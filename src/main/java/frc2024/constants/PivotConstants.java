@@ -38,7 +38,7 @@ public final class PivotConstants {
         PIVOT_CONSTANTS.positionThreshold = Rotation2d.fromDegrees(0.8).getRotations();
     }
 
-    public static final Rotation2d RELATIVE_ENCODER_TO_HORIZONTAL = Rotation2d.fromDegrees(43.417);
+    public static final Rotation2d ENCODER_TO_HORIZONTAL = Rotation2d.fromDegrees(43.417);
 
     public static final Rotation2d MAP_OFFSET = Rotation2d.fromDegrees(0.0);
 

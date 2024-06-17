@@ -1,16 +1,13 @@
 package com.team4522.lib.drivers;
 
-import java.util.function.DoubleSupplier;
 import java.util.function.UnaryOperator;
 
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.Slot2Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.ControlRequest;
-import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -22,14 +19,10 @@ import com.ctre.phoenix6.signals.ControlModeValue;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.team4522.lib.config.DeviceConfig;
 import com.team4522.lib.util.SimFlippable;
 
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -97,7 +90,7 @@ public class TalonFXSubsystem extends SubsystemBase{
     protected final TalonFX master;
     protected final TalonFX[] slaves;
 
-    protected SimState simState;
+    protected final TalonFXSimState masterSimState;
 
     private TalonFXConfiguration masterConfig;
     protected final TalonFXConfiguration[] slaveConfigs;
@@ -123,7 +116,7 @@ public class TalonFXSubsystem extends SubsystemBase{
         slaves = new TalonFX[constants.slaveConstants.length];
         slaveConfigs = new TalonFXConfiguration[constants.slaveConstants.length];
 
-        simState = new SimState(0.0, 0.0, 0.0);
+        masterSimState = master.getSimState();
 
         voltageRequest = new VoltageOut(0.0);
         positionRequest = new PositionVoltage(0.0);
@@ -240,23 +233,23 @@ public class TalonFXSubsystem extends SubsystemBase{
     }
 
     public synchronized double getRotorPosition(){
-        return SimFlippable.getValue(masterPositionSignal.asSupplier().get() * constants.rotorToSensorRatio, simState.position * constants.rotorToSensorRatio);
+        return masterPositionSignal.asSupplier().get() * constants.rotorToSensorRatio;
     }
 
     public synchronized double getPosition(){
-        return SimFlippable.getValue(masterPositionSignal.asSupplier().get(), simState.position);
+        return masterPositionSignal.asSupplier().get();
     }
 
     public synchronized double getRotorVelocity(){
-        return SimFlippable.getValue(masterVelocitySignal.asSupplier().get() * constants.rotorToSensorRatio, simState.velocity * constants.rotorToSensorRatio);
+        return masterVelocitySignal.asSupplier().get() * constants.rotorToSensorRatio;
     }
 
     public synchronized double getVelocity(){
-        return SimFlippable.getValue(masterVelocitySignal.asSupplier().get(), simState.velocity);
+        return masterVelocitySignal.asSupplier().get();
     }
 
-    public synchronized SimState getSimState(){
-        return simState;
+    public synchronized TalonFXSimState getSimState(){
+        return masterSimState;
     }
 
     public synchronized double getSetpoint(){
@@ -336,8 +329,10 @@ public class TalonFXSubsystem extends SubsystemBase{
         master.setControl(control);
     }
 
-    public synchronized void setSimState(SimState simState, double setpoint, boolean velocityMode){;
-        this.simState = simState;
+    public synchronized void updateSimState(SimState simState, double setpoint, boolean velocityMode){;
+        masterSimState.setRawRotorPosition(simState.position);
+        masterSimState.setSupplyVoltage(simState.supplyVoltage);
+        masterSimState.setRotorVelocity(simState.velocity);
         this.setpoint = setpoint;
         this.inVelocityMode = velocityMode;
     }

@@ -15,7 +15,7 @@ public final class SwerveConstants{
 
     public static final ScreamPIDConstants HEADING_CONSTANTS = new ScreamPIDConstants(0.1, 0.0, 0.001);
 
-    public static final ScreamPIDConstants SNAP_CONSTANTS = new ScreamPIDConstants(7, 0, 0.5);
+    public static final ScreamPIDConstants SNAP_CONSTANTS = new ScreamPIDConstants(10, 0, 0.8);
 
     public static final HolonomicPathFollowerConfig PATH_FOLLOWER_CONFIG = new HolonomicPathFollowerConfig(
       PATH_TRANSLATION_CONSTANTS.getPathPlannerPIDConstants(), 

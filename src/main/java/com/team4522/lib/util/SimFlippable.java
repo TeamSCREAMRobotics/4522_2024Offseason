@@ -1,7 +1,5 @@
 package com.team4522.lib.util;
 
-import java.util.function.DoubleSupplier;
-
 import com.ctre.phoenix6.Utils;
 
 public class SimFlippable{

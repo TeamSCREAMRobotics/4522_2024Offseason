@@ -4,6 +4,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import com.team4522.lib.util.AllianceFlipUtil;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -23,11 +25,18 @@ public class Controlboard {
         driveController.start().onTrue(Commands.runOnce(() -> fieldCentric = !fieldCentric));
     }
 
+    public static Supplier<Translation2d> getRawTranslation(){
+        return () -> 
+            new Translation2d(
+                driveController.getLeftY(),
+                driveController.getLeftX());
+    }
+
     public static Supplier<Translation2d> getTranslation(){
         return () -> 
             new Translation2d(
-                -MathUtil.applyDeadband(driveController.getLeftY(), STICK_DEADBAND) * (getSlowMode().getAsBoolean() ? 0.5 : 1),
-                -MathUtil.applyDeadband(driveController.getLeftX(), STICK_DEADBAND) * (getSlowMode().getAsBoolean() ? 0.5 : 1));
+                -MathUtil.applyDeadband(AllianceFlipUtil.Number(driveController.getLeftY(), -driveController.getLeftY()), STICK_DEADBAND) * (getSlowMode().getAsBoolean() ? 0.5 : 1),
+                -MathUtil.applyDeadband(AllianceFlipUtil.Number(driveController.getLeftX(), -driveController.getLeftX()), STICK_DEADBAND) * (getSlowMode().getAsBoolean() ? 0.5 : 1));
     }
 
     public static DoubleSupplier getRotation(){

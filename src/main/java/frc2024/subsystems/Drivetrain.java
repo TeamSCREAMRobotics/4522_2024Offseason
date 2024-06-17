@@ -1,16 +1,13 @@
-package frc2024.subsystems.swerve;
+package frc2024.subsystems;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.SteerRequestType;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.ForwardReference;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.team4522.lib.util.PhoenixSwerveUtil;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 
@@ -18,16 +15,14 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc2024.constants.Constants;
 import frc2024.constants.SwerveConstants;
-import frc2024.controlboard.Controlboard;
 import lombok.Getter;
 
 /**
@@ -44,6 +39,8 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
 
     public Drivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency, SwerveModuleConstants... modules) {
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
+
+        CommandScheduler.getInstance().registerSubsystem(this);
 
         if (Utils.isSimulation()) {
             startSimThread();
@@ -81,24 +78,11 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
             /* use the measured time delta, get battery voltage from WPILib */
             updateSimState(deltaTime, RobotController.getBatteryVoltage());
         });
-        simNotifier.startPeriodic(SIM_LOOP_PERIOD);
+        simNotifier.startPeriodic(0.001);
     }
 
     private void setChassisSpeeds(ChassisSpeeds speeds){
         setControl(util.getApplyChassisSpeeds(speeds));
-    }
-
-    PIDController xController = new PIDController(10, 0, 0);
-    PIDController yController = new PIDController(10, 0, 0);
-    PIDController rotController = new PIDController(7, 0, 0);
-
-    public SwerveRequest driveToPose(Pose2d pose){
-        ChassisSpeeds speeds = 
-            new ChassisSpeeds(
-                xController.calculate(getPose().getX(), pose.getX()),
-                yController.calculate(getPose().getY(), pose.getY()),
-                rotController.calculate(getPose().getRotation().getRadians(), pose.getRotation().getRadians()));
-        return util.getApplyChassisSpeeds(speeds);
     }
 
     public boolean getWithinAngleThreshold(Rotation2d targetAngle, Rotation2d threshold){
@@ -113,12 +97,13 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
         return m_kinematics.toChassisSpeeds(getState().ModuleStates);
     }
 
+    public ChassisSpeeds getFieldRelativeSpeeds(){
+        return getState().speeds;
+    }
+
     public void optimizeModuleUtilization(SwerveModule module){
         module.getDriveMotor().optimizeBusUtilization();
         module.getSteerMotor().optimizeBusUtilization();
         module.getCANcoder().optimizeBusUtilization();
     }
-
-    @Override
-    public void periodic() {}
 }

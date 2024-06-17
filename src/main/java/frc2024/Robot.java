@@ -5,12 +5,9 @@
 package frc2024;
 
 import org.littletonrobotics.junction.LoggedRobot;
-import org.littletonrobotics.junction.Logger;
-
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc2024.constants.FieldConstants;
+import frc2024.constants.ElevatorConstants;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -33,6 +30,7 @@ public class Robot extends LoggedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     //Logger.start();
+    System.out.println(ElevatorConstants.PULLEY_CIRCUMFERENCE.getInches() + "/////////////////////////////////////////////////////////////////////");
     m_robotContainer = new RobotContainer();
   }
 

@@ -3,18 +3,15 @@ package frc2024.subsystems;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.mechanisms.DifferentialMechanism;
 import com.team4522.lib.drivers.TalonFXSubsystem;
 import com.team4522.lib.math.Conversions;
-import com.team4522.lib.pid.ScreamPIDConstants;
 import com.team4522.lib.util.Length;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc2024.RobotContainer;
@@ -25,12 +22,16 @@ import lombok.Setter;
 
 public class Elevator extends TalonFXSubsystem{
 
+    private final ElevatorSim sim;
+    private final PIDController simController;
+    private Notifier simNotifier = null;
+    private double lastSimTime;
+
+
     public Elevator(TalonFXSubystemConstants constants) {
         super(constants);
-    }
 
-    public final ElevatorSim sim = 
-        new ElevatorSim(
+        sim = new ElevatorSim(
             DCMotor.getKrakenX60(2), 
             ElevatorConstants.ELEVATOR_CONSTANTS.rotorToSensorRatio, 
             Units.lbsToKilograms(28), 
@@ -40,7 +41,13 @@ public class Elevator extends TalonFXSubsystem{
             false, 
             0.0
         );
-    public final PIDController simController = new PIDController(78.0 * 2.0, 0.0, 0.0);
+
+        simController = new PIDController(15, 0.0, 0.0);
+
+        if(Utils.isSimulation()){
+            startSimThread();
+        }
+    }
 
     public enum Goal {
         HOME_INTAKE(() -> 0.0),
@@ -49,14 +56,13 @@ public class Elevator extends TalonFXSubsystem{
         AMP(() -> 19.71),
         TRAP(() -> 21.75),
         EJECT(() -> 5.43),
-        AUTO(() -> RobotContainer.getRobotState().getShotParameters().shootState().elevatorHeight()),
-        CUSTOM(() -> RobotContainer.getSubsystems().elevator().getCustomGoal());
+        AUTO(() -> RobotContainer.getRobotState().getActiveShotParameters().get().shootState().elevatorHeight());
 
         @Getter
         DoubleSupplier targetRotations;
 
         private Goal(DoubleSupplier targetHeightInches){
-            targetRotations = () -> Elevator.heightInchesToRotations(targetHeightInches.getAsDouble());
+            targetRotations = () -> Elevator.heightInchesToRotations(targetHeightInches.getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE.getInches());
         }
     }
 
@@ -66,28 +72,20 @@ public class Elevator extends TalonFXSubsystem{
     @Getter @Setter
     private double customGoal;
 
-    public static double heightInchesToRotations(double inches){
-        return ((inches - ElevatorConstants.MIN_HEIGHT) / (ElevatorConstants.MAX_HEIGHT - ElevatorConstants.MIN_HEIGHT)) * (ElevatorConstants.ENCODER_MAX - ElevatorConstants.ENCODER_MIN);
+    public static double heightInchesToRotations(double inches, double circumferenceInches){
+        return inches / circumferenceInches;
     }
 
-    public static Length rotationsToLength(double position){
-        return Length.fromInches(position * (ElevatorConstants.MAX_HEIGHT - ElevatorConstants.MIN_HEIGHT) / (ElevatorConstants.ENCODER_MAX - ElevatorConstants.ENCODER_MIN));
+    public static Length rotationsToLength(double position, double circumferenceInches){
+        return Length.fromInches(position * circumferenceInches);
     }
 
     public Length getHeight(){
-        return rotationsToLength(getPosition());
+        return rotationsToLength(getPosition(), ElevatorConstants.PULLEY_CIRCUMFERENCE.getInches());
     }
 
     public Command setGoalCommand(Goal goal){
         return run(() -> setGoal(goal));
-    }
-
-    public Command setCustomGoalCommand(DoubleSupplier heightInches){
-        return run(
-            () -> {
-                setCustomGoal(heightInches.getAsDouble());
-                setGoal(Goal.CUSTOM);
-            });
     }
 
     @Override
@@ -99,17 +97,26 @@ public class Elevator extends TalonFXSubsystem{
             } else {
                 setSetpointMotionMagicPosition(getGoal().getTargetRotations().getAsDouble());
             }
-        } else {
-            double inputVoltage = simController.calculate(getPosition(), getGoal().getTargetRotations().getAsDouble());
-            sim.update(Constants.SIM_PERIOD_SEC);
-            sim.setInputVoltage(inputVoltage);
-            setSimState(
-                new SimState(
-                    heightInchesToRotations(Units.metersToInches(sim.getPositionMeters())),
-                    0.0, 
-                    inputVoltage),
-                getGoal().getTargetRotations().getAsDouble(),
-                false);
         }
+    }
+
+    public void startSimThread(){
+        simNotifier = new Notifier(() -> {
+            final double currentTime = Utils.getCurrentTimeSeconds();
+            double deltaTime = currentTime - lastSimTime;
+            lastSimTime = currentTime;
+
+            double inputVoltage = simController.calculate(getPosition(), getGoal().getTargetRotations().getAsDouble());
+            sim.update(deltaTime);
+            sim.setInputVoltage(inputVoltage);
+            updateSimState(
+                new SimState(
+                    heightInchesToRotations(Units.metersToInches(sim.getPositionMeters()), ElevatorConstants.PULLEY_CIRCUMFERENCE.getInches()),
+                    Conversions.mpsToFalconRPS(sim.getVelocityMetersPerSecond(), ElevatorConstants.PULLEY_CIRCUMFERENCE.getMeters(), ElevatorConstants.ELEVATOR_CONSTANTS.rotorToSensorRatio),
+                    RobotController.getBatteryVoltage()),
+                    getGoal().getTargetRotations().getAsDouble(),
+                    false);
+        });
+        simNotifier.startPeriodic(Constants.SIM_PERIOD_SEC);
     }
 }

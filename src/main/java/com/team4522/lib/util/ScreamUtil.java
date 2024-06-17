@@ -1,14 +1,8 @@
 package com.team4522.lib.util;
 
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import javax.swing.TransferHandler.TransferSupport;
-
-import org.photonvision.PhotonUtils;
-
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.team4522.lib.pid.ScreamPIDConstants;
@@ -17,15 +11,14 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.networktables.BooleanSubscriber;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj2.command.Command;
 
 /**
  *  Various utility methods 
@@ -93,16 +86,6 @@ public class ScreamUtil {
         return new Twist2d(translation_part.getX(), translation_part.getY(), dtheta);
 	}
 
-	public static ProfiledPIDController createProfiledPIDController(ScreamPIDConstants pidConstants, Constraints motionConstraints, double updatePeriod){
-		return new ProfiledPIDController(pidConstants.kP(), pidConstants.kI(), pidConstants.kD(), motionConstraints, updatePeriod);
-	}
-
-	public static PIDController createPIDController(ScreamPIDConstants pidConstants, double updatePeriod){
-		PIDController controller =  new PIDController(pidConstants.kP(), pidConstants.kI(), pidConstants.kD(), updatePeriod);
-		controller.setIntegratorRange(-pidConstants.integralZone(), pidConstants.integralZone());
-		return controller;
-	}
-
     public static PPHolonomicDriveController createHolonomicDriveController(HolonomicPathFollowerConfig config){
         return new PPHolonomicDriveController(config.translationConstants, config.rotationConstants, config.period, config.maxModuleSpeed, config.driveBaseRadius);
     }
@@ -115,10 +98,6 @@ public class ScreamUtil {
 
     public static double calculateDistanceToTranslation(Translation2d current, Translation2d target){
         return current.getDistance(target);
-    }
-
-    public static DoubleSupplier calculateDistanceToTranslation(Supplier<Translation2d> current, Supplier<Translation2d> target){
-        return () -> current.get().getDistance(target.get());
     }
 
     public static double average(double... nums){
@@ -152,7 +131,42 @@ public class ScreamUtil {
     }
 
     public static double[] translation3dToArray(Translation3d translation){
-        return new double[]{translation.getX(), translation.getY(), translation.getZ()};
+        return new double[]{translation.getX(), translation.getY(), translation.getZ(), 0, 0, 0, 0};
+    }
+
+    public static double[] translation3dToArray(Translation3d translation, Rotation3d rot){
+        Quaternion quat = rot.getQuaternion();
+        return new double[]{translation.getX(), translation.getY(), translation.getZ(), quat.getX(), quat.getY(), quat.getZ(), quat.getW()};
+    }
+
+    public static Translation3d pose3dArrayToTranslation3d(double[] array){
+        return new Translation3d(array[0], array[1], array[2]);
+    }
+
+    public static double[] translation3dArrayToNumArray(Translation3d[] translations){
+        double[] combinedArr = new double[translations.length * 7];
+        int index = 0;
+
+        for (Translation3d translation : translations) {
+            double[] arr = translation3dToArray(translation);
+
+            System.arraycopy(arr, 0, combinedArr, index, arr.length);
+
+            index += arr.length;
+        }
+
+        return combinedArr;
+    }
+
+    public static Translation3d rotatePoint(Translation3d point, Rotation2d yaw) {
+        double cosAngle = yaw.getCos();
+        double sinAngle = yaw.getSin();
+
+        double newX = point.getX() * cosAngle - point.getY() * sinAngle;
+        double newY = point.getX() * sinAngle + point.getY() * cosAngle;
+        double newZ = point.getZ();
+
+        return new Translation3d(newX, newY, newZ);
     }
 
     /* public static void logBasicMotorOutputs(String path, TalonFX motor){

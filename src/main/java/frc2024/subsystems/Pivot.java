@@ -4,14 +4,15 @@ import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.Utils;
 import com.team4522.lib.drivers.TalonFXSubsystem;
+import com.team4522.lib.math.Conversions;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc2024.RobotContainer;
 import frc2024.constants.Constants;
@@ -22,12 +23,18 @@ import lombok.Setter;
 
 public class Pivot extends TalonFXSubsystem{
 
+    public final DCMotorSim sim = new DCMotorSim(DCMotor.getFalcon500(1), PivotConstants.PIVOT_CONSTANTS.rotorToSensorRatio, 0.366879329 + 0.03);
+    public final PIDController simController = new PIDController(400.0, 0.0, 0.0);
+    private Notifier simNotifier = null;
+    private double lastSimTime;
+
     public Pivot(TalonFXSubystemConstants constants) {
         super(constants);
-    }
 
-    public final DCMotorSim sim = new DCMotorSim(DCMotor.getFalcon500(1), PivotConstants.PIVOT_CONSTANTS.rotorToSensorRatio, 0.366879329 + 0.03);
-    public final PIDController simController = new PIDController(10000.0, 0.0, 0.0);
+        if(Utils.isSimulation()){
+            startSimThread();
+        }
+    }
     
     public enum Goal{
         HOME_INTAKE(() -> 17.1),
@@ -37,7 +44,7 @@ public class Pivot extends TalonFXSubsystem{
         AMP(() -> 21.1),
         TRAP(() -> 51.62),
         EJECT(() -> 19.35),
-        AIM(() -> RobotContainer.getRobotState().getShotParameters().shootState().pivotAngle().getDegrees());
+        AIM(() -> RobotContainer.getRobotState().getActiveShotParameters().get().shootState().pivotAngle().getDegrees());
 
         @Getter
         DoubleSupplier targetRotations;
@@ -63,17 +70,26 @@ public class Pivot extends TalonFXSubsystem{
             } else {
                 setSetpointPosition(getGoal().getTargetRotations().getAsDouble());
             }
-        } else{
+        }
+    }
+
+    public void startSimThread(){
+        simNotifier = new Notifier(() -> {
+            final double currentTime = Utils.getCurrentTimeSeconds();
+            double deltaTime = currentTime - lastSimTime;
+            lastSimTime = currentTime;
+
             double inputVoltage = simController.calculate(getPosition(), getGoal().getTargetRotations().getAsDouble());
-            sim.update(Constants.SIM_PERIOD_SEC);
+            sim.update(deltaTime);
             sim.setInputVoltage(inputVoltage);
-            setSimState(
+            updateSimState(
                 new SimState(
                     sim.getAngularPositionRotations(),
-                    0.0,
-                    inputVoltage),
-                getGoal().getTargetRotations().getAsDouble(),
-                false);
-        }
+                    Conversions.rpmToFalconRPS(sim.getAngularVelocityRPM(), PivotConstants.PIVOT_CONSTANTS.rotorToSensorRatio),
+                    RobotController.getBatteryVoltage()),
+                    getGoal().getTargetRotations().getAsDouble(),
+                    false);
+        });
+        simNotifier.startPeriodic(Constants.SIM_PERIOD_SEC);
     }
 }

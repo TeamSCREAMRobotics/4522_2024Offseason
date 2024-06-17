@@ -1,7 +1,5 @@
 package com.team4522.lib.util;
 
-import edu.wpi.first.math.util.Units;
-
 public class Length {
     private double inches = 0.0;
 
