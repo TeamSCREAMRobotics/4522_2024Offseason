@@ -5,12 +5,15 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.team4522.lib.util.AllianceFlipUtil;
+import com.team4522.lib.util.ScreamUtil;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc2024.RobotContainer;
 
 public class Controlboard {
     public static final CommandXboxController driveController = new CommandXboxController(0);
@@ -18,7 +21,7 @@ public class Controlboard {
     public static final Buttonboard buttonboard = new Buttonboard(2, 3);
 
     public static final double STICK_DEADBAND = 0.1;
-    public static final double TRIGGER_DEADBAND = 0.10;
+    public static final double TRIGGER_DEADBAND = 0.1;
 
     public static boolean fieldCentric = true;
     static{

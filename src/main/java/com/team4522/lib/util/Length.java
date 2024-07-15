@@ -3,6 +3,10 @@ package com.team4522.lib.util;
 public class Length {
     private double inches = 0.0;
 
+    public Length(){
+        this(0);
+    }
+
     private Length(double inches){
         this.inches = inches;
     }

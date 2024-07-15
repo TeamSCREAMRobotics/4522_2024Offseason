@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RunnableUtil {
 
-    private static class RunOnce {
+    public static class RunOnce {
         private final AtomicBoolean hasRun = new AtomicBoolean(false);
 
         public void runOnce(Runnable runnable) {
@@ -24,7 +24,7 @@ public class RunnableUtil {
         }
     }
 
-    private static class RunUntil {
+    public static class RunUntil {
         private final AtomicBoolean shouldStop = new AtomicBoolean(false);
     
         public void runUntil(Runnable runnable, boolean stopCondition) {

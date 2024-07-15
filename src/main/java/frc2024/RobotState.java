@@ -1,37 +1,61 @@
 package frc2024;
 
+import java.sql.Driver;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
+
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.console.SimConsoleSource;
+import org.photonvision.estimation.RotTrlTransform3d;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.team4522.lib.math.Conversions;
 import com.team4522.lib.util.AllianceFlipUtil;
 import com.team4522.lib.util.Length;
+import com.team4522.lib.util.LimitedSizeList;
+import com.team4522.lib.util.PolygonalPoseArea;
 import com.team4522.lib.util.ScreamUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc2024.RobotContainer.Subsystems;
 import frc2024.commands.ShootSimNote;
 import frc2024.constants.Constants;
-import frc2024.constants.ElevatorConstants;
 import frc2024.constants.FieldConstants;
-import frc2024.constants.PivotConstants;
-import frc2024.constants.ShooterConstants;
-import frc2024.subsystems.Drivetrain;
-import frc2024.subsystems.Elevator;
-import frc2024.subsystems.Pivot;
-import frc2024.subsystems.Shooter;
+import frc2024.constants.SimConstants;
+import frc2024.dashboard.ComponentVisualizer;
+import frc2024.dashboard.MechanismVisualizer;
+import frc2024.subsystems.conveyor.Conveyor;
+import frc2024.subsystems.elevator.Elevator;
+import frc2024.subsystems.elevator.ElevatorConstants;
+import frc2024.subsystems.pivot.Pivot;
+import frc2024.subsystems.pivot.PivotConstants;
+import frc2024.subsystems.shooter.Shooter;
+import frc2024.subsystems.shooter.ShooterConstants;
+import frc2024.subsystems.shooter.ShootingUtils;
+import frc2024.subsystems.shooter.ShootingUtils.ShotParameters;
+import frc2024.subsystems.stabilizers.StabilizerConstants;
+import frc2024.subsystems.stabilizers.Stabilizers;
+import frc2024.subsystems.swerve.Drivetrain;
 import lombok.Getter;
+import lombok.Setter;
 
 public class RobotState {
 
@@ -39,115 +63,98 @@ public class RobotState {
     private Elevator elevator;
     private Pivot pivot;
     private Shooter shooter;
+    private Conveyor conveyor;
+    private Stabilizers stabilizers;
 
-    public record ShootState(Rotation2d pivotAngle, double elevatorHeight, double velocityRPM){}
-    public record ShotParameters(Rotation2d targetHeading, ShootState shootState, double effectiveDistance){}
-
-    private final LinearFilter angleFilter = LinearFilter.movingAverage(5);
-
-    private final double mechWidth = Units.inchesToMeters(40);
-    private final double mechHeight = Units.inchesToMeters(50);
-
-    private final Mechanism2d superstructure = new Mechanism2d(mechWidth, mechHeight);
-    private final MechanismLigament2d elevatorMech = superstructure.getRoot("Elevator", mechWidth / 2.0, 0).append(new MechanismLigament2d("Height", ElevatorConstants.HOME_HEIGHT_FROM_FLOOR.getMeters(), 80, 6, new Color8Bit(Color.kOrange)));
-    private final MechanismRoot2d pivotRoot = superstructure.getRoot("Pivot", 0, 0);
-    private final MechanismLigament2d pivotFrontMech = pivotRoot.append(new MechanismLigament2d("Pivot1", Units.inchesToMeters(17), 180, 10, new Color8Bit(Color.kBlue)));
-    private final MechanismLigament2d pivotBackMech = pivotRoot.append(new MechanismLigament2d("Pivot2", Units.inchesToMeters(9), 0, 10, new Color8Bit(Color.kBlue)));
+    public enum SuperstructureGoal{
+        TRACKING,
+        SUB,
+        SUB_DEFENDED,
+        AMP,
+    }
 
     @Getter
-    private final Supplier<Translation3d> activeSpeaker = () -> AllianceFlipUtil.MirroredTranslation3d(FieldConstants.SPEAKER_OPENING);
+    private final Supplier<Translation2d> absolutePivotPosition = 
+        () -> new Translation2d(
+                elevator.getHeight().plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR).minus(PivotConstants.AXLE_DISTANCE_FROM_ELEVATOR_TOP).plus(PivotConstants.SHOOTER_DISTANCE_FROM_AXLE).getMeters(), 
+                Rotation2d.fromDegrees(80));
+
+    @Getter
+    private final Supplier<Translation2d> absoluteShooterPosition =
+        () -> absolutePivotPosition.get().plus(new Translation2d(PivotConstants.SHOOTER_DISTANCE_FROM_AXLE.getMeters(), pivot.getAngle()));
+
+    @Getter @Setter
+    private Translation3d activeSpeaker = AllianceFlipUtil.MirroredTranslation3d(FieldConstants.SPEAKER_OPENING);
 
     @Getter
     private final Supplier<Translation3d[]> activeTrajectory = 
-        () -> calculateTrajectory(
-                    Rotation2d.fromRotations(pivot.getPosition()).minus(PivotConstants.ENCODER_TO_HORIZONTAL), 
+        () -> ShootingUtils.calculateTrajectory(
+                    pivot.getAngle(), 
                     Conversions.falconRPSToMechanismMPS(shooter.getVelocity(), ShooterConstants.WHEEL_CIRCUMFERENCE.getMeters(), 1.0) * 0.8, 
                     drivetrain.getPose());
 
     @Getter
     private final Supplier<ShotParameters> activeShotParameters =
-        () -> calculateShotParameters(drivetrain.getPose().getTranslation(), getActiveSpeaker().get().toTranslation2d());
+        () -> ShootingUtils.calculateShotParameters(drivetrain.getPose().getTranslation(), getActiveSpeaker().toTranslation2d());
 
-    private static final ShootSimNote shootSimNote = new ShootSimNote(RobotContainer.getSubsystems());
+    public final LimitedSizeList<Supplier<Pose3d>> activeNotes = new LimitedSizeList<>(SimConstants.MAX_SIM_NOTES);
+
+    static{
+        MechanismVisualizer.setDimensions(SimConstants.MECH_WIDTH, SimConstants.MECH_HEIGHT);
+    }
+    private final MechanismVisualizer elevatorVisualizer = 
+        new MechanismVisualizer("Elevator")
+            .withStaticAngle(Rotation2d.fromDegrees(80))
+            .withDynamicLength(
+                () -> elevator.getHeight().plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR), 
+                () -> Elevator.rotationsToLength(elevator.getGoal().getTargetRotations().getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE.getInches()).plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR))
+            .withStaticPosition(new Translation2d(SimConstants.ELEVATOR_X, 0));
+
+    private final MechanismVisualizer shooterFrontVisualizer = 
+        new MechanismVisualizer("Pivot Front")
+            .withStaticLength(Length.fromInches(17))
+            .withDynamicAngle(
+                () -> pivot.getAngle().unaryMinus(), 
+                () -> Rotation2d.fromRotations(-pivot.getGoal().getTargetRotations().getAsDouble()))
+            .withDynamicPosition(() -> absolutePivotPosition.get().plus(new Translation2d(SimConstants.ELEVATOR_X, 0)));
+
+    private final MechanismVisualizer shooterBackVisualizer = 
+        new MechanismVisualizer("Pivot Back")
+            .withStaticLength(Length.fromInches(9))
+            .withDynamicAngle(
+                () -> pivot.getAngle().unaryMinus().plus(Rotation2d.fromRotations(0.5)), 
+                () -> Rotation2d.fromRotations(0.5 - pivot.getGoal().getTargetRotations().getAsDouble()))
+            .withDynamicPosition(() -> absolutePivotPosition.get().plus(new Translation2d(SimConstants.ELEVATOR_X, 0)));
 
     public RobotState(Subsystems subsystems){
         drivetrain = subsystems.drivetrain();
         elevator = subsystems.elevator();
         pivot = subsystems.pivot();
         shooter = subsystems.shooter();
+        conveyor = subsystems.conveyor();
+        stabilizers = subsystems.stabilizers();
     }
 
-    public static void shootSimNote(){
-        shootSimNote.restart();
-    }
-
-    private ShotParameters calculateShotParameters(Translation2d currentTranslation, Translation2d targetTranslation){
-        double horizontalDistance = currentTranslation.getDistance(targetTranslation);
-        Rotation2d targetHeading = targetTranslation.minus(currentTranslation).getAngle().plus(Rotation2d.fromDegrees(180));
-        ShootState calculated = ShooterConstants.SHOOTING_MAP.get(horizontalDistance);
-        double velocity = horizontalDistance > Units.feetToMeters(25) ? 2000 : calculated.velocityRPM;
-        Rotation2d adjustedAngle = 
-            Rotation2d.fromDegrees(
-                MathUtil.clamp(
-                    calculated.pivotAngle.plus(PivotConstants.MAP_OFFSET).unaryMinus().plus(PivotConstants.ENCODER_TO_HORIZONTAL).getDegrees(),
-                    elevator.getHeight().getInches() > 1.5 ? Units.rotationsToDegrees(Pivot.Goal.SUB.getTargetRotations().getAsDouble()) : 1, 
-                    28));
-        ShootState adjusted = new ShootState(adjustedAngle, calculated.elevatorHeight, velocity);
-
-        return new ShotParameters(filterAngle(targetHeading), adjusted, horizontalDistance);
-    }
-
-    private static Translation3d[] calculateTrajectory(Rotation2d launchAngle, double initialVelocity, Pose2d pose) {
-        Translation3d[] trajectoryPoints = new Translation3d[ShooterConstants.NUM_TRAJECTORY_POINTS + 1];
-
-        Length absoluteHeight = RobotContainer.getSubsystems().elevator().getHeight().plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR);
-        Translation2d pivotRootPos = new Translation2d(absoluteHeight.minus(PivotConstants.AXLE_DISTANCE_FROM_ELEVATOR_TOP).getMeters(), Rotation2d.fromDegrees(80));
-
-        launchAngle = launchAngle.plus(new Rotation2d(Math.PI));
-        double totalTime = (initialVelocity * launchAngle.getSin() + Math.sqrt(Math.pow(initialVelocity * launchAngle.getSin(), 2) + 2 * Constants.GRAVITY * pivotRootPos.getY())) / Constants.GRAVITY;
-
-        double timeInterval = totalTime / ShooterConstants.NUM_TRAJECTORY_POINTS; 
-
-        int index = 0; 
-
-        for (int i = 0; i <= ShooterConstants.NUM_TRAJECTORY_POINTS; i++) {
-            double time = i * timeInterval;
-            double x = initialVelocity * launchAngle.getCos() * time;
-            double y = (initialVelocity * launchAngle.getSin() * time) - (0.5 * Constants.GRAVITY * time * time) + pivotRootPos.getY();
-            double z = 0; 
-            if (y < 0) {
-                y = 0; 
-            }
-
-            Translation3d rotatedPoint = ScreamUtil.rotatePoint(new Translation3d(x, z, y).plus(new Translation3d(pivotRootPos.getX(), 0.0, 0.0)), pose.getRotation());
-
-            double relX = rotatedPoint.getX() + pose.getX();
-            double relY = rotatedPoint.getY() + pose.getY();
-            double relZ = rotatedPoint.getZ();
-
-            trajectoryPoints[index++] = new Translation3d(relX, relY, relZ);
-        }
-
-        return trajectoryPoints;
+    public static Command shootSimNoteCommand(){
+        return Commands.runOnce(() -> new ShootSimNote(RobotContainer.getSubsystems()).schedule());
     }
 
     public void outputTelemetry(){
-        Length absElevHeight = elevator.getHeight().plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR);
-        Translation2d pivotRootPos = new Translation2d(absElevHeight.minus(PivotConstants.AXLE_DISTANCE_FROM_ELEVATOR_TOP).getMeters(), Rotation2d.fromDegrees(80));
-        elevatorMech.setLength(absElevHeight.getMeters());
-        pivotRoot.setPosition(pivotRootPos.getX() + mechWidth / 2.0, pivotRootPos.getY());
-        pivotFrontMech.setAngle(Rotation2d.fromRotations(pivot.getPosition()).minus(PivotConstants.ENCODER_TO_HORIZONTAL));
-        pivotBackMech.setAngle(Rotation2d.fromRotations(0.5 + pivot.getPosition()).minus(PivotConstants.ENCODER_TO_HORIZONTAL));
-
-        SmartDashboard.putData("Superstructure", superstructure);
-        SmartDashboard.putNumberArray("Note Trajectory", ScreamUtil.translation3dArrayToNumArray(getActiveTrajectory().get()));
+        Logger.recordOutput("Simulation/ActiveNotes", activeNotes.stream().map(Supplier::get).toArray(Pose3d[]::new));
+        Logger.recordOutput("Simulation/NoteTrajectory", getActiveTrajectory().get());
+        Logger.recordOutput("RobotState/HorizontalDistanceFromGoal", getActiveShotParameters().get().effectiveDistance());
+        Logger.recordOutput("ComponentPoses", 
+        new Pose3d[]{
+            ComponentVisualizer.getElevStage1Pose(elevator.getHeight().getMeters()), 
+            ComponentVisualizer.getElevStage2Pose(elevator.getHeight().getMeters()), 
+            ComponentVisualizer.getShooterPose(elevator.getHeight().getMeters(), pivot.getAngle()), 
+            ComponentVisualizer.getStabilizersPose(stabilizers.getAngle())
+        });
     }
 
     public void telemeterizeDrivetrain(SwerveDriveState state){
-        SmartDashboard.putNumberArray("Pose", ScreamUtil.pose2dToArray(state.Pose));
-    }
-
-    public Rotation2d filterAngle(Rotation2d angle){
-        return Rotation2d.fromDegrees(angleFilter.calculate(Math.abs(angle.getDegrees())) * Math.signum(angle.getDegrees()));
+        Logger.recordOutput("RobotState/RobotPose", state.Pose);
+        Logger.recordOutput("RobotState/Subsystems/Swerve/MeasuredStates", state.ModuleStates);
+        Logger.recordOutput("RobotState/Subsystems/Swerve/SetpointStates", state.ModuleTargets);
     }
 }

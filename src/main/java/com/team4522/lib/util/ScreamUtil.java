@@ -11,12 +11,15 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.geometry.struct.Pose2dStruct;
+import edu.wpi.first.math.geometry.struct.Pose3dStruct;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 
@@ -70,21 +73,6 @@ public class ScreamUtil {
 	public static boolean epsilonEquals(final Twist2d twist, final Twist2d other) {
         return epsilonEquals(twist, other, EPSILON);
     }
-
-	public static Twist2d getPoseLog(Pose2d transform){
-        final double dtheta = transform.getRotation().getRadians();
-        final double half_dtheta = 0.5 * dtheta;
-        final double cos_minus_one = transform.getRotation().getCos() - 1.0;
-        double halftheta_by_tan_of_halfdtheta;
-        if (Math.abs(cos_minus_one) < EPSILON) {
-            halftheta_by_tan_of_halfdtheta = 1.0 - 1.0 / 12.0 * dtheta * dtheta;
-        } else {
-            halftheta_by_tan_of_halfdtheta = -(half_dtheta * transform.getRotation().getSin()) / cos_minus_one;
-        }
-        final Translation2d translation_part = transform.getTranslation()
-                .rotateBy(new Rotation2d(halftheta_by_tan_of_halfdtheta, -half_dtheta));
-        return new Twist2d(translation_part.getX(), translation_part.getY(), dtheta);
-	}
 
     public static PPHolonomicDriveController createHolonomicDriveController(HolonomicPathFollowerConfig config){
         return new PPHolonomicDriveController(config.translationConstants, config.rotationConstants, config.period, config.maxModuleSpeed, config.driveBaseRadius);
@@ -158,6 +146,36 @@ public class ScreamUtil {
         return combinedArr;
     }
 
+    public static double[] translation2dArrayToNumArray(Translation2d[] translations){
+        double[] combinedArr = new double[translations.length * 7];
+        int index = 0;
+
+        for (Translation2d translation : translations) {
+            double[] arr = translation3dToArray(new Translation3d(translation.getX(), translation.getY(), 0.0));
+
+            System.arraycopy(arr, 0, combinedArr, index, arr.length);
+
+            index += arr.length;
+        }
+
+        return combinedArr;
+    }
+
+    public static double[] translation2dArrayToNumArray(Translation2d[] translations, double z){
+        double[] combinedArr = new double[translations.length * 7];
+        int index = 0;
+
+        for (Translation2d translation : translations) {
+            double[] arr = translation3dToArray(new Translation3d(translation.getX(), translation.getY(), z));
+
+            System.arraycopy(arr, 0, combinedArr, index, arr.length);
+
+            index += arr.length;
+        }
+
+        return combinedArr;
+    }
+
     public static Translation3d rotatePoint(Translation3d point, Rotation2d yaw) {
         double cosAngle = yaw.getCos();
         double sinAngle = yaw.getSin();
@@ -167,6 +185,14 @@ public class ScreamUtil {
         double newZ = point.getZ();
 
         return new Translation3d(newX, newY, newZ);
+    }
+
+    public static double getLinearSpeed(ChassisSpeeds speeds){
+        return pythagorean(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+    }
+
+    public static boolean withinAngleThreshold(Rotation2d targetAngle, Rotation2d currentAngle, Rotation2d threshold){
+        return MathUtil.isNear(targetAngle.getDegrees(), currentAngle.getDegrees(), threshold.getDegrees(), -180, 180);
     }
 
     /* public static void logBasicMotorOutputs(String path, TalonFX motor){

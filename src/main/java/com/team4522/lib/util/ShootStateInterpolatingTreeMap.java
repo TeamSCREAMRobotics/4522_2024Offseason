@@ -2,7 +2,7 @@ package com.team4522.lib.util;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import frc2024.RobotState.ShootState;
+import frc2024.subsystems.shooter.ShootingUtils.ShootState;
 
 public class ShootStateInterpolatingTreeMap{
     private InterpolatingDoubleTreeMap angleInterpolator = new InterpolatingDoubleTreeMap();

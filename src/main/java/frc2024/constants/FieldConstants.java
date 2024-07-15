@@ -39,4 +39,29 @@ public final class FieldConstants{
   
   public static final RectanglePoseArea FIELD_AREA = new RectanglePoseArea(new Translation2d(0, 0), FIELD_DIMENSIONS); //Blue origin
   public static final RectanglePoseArea WING_POSE_AREA = new RectanglePoseArea(new Translation2d(10.4, 0.0), FIELD_DIMENSIONS); //Blue origin
+
+  public static final class StagingLocations {
+    public static final double centerlineX = FIELD_DIMENSIONS.getX() / 2.0;
+
+    public static final double centerlineFirstY = Units.inchesToMeters(29.638);
+    public static final double centerlineSeparationY = Units.inchesToMeters(66);
+    public static final double spikeX = Units.inchesToMeters(114);
+    public static final double spikeFirstY = Units.inchesToMeters(161.638);
+    public static final double spikeSeparationY = Units.inchesToMeters(57);
+
+    public static final Translation2d[] centerlineTranslations = new Translation2d[5];
+    public static final Translation2d[] spikeTranslations = new Translation2d[3];
+
+    static {
+      for (int i = 0; i < centerlineTranslations.length; i++) {
+        centerlineTranslations[i] =
+            new Translation2d(centerlineX, centerlineFirstY + (i * centerlineSeparationY));
+      }
+    }
+    static {
+      for (int i = 0; i < spikeTranslations.length; i++) {
+        spikeTranslations[i] = new Translation2d(spikeX, spikeFirstY + (i * spikeSeparationY));
+      }
+    }
+  }
 }

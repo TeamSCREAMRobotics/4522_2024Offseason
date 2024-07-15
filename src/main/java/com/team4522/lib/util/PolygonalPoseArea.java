@@ -2,43 +2,56 @@ package com.team4522.lib.util;
 
 import java.util.List;
 
+import org.opencv.core.Point;
+
 import edu.wpi.first.math.geometry.Translation2d;
 
 public class PolygonalPoseArea {
 
     private final List<Translation2d> vertices;
 
-    public PolygonalPoseArea(Translation2d... vertices) {
-        this.vertices = List.of(vertices);
+    public PolygonalPoseArea(List<Translation2d> vertices) {
+        this.vertices = vertices;
     }
 
     public boolean contains(Translation2d point) {
-        int intersectionCount = 0;
-        for (int i = 0; i < vertices.size(); i++) {
-            Translation2d start = vertices.get(i);
-            Translation2d end = vertices.get((i + 1) % vertices.size());
-
-            // Check if ray from point to positive infinity intersects the segment
-            if (isBetween(start.getX(), end.getY(), point.getY()) && isOnSegment(point, start, end)) {
-                // Ignore coinciding with a vertex if the other endpoint is higher
-                if (!(point.equals(start) && end.getY() > start.getY()) && !(point.equals(end) && start.getY() > end.getY())) {
-                    intersectionCount++;
-                }
+        int n = vertices.size();
+        boolean result = false;
+        for (int i = 0, j = n - 1; i < n; j = i++) {
+            if ((vertices.get(i).getY() > point.getY()) != (vertices.get(j).getY() > point.getY()) &&
+                (point.getX() < (vertices.get(j).getX() - vertices.get(i).getX()) * (point.getY() - vertices.get(i).getY()) / (vertices.get(j).getY() - vertices.get(i).getY()) + vertices.get(i).getX())) {
+                result = !result;
             }
         }
-        return intersectionCount % 2 != 0;
+        return result;
     }
 
-    private boolean isBetween(double a, double b, double c) {
-        return (c >= Math.min(a, b) && c <= Math.max(a, b));
-    }
+    public Translation2d getCenter() {
+        double centerX = 0.0;
+        double centerY = 0.0;
+        double signedArea = 0.0;
+        double currentX;
+        double currentY;
+        double nextX; 
+        double nextY;
+        double a; 
 
-    private boolean isOnSegment(Translation2d point, Translation2d start, Translation2d end) {
-        double denominator = (end.getX() - start.getX()) * (end.getY() - point.getY()) - (end.getY() - start.getY()) * (end.getX() - point.getX());
-        if (denominator == 0) {
-            return false; // Collinear. Not necessarily an intersection
+        int n = vertices.size();
+        for (int i = 0; i < n; i++) {
+            currentX = vertices.get(i).getX();
+            currentY = vertices.get(i).getY();
+            nextX = vertices.get((i + 1) % n).getX();
+            nextY = vertices.get((i + 1) % n).getY();
+            a = currentX * nextY - nextX * currentY;
+            signedArea += a;
+            centerX += (currentX + nextX) * a;
+            centerY += (currentY + nextY) * a;
         }
-        double t = ((end.getX() - start.getX()) * (point.getY() - start.getY()) - (end.getY() - start.getY()) * (point.getX() - start.getX())) / denominator;
-        return (t >= 0 && t <= 1);
+
+        signedArea *= 0.5;
+        centerX /= (6.0 * signedArea);
+        centerY /= (6.0 * signedArea);
+
+        return new Translation2d(centerX, centerY);
     }
 }

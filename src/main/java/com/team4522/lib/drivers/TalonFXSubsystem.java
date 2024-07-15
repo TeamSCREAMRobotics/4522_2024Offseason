@@ -21,8 +21,10 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.team4522.lib.config.DeviceConfig;
+import com.team4522.lib.pid.ScreamPIDConstants.MotionMagicConstants;
 import com.team4522.lib.util.SimFlippable;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -42,7 +44,7 @@ public class TalonFXSubsystem extends SubsystemBase{
 
     public static record SimState(double position, double velocity, double supplyVoltage){}
 
-    public static class TalonFXSubystemConstants {
+    public static class TalonFXSubsystemConstants {
         public String name = "ERROR_ASSIGN_A_NAME";
 
         public boolean outputTelemetry = false;
@@ -76,7 +78,7 @@ public class TalonFXSubsystem extends SubsystemBase{
         public double rampRate = 0.0; // s
         public double maxVoltage = 12.0;
 
-        public int supplyCurrentLimit = 60; // amps
+        public int supplyCurrentLimit = 40; // amps
         public boolean enableSupplyCurrentLimit = false;
 
         public int statorCurrentLimit = 40; // amps
@@ -86,7 +88,7 @@ public class TalonFXSubsystem extends SubsystemBase{
         public double minUnitsLimit = Double.NEGATIVE_INFINITY;
     }
     
-    protected final TalonFXSubystemConstants constants;
+    protected final TalonFXSubsystemConstants constants;
     protected final TalonFX master;
     protected final TalonFX[] slaves;
 
@@ -110,7 +112,7 @@ public class TalonFXSubsystem extends SubsystemBase{
     protected double setpoint;
     protected boolean inVelocityMode = false;
 
-    protected TalonFXSubsystem(final TalonFXSubystemConstants constants){
+    protected TalonFXSubsystem(final TalonFXSubsystemConstants constants){
         this.constants = constants;
         master = new TalonFX(constants.masterConstants.device.id, constants.masterConstants.device.canbus);
         slaves = new TalonFX[constants.slaveConstants.length];
@@ -233,19 +235,19 @@ public class TalonFXSubsystem extends SubsystemBase{
     }
 
     public synchronized double getRotorPosition(){
-        return masterPositionSignal.asSupplier().get() * constants.rotorToSensorRatio;
-    }
-
-    public synchronized double getPosition(){
         return masterPositionSignal.asSupplier().get();
     }
 
+    public synchronized double getPosition(){
+        return masterPositionSignal.asSupplier().get() / constants.rotorToSensorRatio;
+    }
+
     public synchronized double getRotorVelocity(){
-        return masterVelocitySignal.asSupplier().get() * constants.rotorToSensorRatio;
+        return masterVelocitySignal.asSupplier().get();
     }
 
     public synchronized double getVelocity(){
-        return masterVelocitySignal.asSupplier().get();
+        return masterVelocitySignal.asSupplier().get() / constants.rotorToSensorRatio;
     }
 
     public synchronized TalonFXSimState getSimState(){
@@ -257,11 +259,20 @@ public class TalonFXSubsystem extends SubsystemBase{
     }
 
     public synchronized double getError(){
-        return inVelocityMode ? Math.abs(setpoint - getVelocity()) : setpoint - getPosition();
+        return inVelocityMode ? setpoint - getVelocity() : setpoint - getPosition();
+    }
+
+    public synchronized Rotation2d getAngle(){
+        return Rotation2d.fromRotations(getPosition());
     }
 
     public synchronized boolean atGoal(){
-        return inVelocityMode ? getError() <= constants.velocityThreshold : getError() <= constants.positionThreshold;
+        double err = Math.abs(getError());
+        return inVelocityMode ? err <= constants.velocityThreshold : err <= constants.positionThreshold;
+    }
+
+    public synchronized boolean isActive(){
+        return Math.abs(master.getVelocity().asSupplier().get()) > 0.0;
     }
 
     public synchronized void setVoltage(double volts, double voltageFeedForward){
@@ -274,7 +285,7 @@ public class TalonFXSubsystem extends SubsystemBase{
     }
 
     public synchronized void setSetpointPosition(double position, double voltageFeedForward){
-        setPosition(position, voltageFeedForward, false);
+        setTargetPosition(position, voltageFeedForward, false);
     }
 
     public synchronized void setSetpointPosition(double position){
@@ -282,7 +293,7 @@ public class TalonFXSubsystem extends SubsystemBase{
     }
 
     public synchronized void setSetpointMotionMagicPosition(double position, double voltageFeedForward){
-        setPosition(position, voltageFeedForward, true);
+        setTargetPosition(position, voltageFeedForward, true);
     }
 
     public synchronized void setSetpointMotionMagicPosition(double position){
@@ -290,7 +301,7 @@ public class TalonFXSubsystem extends SubsystemBase{
     }
 
     public synchronized void setSetpointVelocity(double velocity, double voltageFeedForward){
-        setVelocity(velocity, voltageFeedForward, false);
+        setTargetVelocity(velocity, voltageFeedForward, false);
     }
 
     public synchronized void setSetpointVelocity(double velocity){
@@ -298,14 +309,14 @@ public class TalonFXSubsystem extends SubsystemBase{
     }
 
     public synchronized void setSetpointMotionMagicVelocity(double velocity, double voltageFeedForward){
-        setVelocity(velocity, voltageFeedForward, true);
+        setTargetVelocity(velocity, voltageFeedForward, true);
     }
 
     public synchronized void setSetpointMotionMagicVelocity(double velocity){
         setSetpointMotionMagicPosition(velocity, 0.0);
     }
 
-    private synchronized void setPosition(double position, double voltageFeedForward, boolean motionMagic){
+    private synchronized void setTargetPosition(double position, double voltageFeedForward, boolean motionMagic){
         setpoint = position;
         inVelocityMode = false;
         ControlRequest control = 
@@ -315,7 +326,7 @@ public class TalonFXSubsystem extends SubsystemBase{
         setMaster(control);
     }
 
-    private synchronized void setVelocity(double velocity, double voltageFeedForward, boolean motionMagic){
+    private synchronized void setTargetVelocity(double velocity, double voltageFeedForward, boolean motionMagic){
         setpoint = velocity;
         inVelocityMode = true;
         ControlRequest control = 
@@ -329,12 +340,10 @@ public class TalonFXSubsystem extends SubsystemBase{
         master.setControl(control);
     }
 
-    public synchronized void updateSimState(SimState simState, double setpoint, boolean velocityMode){;
+    public synchronized void updateSimState(SimState simState){;
         masterSimState.setRawRotorPosition(simState.position);
         masterSimState.setSupplyVoltage(simState.supplyVoltage);
         masterSimState.setRotorVelocity(simState.velocity);
-        this.setpoint = setpoint;
-        this.inVelocityMode = velocityMode;
     }
 
     public synchronized void resetPosition(double position){
@@ -362,15 +371,18 @@ public class TalonFXSubsystem extends SubsystemBase{
         master.getConfigurator().apply(masterConfig);
     }
 
-    public synchronized void setMotionMagicConfigsUnchecked(double accel, double jerk) {
-        masterConfig.MotionMagic.MotionMagicAcceleration = accel;
-        masterConfig.MotionMagic.MotionMagicJerk = jerk;
+    public synchronized void setMotionMagicConfigsUnchecked(MotionMagicConstants configs) {
+        masterConfig.MotionMagic.MotionMagicAcceleration = configs.acceleration();
+        masterConfig.MotionMagic.MotionMagicJerk = configs.jerk();
+        masterConfig.MotionMagic.MotionMagicCruiseVelocity = configs.cruiseVelocity();
+
         master.getConfigurator().apply(masterConfig.MotionMagic);
     }
 
-    public synchronized void setMotionMagicConfigs(double accel, double jerk) {
-        masterConfig.MotionMagic.MotionMagicAcceleration = accel;
-        masterConfig.MotionMagic.MotionMagicJerk = jerk;
+    public synchronized void setMotionMagicConfigs(MotionMagicConstants configs) {
+        masterConfig.MotionMagic.MotionMagicAcceleration = configs.acceleration();
+        masterConfig.MotionMagic.MotionMagicJerk = configs.jerk();
+        masterConfig.MotionMagic.MotionMagicCruiseVelocity = configs.cruiseVelocity();
         
         configMaster(masterConfig);
     }
