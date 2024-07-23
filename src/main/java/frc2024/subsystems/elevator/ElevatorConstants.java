@@ -14,13 +14,15 @@ public final class ElevatorConstants{
 
   public static final boolean updateFromTuner = false;
 
-  public static final double MAX_HEIGHT = 21.75;  
+  public static final double MAX_HEIGHT = 21.745;
   public static final double MIN_HEIGHT = 0.0;
-  public static final Length MAX_HEIGHT_AS_LENGTH = Length.fromInches(21.75);
+  public static final Length MAX_HEIGHT_AS_LENGTH = Length.fromInches(MAX_HEIGHT);
   public static final double ENCODER_MAX = 3.1;
   public static final double ENCODER_MIN = 0.0;
-  public static final Length HOME_HEIGHT_FROM_FLOOR = Length.fromInches(26.553805);
+  public static final Length HOME_HEIGHT_FROM_FLOOR = Length.fromInches(26.476152);
   public static final Length PULLEY_CIRCUMFERENCE = Length.fromInches(6.946136755);
+
+  public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(10.0, 0.0, 0.0);
 
   public static final TalonFXSubsystemConstants ELEVATOR_CONSTANTS = new TalonFXSubsystemConstants();
   static{

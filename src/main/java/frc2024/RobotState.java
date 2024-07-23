@@ -50,6 +50,7 @@ import frc2024.subsystems.pivot.PivotConstants;
 import frc2024.subsystems.shooter.Shooter;
 import frc2024.subsystems.shooter.ShooterConstants;
 import frc2024.subsystems.shooter.ShootingUtils;
+import frc2024.subsystems.shooter.Shooter.Goal;
 import frc2024.subsystems.shooter.ShootingUtils.ShotParameters;
 import frc2024.subsystems.stabilizers.StabilizerConstants;
 import frc2024.subsystems.stabilizers.Stabilizers;
@@ -67,35 +68,32 @@ public class RobotState {
     private Stabilizers stabilizers;
 
     public enum SuperstructureGoal{
-        TRACKING,
+        IDLE,
         SUB,
         SUB_DEFENDED,
         AMP,
+        PASSING,
+        EJECT;
     }
 
     @Getter
-    private final Supplier<Translation2d> absolutePivotPosition = 
-        () -> new Translation2d(
-                elevator.getHeight().plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR).minus(PivotConstants.AXLE_DISTANCE_FROM_ELEVATOR_TOP).plus(PivotConstants.SHOOTER_DISTANCE_FROM_AXLE).getMeters(), 
-                Rotation2d.fromDegrees(80));
-
-    @Getter
-    private final Supplier<Translation2d> absoluteShooterPosition =
-        () -> absolutePivotPosition.get().plus(new Translation2d(PivotConstants.SHOOTER_DISTANCE_FROM_AXLE.getMeters(), pivot.getAngle()));
+    private final Supplier<Translation2d> pivotRootPosition = () -> {
+        Translation3d t = ComponentVisualizer.getShooterPose(elevator.getHeight().getMeters(), new Rotation2d()).getTranslation();
+        return new Translation2d(t.getX(), t.getZ());
+    };
 
     @Getter @Setter
     private Translation3d activeSpeaker = AllianceFlipUtil.MirroredTranslation3d(FieldConstants.SPEAKER_OPENING);
 
     @Getter
-    private final Supplier<Translation3d[]> activeTrajectory = 
-        () -> ShootingUtils.calculateTrajectory(
-                    pivot.getAngle(), 
-                    Conversions.falconRPSToMechanismMPS(shooter.getVelocity(), ShooterConstants.WHEEL_CIRCUMFERENCE.getMeters(), 1.0) * 0.8, 
-                    drivetrain.getPose());
-
-    @Getter
     private final Supplier<ShotParameters> activeShotParameters =
         () -> ShootingUtils.calculateShotParameters(drivetrain.getPose().getTranslation(), getActiveSpeaker().toTranslation2d());
+
+    @Getter
+    private final Supplier<Translation3d[]> activeTrajectory = 
+        () -> ShootingUtils.calculateSimpleTrajectory(
+                    drivetrain.getPose(),
+                    drivetrain.getPose().getTranslation().getDistance(activeSpeaker.toTranslation2d()) + 1);
 
     public final LimitedSizeList<Supplier<Pose3d>> activeNotes = new LimitedSizeList<>(SimConstants.MAX_SIM_NOTES);
 
@@ -116,7 +114,7 @@ public class RobotState {
             .withDynamicAngle(
                 () -> pivot.getAngle().unaryMinus(), 
                 () -> Rotation2d.fromRotations(-pivot.getGoal().getTargetRotations().getAsDouble()))
-            .withDynamicPosition(() -> absolutePivotPosition.get().plus(new Translation2d(SimConstants.ELEVATOR_X, 0)));
+            .withDynamicPosition(() -> pivotRootPosition.get().plus(new Translation2d(SimConstants.ELEVATOR_X, 0)));
 
     private final MechanismVisualizer shooterBackVisualizer = 
         new MechanismVisualizer("Pivot Back")
@@ -124,7 +122,7 @@ public class RobotState {
             .withDynamicAngle(
                 () -> pivot.getAngle().unaryMinus().plus(Rotation2d.fromRotations(0.5)), 
                 () -> Rotation2d.fromRotations(0.5 - pivot.getGoal().getTargetRotations().getAsDouble()))
-            .withDynamicPosition(() -> absolutePivotPosition.get().plus(new Translation2d(SimConstants.ELEVATOR_X, 0)));
+            .withDynamicPosition(() -> pivotRootPosition.get().plus(new Translation2d(SimConstants.ELEVATOR_X, 0)));
 
     public RobotState(Subsystems subsystems){
         drivetrain = subsystems.drivetrain();
@@ -139,17 +137,56 @@ public class RobotState {
         return Commands.runOnce(() -> new ShootSimNote(RobotContainer.getSubsystems()).schedule());
     }
 
+    public Command setSuperstructureGoalCommand(SuperstructureGoal goal){
+        Supplier<Command> command;
+        command = () -> {
+            switch(goal){
+                case AMP:
+                    return elevator.moveToGoal(Elevator.Goal.AMP)
+                        .alongWith(pivot.setGoalCommand(Pivot.Goal.AMP))
+                        .alongWith(shooter.setGoalCommand(Shooter.Goal.TRACKING));
+                case PASSING:
+                    return elevator.moveToGoal(Elevator.Goal.TRACKING)
+                        .alongWith(pivot.setGoalCommand(Pivot.Goal.TRACKING))
+                        .alongWith(shooter.setGoalCommand(Shooter.Goal.TRACKING));
+                case SUB:
+                    return elevator.moveToGoal(Elevator.Goal.SUB)
+                        .alongWith(pivot.setGoalCommand(Pivot.Goal.SUB))
+                        .alongWith(shooter.setGoalCommand(Shooter.Goal.SUB));
+                case SUB_DEFENDED:
+                    return elevator.moveToGoal(Elevator.Goal.SUB_DEFENDED)
+                        .alongWith(pivot.setGoalCommand(Pivot.Goal.SUB_DEFENDED))
+                        .alongWith(shooter.setGoalCommand(Shooter.Goal.SUB));
+                case EJECT:
+                    return elevator.moveToGoal(Elevator.Goal.EJECT)
+                        .alongWith(pivot.setGoalCommand(Pivot.Goal.EJECT))
+                        .alongWith(shooter.setGoalCommand(Shooter.Goal.TRACKING));
+                case IDLE:
+                default:
+                    return elevator.moveToGoal(Elevator.Goal.TRACKING)
+                        .alongWith(pivot.setGoalCommand(Pivot.Goal.TRACKING))
+                        .alongWith(shooter.setGoalCommand(Shooter.Goal.TRACKING));
+            }};
+        return command.get();
+    }
+
     public void outputTelemetry(){
         Logger.recordOutput("Simulation/ActiveNotes", activeNotes.stream().map(Supplier::get).toArray(Pose3d[]::new));
         Logger.recordOutput("Simulation/NoteTrajectory", getActiveTrajectory().get());
         Logger.recordOutput("RobotState/HorizontalDistanceFromGoal", getActiveShotParameters().get().effectiveDistance());
-        Logger.recordOutput("ComponentPoses", 
-        new Pose3d[]{
-            ComponentVisualizer.getElevStage1Pose(elevator.getHeight().getMeters()), 
-            ComponentVisualizer.getElevStage2Pose(elevator.getHeight().getMeters()), 
-            ComponentVisualizer.getShooterPose(elevator.getHeight().getMeters(), pivot.getAngle()), 
-            ComponentVisualizer.getStabilizersPose(stabilizers.getAngle())
-        });
+        Logger.recordOutput("Simulation/ComponentPoses", 
+            new Pose3d[]{
+                ComponentVisualizer.getElevStage1Pose(elevator.getHeight().getMeters()), 
+                ComponentVisualizer.getElevStage2Pose(elevator.getHeight().getMeters()), 
+                ComponentVisualizer.getShooterPose(elevator.getHeight().getMeters(), pivot.getAngle()), 
+                ComponentVisualizer.getStabilizersPose(stabilizers.getAngle())
+            });
+        Logger.recordOutput("shooter", shooter.atGoal());
+        Logger.recordOutput("pivot", pivot.atGoal());
+        Logger.recordOutput("ele", elevator.atGoal());
+        Logger.recordOutput("locked", drivetrain.getWithinAngleThreshold(getActiveShotParameters().get().targetHeading(), Rotation2d.fromDegrees(3.0)));
+        Logger.recordOutput("withinrange", ShootingUtils.withinRange());
+        Logger.recordOutput("spped", ScreamUtil.getLinearSpeed(drivetrain.getRobotRelativeSpeeds()));
     }
 
     public void telemeterizeDrivetrain(SwerveDriveState state){

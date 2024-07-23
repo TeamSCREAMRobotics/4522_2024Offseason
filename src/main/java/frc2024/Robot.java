@@ -43,20 +43,17 @@ public class Robot extends LoggedRobot {
   public void robotInit() {
     switch (Constants.ROBOT_MODE) {
       case REAL:
-        // Running on a real robot, log to a USB stick ("/U/logs")
         Logger.addDataReceiver(new WPILOGWriter());
         Logger.addDataReceiver(new RLOGServer());
         SignalLogger.start();
         break;
 
       case SIM:
-        // Running a physics simulator, log to NT
         Logger.addDataReceiver(new RLOGServer());
         break;
 
       case REPLAY:
-        // Replaying a log, set up replay source
-        setUseTiming(false); // Run as fast as possible
+        setUseTiming(false);
         String logPath = LogFileUtil.findReplayLog();
         Logger.setReplaySource(new WPILOGReader(logPath));
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"), 0.01));

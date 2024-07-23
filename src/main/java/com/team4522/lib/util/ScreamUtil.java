@@ -98,10 +98,6 @@ public class ScreamUtil {
         return sum / nums.length;
     }
 
-    public static double pythagorean(double a, double b){
-        return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
-    }
-
     public static double mapRange(double value, double fromLow, double fromHigh, double toLow, double toHigh) {
         if (fromHigh - fromLow == 0) {
             throw new IllegalArgumentException("Input range has zero width");
@@ -188,7 +184,11 @@ public class ScreamUtil {
     }
 
     public static double getLinearSpeed(ChassisSpeeds speeds){
-        return pythagorean(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+        return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+    }
+
+    public static Translation2d chassisSpeedsToTranslation(ChassisSpeeds speeds){
+        return new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
     }
 
     public static boolean withinAngleThreshold(Rotation2d targetAngle, Rotation2d currentAngle, Rotation2d threshold){

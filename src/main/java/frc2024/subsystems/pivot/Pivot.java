@@ -39,6 +39,8 @@ public class Pivot extends TalonFXSubsystem{
         if(Utils.isSimulation()){
             startSimThread();
         }
+
+        setDefaultCommand(setGoalCommand(Goal.TRACKING));
     }
     
     public enum Goal{
@@ -49,7 +51,7 @@ public class Pivot extends TalonFXSubsystem{
         AMP(() -> 22.317),
         TRAP(() -> -8.203),
         EJECT(() -> 24.067),
-        AIM(() -> RobotContainer.getRobotState().getActiveShotParameters().get().shootState().pivotAngle().getDegrees());
+        TRACKING(() -> RobotContainer.getRobotState().getActiveShotParameters().get().shootState().pivotAngle().getDegrees());
 
         @Getter
         DoubleSupplier targetRotations;
@@ -60,7 +62,7 @@ public class Pivot extends TalonFXSubsystem{
     }
 
     @Getter @Setter @AutoLogOutput(key = "RobotState/Subsystems/Pivot/Goal")
-    private Goal goal = Goal.AIM;
+    private Goal goal = Goal.TRACKING;
 
     public Command setGoalCommand(Goal goal){
         return run(() -> setGoal(goal));
@@ -72,7 +74,7 @@ public class Pivot extends TalonFXSubsystem{
         if(!PivotConstants.updateFromTuner){
             if(getGoal() == Goal.HOME_INTAKE && atGoal()){
                 stop();
-            } else if(getGoal() == Goal.AIM){
+            } else if(getGoal() == Goal.TRACKING){
                 setSetpointPosition(getGoal().getTargetRotations().getAsDouble());
             } else {
                 setSetpointMotionMagicPosition(getGoal().getTargetRotations().getAsDouble());
@@ -89,7 +91,7 @@ public class Pivot extends TalonFXSubsystem{
             double inputVoltage = simController.calculate(getPosition(), getSetpoint());
             sim.update(deltaTime);
             sim.setInputVoltage(inputVoltage);
-            updateSimState(
+            setSimState(
                 new SimState(
                     sim.getAngularPositionRotations(),
                     Conversions.rpmToFalconRPS(sim.getAngularVelocityRPM(), PivotConstants.PIVOT_CONSTANTS.rotorToSensorRatio),

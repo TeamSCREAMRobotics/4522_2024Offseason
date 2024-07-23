@@ -47,6 +47,9 @@ public class ShooterConstants {
 
     public static final int NUM_TRAJECTORY_POINTS = 30;
 
+    public static final Length SHOOTER_BACK_LENGTH = Length.fromInches(9.0);
+    public static final Length SHOOTER_FRONT_LENGTH = Length.fromInches(15.5);
+
     public static final ShootStateInterpolatingTreeMap SHOOTING_MAP = new ShootStateInterpolatingTreeMap();
     static{
         SHOOTING_MAP.put(8.0, new ShootState(Rotation2d.fromDegrees(20.15), 0.0, 4000.0));

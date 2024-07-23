@@ -14,18 +14,21 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.team4522.lib.util.AllianceFlipUtil;
 import com.team4522.lib.util.FeedForwardCharacterization;
 import com.team4522.lib.util.ScreamUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc2024.RobotState.SuperstructureGoal;
 import frc2024.commands.ShootSimNote;
 import frc2024.constants.FieldConstants;
 import frc2024.controlboard.Controlboard;
@@ -42,6 +45,7 @@ import frc2024.subsystems.shooter.ShootingUtils;
 import frc2024.subsystems.stabilizers.StabilizerConstants;
 import frc2024.subsystems.stabilizers.Stabilizers;
 import frc2024.subsystems.swerve.Drivetrain;
+import frc2024.subsystems.swerve.SwerveConstants;
 import frc2024.subsystems.swerve.generated.TunerConstants;
 import lombok.Getter;
 
@@ -75,37 +79,50 @@ public class RobotContainer {
   }
 
   private void configButtonBindings() {
-    Controlboard.driveController.rightBumper().whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), robotState.getActiveShotParameters().get().targetHeading())));
+    Controlboard.driveController.rightBumper()
+      .whileTrue(
+        drivetrain.applyRequest(() -> 
+          drivetrain.getUtil().getFacingAngleProfiled(
+            Controlboard.getTranslation().get(), 
+            drivetrain.getPose().getRotation(), 
+            robotState.getActiveShotParameters().get().targetHeading(), 
+            SwerveConstants.HEADING_CONTROLLER)))
+      .onFalse(Commands.runOnce(() -> SwerveConstants.HEADING_CONTROLLER.reset(drivetrain.getPose().getRotation().getRadians())));
 
     Controlboard.driveController.a()
-        .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), Rotation2d.fromDegrees(90))));
+      .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), Rotation2d.fromDegrees(90))));
 
     Controlboard.driveController.a().and(() -> drivetrain.getWithinAngleThreshold(Rotation2d.fromDegrees(90), Rotation2d.fromDegrees(30)))
-          .whileTrue(elevator.setGoalCommand(Elevator.Goal.TRAP).alongWith(pivot.setGoalCommand(Pivot.Goal.AMP)));
+      .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.AMP));
 
     Controlboard.driveController.rightBumper()
-      .and(() -> shooter.atGoal() && elevator.atGoal() && pivot.atGoal() && drivetrain.getWithinAngleThreshold(getRobotState().getActiveShotParameters().get().targetHeading(), Rotation2d.fromDegrees(1.0)) && ScreamUtil.getLinearSpeed(drivetrain.getRobotRelativeSpeeds()) < 0.5 && ShootingUtils.withinRange())
+      .and(() -> ShootingUtils.validShot())
+      .debounce(0.075)
       .onTrue(RobotState.shootSimNoteCommand());
 
+    Controlboard.driveController.x()
+      .toggleOnTrue(elevator.runVoltage(() -> (Controlboard.driveController.getRightTriggerAxis() - Controlboard.driveController.getLeftTriggerAxis()) * 12));
+
+    Controlboard.driveController.leftBumper()
+      .onTrue(RobotState.shootSimNoteCommand());
+
+    Controlboard.driveController.povRight()
+      .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.EJECT));
+
     Controlboard.driveController.y()
-        .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), Rotation2d.fromDegrees(0)))
-          .alongWith(elevator.setGoalCommand(Elevator.Goal.SUB).alongWith(pivot.setGoalCommand(Pivot.Goal.SUB)).alongWith(shooter.setGoalCommand(Shooter.Goal.SUB))));
+      .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), Rotation2d.fromDegrees(0)))
+      .alongWith(robotState.setSuperstructureGoalCommand(SuperstructureGoal.SUB)));
 
     Controlboard.driveController.b()
-        .toggleOnTrue(stabilizers.setGoalCommand(Stabilizers.Goal.OUT).alongWith(elevator.setGoalCommand(Elevator.Goal.TRAP)));
+      .toggleOnTrue(stabilizers.setGoalCommand(Stabilizers.Goal.OUT).alongWith(elevator.moveToGoal(Elevator.Goal.TRAP)));
   }
 
   private void configDefaultCommands(){
     drivetrain.setDefaultCommand(
       drivetrain.applyRequest(
-        () -> Controlboard.getFieldCentric().getAsBoolean() 
+        () -> Controlboard.getFieldCentric().getAsBoolean()
           ? drivetrain.getUtil().getFieldCentric(Controlboard.getTranslation().get(), Controlboard.getRotation().getAsDouble()) 
           : drivetrain.getUtil().getRobotCentric(Controlboard.getTranslation().get(), Controlboard.getRotation().getAsDouble())));
-
-    elevator.setDefaultCommand(elevator.setGoalCommand(Elevator.Goal.AUTO));
-    pivot.setDefaultCommand(pivot.setGoalCommand(Goal.AIM));
-    shooter.setDefaultCommand(shooter.setGoalCommand(Shooter.Goal.AUTO));
-    stabilizers.setDefaultCommand(stabilizers.setGoalCommand(Stabilizers.Goal.IDLE));
   }
 
   double startTime = 0;

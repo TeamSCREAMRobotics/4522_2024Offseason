@@ -11,6 +11,7 @@ import com.team4522.lib.pid.ScreamPIDConstants.FeedforwardConstants;
 import com.team4522.lib.util.Length;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 
 public final class PivotConstants {
 
@@ -33,17 +34,11 @@ public final class PivotConstants {
         PIVOT_CONSTANTS.enableSupplyCurrentLimit = true;
         PIVOT_CONSTANTS.supplyCurrentLimit = 40;
         PIVOT_CONSTANTS.slot0 = new ScreamPIDConstants(400.0, 0, 0).getSlot0Configs(new FeedforwardConstants());
-        PIVOT_CONSTANTS.positionThreshold = Rotation2d.fromDegrees(0.8).getRotations();
+        PIVOT_CONSTANTS.positionThreshold = Units.degreesToRotations(2.0);
     }
 
-    public static final Rotation2d MAP_OFFSET = Rotation2d.fromDegrees(-1);
+    public static final Rotation2d MAP_OFFSET = Rotation2d.fromDegrees(0);
 
-    public static final Length AXLE_HEIGHT_HOME = Length.fromInches(16.640069);
-    public static final Length AXLE_HEIGHT_TOP = Length.fromInches(38.059638);
-    public static final Length AXLE_DISTANCE_FROM_ELEVATOR_TOP = Length.fromInches(9.975600);
-    public static final Length AXLE_DISTANCE_FROM_LENS_HOME = Length.fromInches(9.189772);
-    public static final Length AXLE_DISTANCE_FROM_LENS_TOP = Length.fromInches(12.966620);
-    public static final Length AXLE_DISTANCE_FROM_ROBOT_CENTER_HOME = Length.fromInches(2.840333);
-    public static final Length AXLE_DISTANCE_FROM_ROBOT_CENTER_TOP = Length.fromInches(6.617781);
-    public static final Length SHOOTER_DISTANCE_FROM_AXLE = Length.fromInches(2.877975);
+    public static final Length AXLE_DISTANCE_FROM_ELEVATOR_TOP = Length.fromInches(9.998565);
+    public static final Length SHOOTER_DISTANCE_FROM_AXLE = Length.fromInches(2.736100);
 }

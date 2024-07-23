@@ -10,14 +10,19 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.RobotCentric;
 import com.ctre.phoenix6.mechanisms.swerve.utility.PhoenixPIDController;
 import com.team4522.lib.pid.ScreamPIDConstants;
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.wpilibj2.command.ProfiledPIDSubsystem;
 import frc2024.subsystems.swerve.generated.TunerConstants;
 
 public class PhoenixSwerveUtil {
 
-    private final PhoenixPIDController snapController;
+    private final PhoenixPIDController headingController;
 
     private final FieldCentricFacingAngle fieldCentricFacingAngle;
     private final FieldCentric fieldCentric;
@@ -44,8 +49,8 @@ public class PhoenixSwerveUtil {
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagic);
 
-        this.snapController = snapConstants.getPhoenixPIDController();
-        fieldCentricFacingAngle.HeadingController = snapController;
+        this.headingController = snapConstants.getPhoenixPIDController();
+        fieldCentricFacingAngle.HeadingController = headingController;
         fieldCentricFacingAngle.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
 
         this.MAX_ANGULAR_SPEED = maxAngularSpeed;
@@ -57,6 +62,10 @@ public class PhoenixSwerveUtil {
             .withVelocityX(xy.getX())
             .withVelocityY(xy.getY())
             .withTargetDirection(targetAngle);
+    }
+
+    public SwerveRequest getFacingAngleProfiled(Translation2d translation, Rotation2d currentAngle, Rotation2d targetAngle, ProfiledPIDController profile){
+        return getFieldCentric(translation, profile.calculate(currentAngle.getRadians(), targetAngle.getRadians()));
     }
 
     public SwerveRequest getFieldCentric(Translation2d translation, double angularVelocity){

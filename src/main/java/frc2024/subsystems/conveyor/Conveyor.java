@@ -16,6 +16,8 @@ public class Conveyor extends TalonFXSubsystem{
     
     public Conveyor(TalonFXSubsystemConstants constants){
         super(constants);
+
+        setDefaultCommand(setGoalCommand(Goal.IDLING));
     }
 
     public enum Goal {

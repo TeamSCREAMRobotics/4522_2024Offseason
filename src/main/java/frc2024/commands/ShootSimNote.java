@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc2024.RobotContainer;
 import frc2024.RobotState;
 import frc2024.RobotContainer.Subsystems;
+import frc2024.constants.Constants;
 import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.PivotConstants;
 import frc2024.subsystems.shooter.Shooter;
@@ -49,7 +50,7 @@ public class ShootSimNote extends Command {
     calculatedTrajectory = RobotContainer.getRobotState().getActiveTrajectory().get();
     shooterVelocity = subsystems.shooter().getVelocity();
     startTime = Timer.getFPGATimestamp();
-    duration = (1 / shooterVelocity) * 6.3;
+    duration = calculatedTrajectory[0].getDistance(calculatedTrajectory[calculatedTrajectory.length - 1]) / Conversions.falconRPSToMechanismMPS(shooterVelocity, ShooterConstants.WHEEL_CIRCUMFERENCE.getMeters(), 1.0);
     shooterAngle = subsystems.pivot().getAngle().getRadians();
     robotAngle = subsystems.drivetrain().getPose().getRotation().getRadians();
 
@@ -57,11 +58,11 @@ public class ShootSimNote extends Command {
   }
 
   private Translation3d getNoteTranslation(){
-    double totalDuration = duration * calculatedTrajectory.length - 1;
+    double totalDuration = duration * calculatedTrajectory.length;
     double normalizedTime = (double) (Timer.getFPGATimestamp() - startTime) / totalDuration;
 
     int currentSegment = (int) Math.floor(normalizedTime * (calculatedTrajectory.length - 1));
-    currentSegment = Math.min(currentSegment, calculatedTrajectory.length - 2);
+    currentSegment = Math.max(0, Math.min(currentSegment, calculatedTrajectory.length - 2));
 
     double segmentDuration = 1.0 / (calculatedTrajectory.length - 1);
     double segmentTime = (normalizedTime - currentSegment * segmentDuration) / segmentDuration;

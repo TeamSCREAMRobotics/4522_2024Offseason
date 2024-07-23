@@ -21,10 +21,14 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.team4522.lib.config.DeviceConfig;
+import com.team4522.lib.math.Conversions;
 import com.team4522.lib.pid.ScreamPIDConstants.MotionMagicConstants;
-import com.team4522.lib.util.SimFlippable;
+import com.team4522.lib.sim.SimFlippable;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -94,11 +98,11 @@ public class TalonFXSubsystem extends SubsystemBase{
 
     protected final TalonFXSimState masterSimState;
 
-    private TalonFXConfiguration masterConfig;
+    protected TalonFXConfiguration masterConfig;
     protected final TalonFXConfiguration[] slaveConfigs;
 
-    private final StatusSignal<Double> masterPositionSignal;
-    private final StatusSignal<Double> masterVelocitySignal;
+    protected final StatusSignal<Double> masterPositionSignal;
+    protected final StatusSignal<Double> masterVelocitySignal;
 
     protected final double forwardSoftLimitRotations;
     protected final double reverseSoftLimitRotations;
@@ -109,7 +113,7 @@ public class TalonFXSubsystem extends SubsystemBase{
     protected final VelocityVoltage velocityRequest;
     protected final MotionMagicVelocityVoltage motionMagicVelocityRequest;
 
-    protected double setpoint;
+    protected double setpoint = 0;
     protected boolean inVelocityMode = false;
 
     protected TalonFXSubsystem(final TalonFXSubsystemConstants constants){
@@ -266,6 +270,10 @@ public class TalonFXSubsystem extends SubsystemBase{
         return Rotation2d.fromRotations(getPosition());
     }
 
+    public synchronized double getMPS(double wheelCircumference){
+        return getVelocity() * wheelCircumference;
+    }
+
     public synchronized boolean atGoal(){
         double err = Math.abs(getError());
         return inVelocityMode ? err <= constants.velocityThreshold : err <= constants.positionThreshold;
@@ -340,7 +348,7 @@ public class TalonFXSubsystem extends SubsystemBase{
         master.setControl(control);
     }
 
-    public synchronized void updateSimState(SimState simState){;
+    public synchronized void setSimState(SimState simState){;
         masterSimState.setRawRotorPosition(simState.position);
         masterSimState.setSupplyVoltage(simState.supplyVoltage);
         masterSimState.setRotorVelocity(simState.velocity);

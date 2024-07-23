@@ -35,6 +35,8 @@ public class Stabilizers extends TalonFXSubsystem{
         if(Utils.isSimulation()){
             startSimThread();
         }
+
+        setDefaultCommand(setGoalCommand(Goal.IDLE));
     }
 
     public enum Goal{
@@ -79,7 +81,7 @@ public class Stabilizers extends TalonFXSubsystem{
             double inputVoltage = simController.calculate(getPosition(), getSetpoint());
             sim.update(deltaTime);
             sim.setInputVoltage(inputVoltage);
-            updateSimState(
+            setSimState(
                 new SimState(
                     sim.getAngularPositionRotations(),
                     Conversions.rpmToFalconRPS(sim.getAngularVelocityRPM(), StabilizerConstants.STABILIZER_CONSTANTS.rotorToSensorRatio),

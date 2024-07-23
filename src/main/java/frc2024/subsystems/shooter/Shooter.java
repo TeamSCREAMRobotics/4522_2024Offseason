@@ -40,11 +40,13 @@ public class Shooter extends TalonFXSubsystem{
         if(Utils.isSimulation()){
             startSimThread();
         }
+
+        setDefaultCommand(setGoalCommand(Goal.TRACKING));
     }
 
     public enum Goal{
         SUB(() -> 3000),
-        AUTO(() -> RobotContainer.getRobotState().getActiveShotParameters().get().shootState().velocityRPM());
+        TRACKING(() -> RobotContainer.getRobotState().getActiveShotParameters().get().shootState().velocityRPM());
 
         @Getter
         DoubleSupplier targetRPS;
@@ -55,7 +57,7 @@ public class Shooter extends TalonFXSubsystem{
     }
 
     @Getter @Setter @AutoLogOutput(key = "RobotState/Subsystems/Shooter/Goal")
-    private Goal goal = Goal.AUTO;
+    private Goal goal = Goal.TRACKING;
 
     public Command setGoalCommand(Goal goal){
         return run(() -> setGoal(goal));
@@ -78,7 +80,7 @@ public class Shooter extends TalonFXSubsystem{
             double inputVoltage = simFeedforward.calculate(getVelocity(), getGoal().getTargetRPS().getAsDouble(), deltaTime) + simController.calculate(getVelocity(), getGoal().getTargetRPS().getAsDouble());
             sim.update(deltaTime);
             sim.setInputVoltage(inputVoltage);
-            updateSimState(
+            setSimState(
                 new SimState(
                     0.0,
                     sim.getAngularVelocityRPM() / 60.0,
