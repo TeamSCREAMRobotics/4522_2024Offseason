@@ -16,15 +16,15 @@ public final class SwerveConstants{
     public static final ScreamPIDConstants PATH_TRANSLATION_CONSTANTS = new ScreamPIDConstants(10.0, 0.0, 0.0);
     public static final ScreamPIDConstants PATH_ROTATION_CONSTANTS = new ScreamPIDConstants(10.0, 0.0, 0.0);
 
-    public static final ProfiledPIDController HEADING_CONTROLLER = new ScreamPIDConstants(1.25, 0.0, 0.0).getProfiledPIDController(new Constraints(15, 4));
+    public static final ProfiledPIDController HEADING_CONTROLLER = new ProfiledPIDController(1.25, 0, 0, new Constraints(15, 4));
 
-    public static final ScreamPIDConstants SNAP_CONSTANTS = new ScreamPIDConstants(13, 0, 0.0);
+    public static final ScreamPIDConstants SNAP_CONSTANTS = new ScreamPIDConstants(14, 0.0, 0.0);
 
     public static final HolonomicPathFollowerConfig PATH_FOLLOWER_CONFIG = new HolonomicPathFollowerConfig(
-      PATH_TRANSLATION_CONSTANTS.getPathPlannerPIDConstants(), 
-      PATH_ROTATION_CONSTANTS.getPathPlannerPIDConstants(), 
-      MAX_SPEED, 
-      TunerConstants.DRIVE_BASE_RADIUS, 
-      new ReplanningConfig(), 
-      Constants.PERIOD_SEC);
+        PATH_TRANSLATION_CONSTANTS.getPathPlannerPIDConstants(), 
+        PATH_ROTATION_CONSTANTS.getPathPlannerPIDConstants(), 
+        MAX_SPEED, 
+        TunerConstants.DRIVE_BASE_RADIUS, 
+        new ReplanningConfig(), 
+        Constants.PERIOD_SEC);
   }

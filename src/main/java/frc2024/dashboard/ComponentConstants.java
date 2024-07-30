@@ -9,7 +9,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 
-public class ComponentVisualizer {
+public class ComponentConstants {
     public static final Pose3d ELEV_STAGE1_POSE = new Pose3d(new Translation3d(0.03105, 0.0, 0.171209), new Rotation3d());
     public static final Pose3d ELEV_STAGE2_POSE = new Pose3d(new Translation3d(0.0355, 0.0, 0.196223), new Rotation3d());
     public static final Pose3d SHOOTER_POSE = new Pose3d(new Translation3d(0.074840, 0.0, 0.418531), new Rotation3d());

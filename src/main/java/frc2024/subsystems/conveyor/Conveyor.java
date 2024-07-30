@@ -9,15 +9,14 @@ import com.team4522.lib.drivers.TalonFXSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc2024.RobotContainer;
 import frc2024.subsystems.elevator.ElevatorConstants;
+import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
 import lombok.Getter;
 import lombok.Setter;
 
 public class Conveyor extends TalonFXSubsystem{
     
     public Conveyor(TalonFXSubsystemConstants constants){
-        super(constants);
-
-        setDefaultCommand(setGoalCommand(Goal.IDLING));
+        super(constants, ElevatorGoal.TRACKING);
     }
 
     public enum Goal {
@@ -36,17 +35,15 @@ public class Conveyor extends TalonFXSubsystem{
     }
 
     @Getter @Setter @AutoLogOutput(key = "RobotState/Subsystems/Conveyor/Goal")
-    private Goal goal = Goal.IDLING;
+    private Goal goalgaol = Goal.IDLING;
 
     public Command setGoalCommand(Goal goal){
-        return run(() -> setGoal(goal));
+        return run(() -> setGoalgaol(goal));
     }
 
     @Override
     public void periodic() {
         super.periodic();
-        if(!ConveyorConstants.updateFromTuner){
-            setVoltage(getGoal().getTargetOutput());
-        }
+        setVoltage(getGoalgaol().getTargetOutput());
     }
 }

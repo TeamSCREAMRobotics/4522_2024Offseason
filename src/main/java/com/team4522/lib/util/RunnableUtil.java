@@ -33,6 +33,26 @@ public class RunnableUtil {
                 shouldStop.compareAndSet(false, true);
             }
         }
+
+        public void tryUntil(Runnable runnable, boolean stopCondition) {
+            while (!shouldStop.get() && stopCondition) {
+                try {
+                    runnable.run();
+                    break;
+                } catch (Exception e) {}
+            }
+            shouldStop.compareAndSet(false, true);
+        }
+
+        public void tryUntil(Runnable runnable) {
+            while (!shouldStop.get()) {
+                try {
+                    runnable.run();
+                    break;
+                } catch (Exception e) {}
+            }
+            shouldStop.compareAndSet(false, true);
+        }
     
         public void reset() {
             shouldStop.set(false);
@@ -41,13 +61,5 @@ public class RunnableUtil {
         public boolean hasStopped(){
             return shouldStop.get();
         }
-    }
-
-    public static RunOnce runOnce(){
-        return new RunOnce();
-    }
-
-    public static RunUntil runUntil(){
-        return new RunUntil();
     }
 }

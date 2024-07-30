@@ -43,7 +43,7 @@ public class Controlboard {
     }
 
     public static DoubleSupplier getRotation(){
-        return () -> -MathUtil.applyDeadband(driveController.getRightX(), STICK_DEADBAND);
+        return () -> Math.pow(MathUtil.applyDeadband(driveController.getRightX(), STICK_DEADBAND), 2) * -Math.signum(driveController.getRightX());
     }
 
     public static BooleanSupplier getFieldCentric(){
@@ -51,6 +51,6 @@ public class Controlboard {
     }
 
     public static BooleanSupplier getSlowMode(){
-        return driveController.leftTrigger(TRIGGER_DEADBAND);
+        return driveController.leftTrigger(TRIGGER_DEADBAND).or(driveController.leftBumper());
     }
 }

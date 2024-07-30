@@ -1,4 +1,4 @@
-package com.team4522.lib.util;
+package com.team4522.lib.data;
 
 public class Length {
     private double inches = 0.0;
@@ -31,6 +31,10 @@ public class Length {
         return new Length(value * inchConversionFactor);
     }
 
+    public static Length fromRotations(double value, Length circumference){
+        return new Length(value * circumference.inches);
+    }
+
     public Length plus(Length other){
         return new Length(this.inches + other.getInches());
     }
@@ -45,6 +49,14 @@ public class Length {
 
     public Length div(double scalar){
         return new Length(this.inches / scalar);
+    }
+
+    public Length times(Length scalar){
+        return new Length(this.inches * scalar.inches);
+    }
+
+    public Length div(Length scalar){
+        return new Length(this.inches / scalar.inches);
     }
 
     public double getInches(){

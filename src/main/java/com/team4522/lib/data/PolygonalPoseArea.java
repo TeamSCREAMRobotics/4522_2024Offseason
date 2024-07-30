@@ -1,4 +1,4 @@
-package com.team4522.lib.util;
+package com.team4522.lib.data;
 
 import java.util.List;
 

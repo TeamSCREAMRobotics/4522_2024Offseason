@@ -8,6 +8,7 @@ import org.littletonrobotics.junction.Logger;
 import com.ctre.phoenix6.Utils;
 import com.team4522.lib.drivers.TalonFXSubsystem;
 import com.team4522.lib.math.Conversions;
+import com.team4522.lib.sim.SimState;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -16,23 +17,25 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc2024.Robot;
 import frc2024.RobotContainer;
 import frc2024.constants.Constants;
+import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
 import frc2024.subsystems.pivot.PivotConstants;
 import lombok.Getter;
 import lombok.Setter;
 
 public class Stabilizers extends TalonFXSubsystem{
     
-    public final DCMotorSim sim = new DCMotorSim(DCMotor.getFalcon500(1), StabilizerConstants.STABILIZER_CONSTANTS.rotorToSensorRatio, 0.05859096765521);
+    public final DCMotorSim sim = new DCMotorSim(DCMotor.getFalcon500(1), StabilizerConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio, 0.05859096765521);
     public final PIDController simController = new PIDController(100.0, 0.0, 0.0);
     private Notifier simNotifier = null;
     private double lastSimTime;
 
     public Stabilizers(TalonFXSubsystemConstants constants) {
-        super(constants);
+        super(constants, ElevatorGoal.TRACKING);
 
-        if(Utils.isSimulation()){
+        if(Robot.isSimulation()){
             startSimThread();
         }
 
@@ -52,24 +55,22 @@ public class Stabilizers extends TalonFXSubsystem{
     }
 
     @Getter @Setter @AutoLogOutput(key = "RobotState/Subsystems/Stabilizers/Goal")
-    private Goal goal = Goal.IDLE;
+    private Goal goalgoal = Goal.IDLE;
 
     public Command setGoalCommand(Goal goal){
-        return run(() -> setGoal(goal));
+        return run(() -> setGoalgoal(goal));
     }
 
     public Goal lastGoal = Goal.IDLE;
     @Override
     public void periodic() {
         super.periodic();
-        if(!StabilizerConstants.updateFromTuner){
-            if(getGoal() == Goal.IDLE && (atGoal() && getGoal() != lastGoal)){
-                stop();
-            } else {
-                setSetpointMotionMagicPosition(getGoal().getTargetRotations().getAsDouble());
-            }
+        if(getGoalgoal() == Goal.IDLE && (atGoal() && getGoalgoal() != lastGoal)){
+            stop();
+        } else {
+            setSetpointMotionMagicPosition(getGoalgoal().getTargetRotations().getAsDouble());
         }
-        lastGoal = getGoal();
+        lastGoal = getGoalgoal();
     }
 
     public void startSimThread(){
@@ -84,7 +85,7 @@ public class Stabilizers extends TalonFXSubsystem{
             setSimState(
                 new SimState(
                     sim.getAngularPositionRotations(),
-                    Conversions.rpmToFalconRPS(sim.getAngularVelocityRPM(), StabilizerConstants.STABILIZER_CONSTANTS.rotorToSensorRatio),
+                    Conversions.rpmToRPS(sim.getAngularVelocityRPM(), StabilizerConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio),
                     RobotController.getBatteryVoltage()));
         });
         simNotifier.startPeriodic(Constants.SIM_PERIOD_SEC);

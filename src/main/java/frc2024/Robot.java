@@ -31,92 +31,95 @@ import frc2024.subsystems.elevator.ElevatorConstants;
  * project.
  */
 public class Robot extends LoggedRobot {
-  private Command autonomousCommand;
+    private Command autonomousCommand;
 
-  private RobotContainer robotContainer;
+    private RobotContainer robotContainer;
 
-  private RunOnce autoConfigurator = RunnableUtil.runOnce();
+    private RunOnce autoConfigurator = new RunOnce();
 
-  public Robot(){}
-
-  @Override
-  public void robotInit() {
-    switch (Constants.ROBOT_MODE) {
-      case REAL:
-        Logger.addDataReceiver(new WPILOGWriter());
-        Logger.addDataReceiver(new RLOGServer());
-        SignalLogger.start();
-        break;
-
-      case SIM:
-        Logger.addDataReceiver(new RLOGServer());
-        break;
-
-      case REPLAY:
-        setUseTiming(false);
-        String logPath = LogFileUtil.findReplayLog();
-        Logger.setReplaySource(new WPILOGReader(logPath));
-        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"), 0.01));
-        break;
+    private static boolean isSim = LoggedRobot.isSimulation();
+    public static boolean isSimulation(){
+        return isSim;
     }
 
-    Logger.start();
-    
-    robotContainer = new RobotContainer();
-  }
+    @Override
+    public void robotInit() {
+        switch (Constants.ROBOT_MODE) {
+            case REAL:
+                Logger.addDataReceiver(new WPILOGWriter());
+                Logger.addDataReceiver(new RLOGServer());
+                SignalLogger.start();
+                break;
+            
+            case SIM:
+                Logger.addDataReceiver(new RLOGServer());
+                break;
+            
+            case REPLAY:
+                setUseTiming(false);
+                String logPath = LogFileUtil.findReplayLog();
+                Logger.setReplaySource(new WPILOGReader(logPath));
+                Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"), 0.01));
+                break;
+        }
 
-  @Override
-  public void robotPeriodic() {
-    CommandScheduler.getInstance().run();
-    RobotContainer.getRobotState().outputTelemetry();
+        Logger.start();
 
-    autoConfigurator.runOnceWhen(
-      () -> {
-        RobotContainer.getRobotState().setActiveSpeaker(AllianceFlipUtil.MirroredTranslation3d(FieldConstants.SPEAKER_OPENING));
-        System.out.println("[Init] Ready to Enable!");
-      },
-      DriverStation.getAlliance().isPresent());
-  }
-
-  @Override
-  public void disabledInit() {}
-
-  @Override
-  public void disabledPeriodic() {}
-
-  @Override
-  public void autonomousInit() {
-    autonomousCommand = robotContainer.getAutonomousCommand();
-
-    if (autonomousCommand != null) {
-      autonomousCommand.schedule();
+        robotContainer = new RobotContainer();
     }
-  }
 
-  @Override
-  public void autonomousPeriodic() {}
+    @Override
+    public void robotPeriodic() {
+        CommandScheduler.getInstance().run();
+        RobotContainer.getRobotState().outputTelemetry();
 
-  @Override
-  public void teleopInit() {
-    if (autonomousCommand != null) {
-      autonomousCommand.cancel();
+        autoConfigurator.runOnceWhen(
+            () -> {
+                RobotContainer.getRobotState().setActiveSpeaker(AllianceFlipUtil.MirroredTranslation3d(FieldConstants.SPEAKER_OPENING));
+                System.out.println("[Init] Ready to Enable!");
+            },
+            DriverStation.getAlliance().isPresent());
     }
-  }
 
-  @Override
-  public void teleopPeriodic() {}
+    @Override
+    public void disabledInit() {}
 
-  @Override
-  public void testInit() {
-    CommandScheduler.getInstance().cancelAll();
-  }
+    @Override
+    public void disabledPeriodic() {}
 
-  @Override
-  public void testPeriodic() {}
+    @Override
+    public void autonomousInit() {
+        autonomousCommand = robotContainer.getAutonomousCommand();
 
-  @Override
-  public void simulationInit() {}
+        if (autonomousCommand != null) {
+            autonomousCommand.schedule();
+        }
+    }
 
-  @Override
-  public void simulationPeriodic() {}
+    @Override
+    public void autonomousPeriodic() {}
+
+    @Override
+    public void teleopInit() {
+        if (autonomousCommand != null) {
+            autonomousCommand.cancel();
+        }
+    }
+
+    @Override
+    public void teleopPeriodic() {}
+
+    @Override
+    public void testInit() {
+      CommandScheduler.getInstance().cancelAll();
+    }
+
+    @Override
+    public void testPeriodic() {}
+
+    @Override
+    public void simulationInit() {}
+
+    @Override
+    public void simulationPeriodic() {}
 }

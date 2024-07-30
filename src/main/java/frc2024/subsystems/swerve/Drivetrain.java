@@ -9,6 +9,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.team4522.lib.util.AllianceFlipUtil;
 import com.team4522.lib.util.PhoenixSwerveUtil;
+import com.team4522.lib.util.RunnableUtil;
 import com.team4522.lib.util.ScreamUtil;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
@@ -25,6 +26,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc2024.Robot;
 import frc2024.constants.Constants;
 import lombok.Getter;
 
@@ -44,15 +46,15 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
 
         CommandScheduler.getInstance().registerSubsystem(this);
 
-        if (Utils.isSimulation()) {
+        if (Robot.isSimulation()) {
             startSimThread();
         }
 
-        for(int i = 0; i == 3; i ++){
-            optimizeModuleUtilization(getModule(i));
-        }
+        /* for(SwerveModule mod : getModules()){
+            new RunnableUtil.RunUntil().tryUntil(() -> optimizeModuleUtilization(mod));
+        } */
 
-        util = new PhoenixSwerveUtil(SwerveConstants.MAX_ANGULAR_SPEED, SwerveConstants.SNAP_CONSTANTS);
+        util = new PhoenixSwerveUtil(this::getHeading, SwerveConstants.MAX_ANGULAR_SPEED, SwerveConstants.SNAP_CONSTANTS);
 
         AutoBuilder.configureHolonomic(
             this::getPose, 
@@ -62,6 +64,8 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
             SwerveConstants.PATH_FOLLOWER_CONFIG, 
             AllianceFlipUtil.shouldFlip(), 
             this);
+
+        System.out.println("[Init] Drivetrain Initialization Complete!");
     }
 
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
@@ -87,12 +91,27 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
         setControl(util.getApplyChassisSpeeds(speeds));
     }
 
+    public void setNeutralModes(NeutralModeValue driveMode, NeutralModeValue steerMode){
+        for(SwerveModule mod : getModules()){
+            mod.getDriveMotor().setNeutralMode(driveMode);
+            mod.getSteerMotor().setNeutralMode(steerMode);
+        }
+    }
+
     public boolean getWithinAngleThreshold(Rotation2d targetAngle, Rotation2d threshold){
-        return ScreamUtil.withinAngleThreshold(targetAngle, getPose().getRotation(), threshold);
+        return ScreamUtil.withinAngleThreshold(targetAngle, getHeading(), threshold);
+    }
+
+    public SwerveModule[] getModules(){
+        return Modules;
     }
 
     public Pose2d getPose(){
         return getState().Pose;
+    }
+
+    public Rotation2d getHeading(){
+        return getPose().getRotation();
     }
 
     public ChassisSpeeds getRobotRelativeSpeeds(){
@@ -107,13 +126,5 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
         module.getDriveMotor().optimizeBusUtilization();
         module.getSteerMotor().optimizeBusUtilization();
         module.getCANcoder().optimizeBusUtilization();
-    }
-
-    public void setNeutralModes(NeutralModeValue driveMode, NeutralModeValue steerMode){
-        for(int i = 0; i == 3; i ++){
-            SwerveModule mod = getModule(i);
-            mod.getDriveMotor().setNeutralMode(driveMode);
-            mod.getSteerMotor().setNeutralMode(steerMode);
-        }
     }
 }

@@ -1,39 +1,28 @@
 package frc2024.subsystems.shooter;
 
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.team4522.lib.data.Length;
 import com.team4522.lib.drivers.TalonFXSubsystem.CanDevice;
 import com.team4522.lib.drivers.TalonFXSubsystem.TalonFXConstants;
 import com.team4522.lib.drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import com.team4522.lib.math.Conversions;
 import com.team4522.lib.pid.ScreamPIDConstants;
 import com.team4522.lib.pid.ScreamPIDConstants.FeedforwardConstants;
-import com.team4522.lib.util.Length;
-import com.team4522.lib.util.ShootStateInterpolatingTreeMap;
+import com.team4522.lib.sim.SimWrapper;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc2024.subsystems.elevator.Elevator;
 import frc2024.subsystems.elevator.ElevatorConstants;
+import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
 import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.PivotConstants;
+import frc2024.subsystems.pivot.Pivot.PivotGoal;
 import frc2024.subsystems.shooter.ShootingUtils.ShootState;
 
 public class ShooterConstants {
-
-    public static final boolean updateFromTuner = false;
-
-    public static final TalonFXSubsystemConstants SHOOTER_CONSTANTS = new TalonFXSubsystemConstants();
-    static{
-        SHOOTER_CONSTANTS.name = "Shooter";
-
-        SHOOTER_CONSTANTS.outputTelemetry = true;
-
-        SHOOTER_CONSTANTS.masterConstants = new TalonFXConstants(new CanDevice(11, ""), InvertedValue.CounterClockwise_Positive);
-        SHOOTER_CONSTANTS.slaveConstants = 
-            new TalonFXConstants[]{
-                new TalonFXConstants(new CanDevice(12, ""), InvertedValue.Clockwise_Positive)
-            };
-
-        SHOOTER_CONSTANTS.velocityThreshold = 1.25;
-    }
 
     public static final ScreamPIDConstants PID_CONSTANTS = new ScreamPIDConstants(0.15, 0.0, 0.0);
 
@@ -44,11 +33,33 @@ public class ShooterConstants {
     public static final FeedforwardConstants FEEDFORWARD_CONSTANTS = new FeedforwardConstants(KV, KS, KG, KA);
 
     public static final Length WHEEL_CIRCUMFERENCE = Length.fromInches(4.0 * Math.PI);
-
-    public static final int NUM_TRAJECTORY_POINTS = 30;
-
+    
     public static final Length SHOOTER_BACK_LENGTH = Length.fromInches(9.0);
     public static final Length SHOOTER_FRONT_LENGTH = Length.fromInches(15.5);
+
+    public static final FlywheelSim SIM = new FlywheelSim(DCMotor.getFalcon500(1), 1.0, 0.00599676919909 + 0.0001);
+    public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(0.001, 0, 0);
+    public static final SimpleMotorFeedforward SIM_FEEDFORWARD = new SimpleMotorFeedforward(0.08902, 0.11053, 0.00045);
+
+    public static final TalonFXSubsystemConstants SUBSYSTEM_CONSTANTS = new TalonFXSubsystemConstants();
+    static{
+        SUBSYSTEM_CONSTANTS.name = "Shooter";
+
+        SUBSYSTEM_CONSTANTS.codeEnabled = true;
+        SUBSYSTEM_CONSTANTS.outputTelemetry = true;
+
+        SUBSYSTEM_CONSTANTS.sim = new SimWrapper(SIM);
+        SUBSYSTEM_CONSTANTS.simController = SIM_GAINS.getPIDController();
+        SUBSYSTEM_CONSTANTS.limitSimVoltage = true;
+
+        SUBSYSTEM_CONSTANTS.masterConstants = new TalonFXConstants(new CanDevice(11, ""), InvertedValue.CounterClockwise_Positive);
+        SUBSYSTEM_CONSTANTS.slaveConstants = 
+            new TalonFXConstants[]{
+                new TalonFXConstants(new CanDevice(12, ""), InvertedValue.Clockwise_Positive)
+            };
+
+        SUBSYSTEM_CONSTANTS.velocityThreshold = 1.25;
+    }
 
     public static final ShootStateInterpolatingTreeMap SHOOTING_MAP = new ShootStateInterpolatingTreeMap();
     static{
@@ -64,8 +75,8 @@ public class ShooterConstants {
         SHOOTING_MAP.put(3.5, new ShootState(Rotation2d.fromDegrees(33.3 - 4.0), 0.0, 4000.0));
         SHOOTING_MAP.put(3.0, new ShootState(Rotation2d.fromDegrees(37.0 - 5.0), 0.0, 4000.0));
         SHOOTING_MAP.put(2.5, new ShootState(Rotation2d.fromDegrees(41.3 - 5.0), 0.0, 4000.0));
-        SHOOTING_MAP.put(2.0, new ShootState(Rotation2d.fromDegrees(47.4 - 6.0), Elevator.rotationsToLength(Elevator.Goal.SUB.getTargetRotations().getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE.getInches()).getInches(), 3500.0));
-        SHOOTING_MAP.put(1.5, new ShootState(Rotation2d.fromDegrees(55.0 - 6.0), Elevator.rotationsToLength(Elevator.Goal.SUB.getTargetRotations().getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE.getInches()).getInches(), 3250.0));
-        SHOOTING_MAP.put(1.0, new ShootState(Rotation2d.fromRotations(Pivot.Goal.SUB.getTargetRotations().getAsDouble()), Elevator.rotationsToLength(Elevator.Goal.SUB.getTargetRotations().getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE.getInches()).getInches(), 3000.0));
+        SHOOTING_MAP.put(2.0, new ShootState(Rotation2d.fromDegrees(47.4 - 6.0), Length.fromRotations(ElevatorGoal.SUB.getTargetRotations().getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE).getInches(), 3500.0));
+        SHOOTING_MAP.put(1.5, new ShootState(Rotation2d.fromDegrees(55.0 - 6.0), Length.fromRotations(ElevatorGoal.SUB.getTargetRotations().getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE).getInches(), 3250.0));
+        SHOOTING_MAP.put(1.0, new ShootState(Rotation2d.fromRotations(PivotGoal.SUB.getTargetRotations().getAsDouble()), Length.fromRotations(ElevatorGoal.SUB.getTargetRotations().getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE).getInches(), 3000.0));
     }
 }

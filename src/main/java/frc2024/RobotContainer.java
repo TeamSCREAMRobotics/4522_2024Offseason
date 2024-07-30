@@ -14,8 +14,9 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.team4522.lib.drivers.FeedForwardCharacterization;
+import com.team4522.lib.math.ScreamMath;
 import com.team4522.lib.util.AllianceFlipUtil;
-import com.team4522.lib.util.FeedForwardCharacterization;
 import com.team4522.lib.util.ScreamUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -34,14 +35,17 @@ import frc2024.constants.FieldConstants;
 import frc2024.controlboard.Controlboard;
 import frc2024.subsystems.conveyor.Conveyor;
 import frc2024.subsystems.conveyor.ConveyorConstants;
+import frc2024.subsystems.conveyor.Conveyor.Goal;
 import frc2024.subsystems.elevator.Elevator;
 import frc2024.subsystems.elevator.ElevatorConstants;
+import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
 import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.PivotConstants;
-import frc2024.subsystems.pivot.Pivot.Goal;
+import frc2024.subsystems.pivot.Pivot.PivotGoal;
 import frc2024.subsystems.shooter.Shooter;
 import frc2024.subsystems.shooter.ShooterConstants;
 import frc2024.subsystems.shooter.ShootingUtils;
+import frc2024.subsystems.shooter.Shooter.ShooterGoal;
 import frc2024.subsystems.stabilizers.StabilizerConstants;
 import frc2024.subsystems.stabilizers.Stabilizers;
 import frc2024.subsystems.swerve.Drivetrain;
@@ -51,94 +55,95 @@ import lombok.Getter;
 
 public class RobotContainer {
 
-  public record Subsystems(Drivetrain drivetrain, Elevator elevator, Pivot pivot, Shooter shooter, Conveyor conveyor, Stabilizers stabilizers){}
+    public record Subsystems(Drivetrain drivetrain, Elevator elevator, Pivot pivot, Shooter shooter, Conveyor conveyor, Stabilizers stabilizers){}
 
-  private static final Drivetrain drivetrain = TunerConstants.DriveTrain;
-  private static final Elevator elevator = new Elevator(ElevatorConstants.ELEVATOR_CONSTANTS);
-  private static final Pivot pivot = new Pivot(PivotConstants.PIVOT_CONSTANTS);
-  private static final Shooter shooter = new Shooter(ShooterConstants.SHOOTER_CONSTANTS);
-  private static final Conveyor conveyor = new Conveyor(ConveyorConstants.CONVEYOR_CONSTANTS);
-  private static final Stabilizers stabilizers = new Stabilizers(StabilizerConstants.STABILIZER_CONSTANTS);
+    private static final Drivetrain drivetrain = TunerConstants.DriveTrain;
+    private static final Elevator elevator = new Elevator(ElevatorConstants.SUBSYSTEM_CONSTANTS);
+    private static final Pivot pivot = new Pivot(PivotConstants.SUBSYSTEM_CONSTANTS);
+    private static final Shooter shooter = new Shooter(ShooterConstants.SUBSYSTEM_CONSTANTS);
+    private static final Conveyor conveyor = new Conveyor(ConveyorConstants.SUBSYSTEM_CONSTANTS);
+    private static final Stabilizers stabilizers = new Stabilizers(StabilizerConstants.SUBSYSTEM_CONSTANTS);
 
-  @Getter
-  private static final Subsystems subsystems = new Subsystems(drivetrain, elevator, pivot, shooter, conveyor, stabilizers);
+    @Getter
+    private static final Subsystems subsystems = new Subsystems(drivetrain, elevator, pivot, shooter, conveyor, stabilizers);
 
-  @Getter
-  private static final RobotState robotState = new RobotState(subsystems);
+    @Getter
+    private static final RobotState robotState = new RobotState(subsystems);
 
-  public RobotContainer() {
-    NamedCommands.registerCommand("Shoot", RobotState.shootSimNoteCommand());
-    configButtonBindings();
-    configDefaultCommands();
+    public RobotContainer() {
+        NamedCommands.registerCommand("Shoot", RobotState.shootSimNoteCommand());
+        NamedCommands.registerCommand("Intake", robotState.setSuperstructureGoalCommand(SuperstructureGoal.HOME_INTAKE).withTimeout(1.0));
+        configButtonBindings();
+        configDefaultCommands();
 
-    if (Utils.isSimulation()) {
-      drivetrain.seedFieldRelative(new Pose2d(FieldConstants.FIELD_DIMENSIONS.div(2.0), Rotation2d.fromDegrees(0)));
+        if (Robot.isSimulation()) {
+            drivetrain.seedFieldRelative(new Pose2d(FieldConstants.FIELD_DIMENSIONS.div(2.0), Rotation2d.fromDegrees(0)));
+        }
+
+        drivetrain.registerTelemetry(robotState::telemeterizeDrivetrain);
     }
 
-    drivetrain.registerTelemetry(robotState::telemeterizeDrivetrain);
-  }
+    private void configButtonBindings() {
+        Controlboard.driveController.leftBumper()
+            .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), robotState.getActiveShotParameters().get().targetHeading())));
 
-  private void configButtonBindings() {
-    Controlboard.driveController.rightBumper()
-      .whileTrue(
-        drivetrain.applyRequest(() -> 
-          drivetrain.getUtil().getFacingAngleProfiled(
-            Controlboard.getTranslation().get(), 
-            drivetrain.getPose().getRotation(), 
-            robotState.getActiveShotParameters().get().targetHeading(), 
-            SwerveConstants.HEADING_CONTROLLER)))
-      .onFalse(Commands.runOnce(() -> SwerveConstants.HEADING_CONTROLLER.reset(drivetrain.getPose().getRotation().getRadians())));
+        Controlboard.driveController.a()
+            .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), Rotation2d.fromDegrees(90))));
 
-    Controlboard.driveController.a()
-      .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), Rotation2d.fromDegrees(90))));
+        Controlboard.driveController.a().and(() -> drivetrain.getWithinAngleThreshold(Rotation2d.fromDegrees(90), Rotation2d.fromDegrees(30)))
+            .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.AMP));
 
-    Controlboard.driveController.a().and(() -> drivetrain.getWithinAngleThreshold(Rotation2d.fromDegrees(90), Rotation2d.fromDegrees(30)))
-      .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.AMP));
+        /* Controlboard.driveController.rightBumper()
+            .and(() -> ShootingUtils.validShot(robotState.getActiveShotParameters().get().effectiveDistance()))
+            .onTrue(RobotState.shootSimNoteCommand()); */
 
-    Controlboard.driveController.rightBumper()
-      .and(() -> ShootingUtils.validShot())
-      .debounce(0.075)
-      .onTrue(RobotState.shootSimNoteCommand());
+        Controlboard.driveController.rightTrigger()
+            .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.HOME_INTAKE));
 
-    Controlboard.driveController.x()
-      .toggleOnTrue(elevator.runVoltage(() -> (Controlboard.driveController.getRightTriggerAxis() - Controlboard.driveController.getLeftTriggerAxis()) * 12));
+        Controlboard.driveController.x()
+            .toggleOnTrue(elevator.runVoltage(() -> -Controlboard.driveController.getRightY() * 12));
 
-    Controlboard.driveController.leftBumper()
-      .onTrue(RobotState.shootSimNoteCommand());
+        Controlboard.driveController.rightBumper()
+            .onTrue(RobotState.shootSimNoteCommand());
 
-    Controlboard.driveController.povRight()
-      .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.EJECT));
+        Controlboard.driveController.povRight()
+            .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.EJECT));
 
-    Controlboard.driveController.y()
-      .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), Rotation2d.fromDegrees(0)))
-      .alongWith(robotState.setSuperstructureGoalCommand(SuperstructureGoal.SUB)));
+        Controlboard.driveController.y()
+            .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), Rotation2d.fromDegrees(0)))
+            .alongWith(robotState.setSuperstructureGoalCommand(SuperstructureGoal.SUB)));
 
-    Controlboard.driveController.b()
-      .toggleOnTrue(stabilizers.setGoalCommand(Stabilizers.Goal.OUT).alongWith(elevator.moveToGoal(Elevator.Goal.TRAP)));
-  }
+        Controlboard.driveController.b()
+            .toggleOnTrue(stabilizers.setGoalCommand(Stabilizers.Goal.OUT).alongWith(elevator.applyGoal(ElevatorGoal.TRAP)));
+    }
 
-  private void configDefaultCommands(){
-    drivetrain.setDefaultCommand(
-      drivetrain.applyRequest(
-        () -> Controlboard.getFieldCentric().getAsBoolean()
-          ? drivetrain.getUtil().getFieldCentric(Controlboard.getTranslation().get(), Controlboard.getRotation().getAsDouble()) 
-          : drivetrain.getUtil().getRobotCentric(Controlboard.getTranslation().get(), Controlboard.getRotation().getAsDouble())));
-  }
+    private void configDefaultCommands(){
+        drivetrain.setDefaultCommand(
+            drivetrain.applyRequest(
+                () -> Controlboard.getFieldCentric().getAsBoolean()
+                    ? drivetrain.getUtil().getFieldCentric(Controlboard.getTranslation().get(), Controlboard.getRotation().getAsDouble()) 
+                    : drivetrain.getUtil().getRobotCentric(Controlboard.getTranslation().get(), Controlboard.getRotation().getAsDouble())));
+        elevator.setDefaultCommand(elevator.applyGoal(ElevatorGoal.TRACKING));
+        pivot.setDefaultCommand(pivot.applyGoal(PivotGoal.TRACKING));
+        shooter.setDefaultCommand(shooter.applyGoal(ShooterGoal.TRACKING));
+        conveyor.setDefaultCommand(conveyor.setGoalCommand(Conveyor.Goal.IDLING));
+        stabilizers.setDefaultCommand(stabilizers.setGoalCommand(Stabilizers.Goal.IDLE));
+    }
 
-  double startTime = 0;
-  private void startTime(){
-    startTime = Timer.getFPGATimestamp();
-  }
+    double startTime = 0;
+    private void startTime(){
+        startTime = Timer.getFPGATimestamp();
+    }
 
-  public Command getAutonomousCommand() {
-    PathPlannerPath path = PathPlannerPath.fromPathFile("Test Path");
-    return new SequentialCommandGroup(
-      Commands.runOnce(() -> startTime()),
-      Commands.runOnce(() -> drivetrain.seedFieldRelative(path.getPreviewStartingHolonomicPose())),
-      RobotState.shootSimNoteCommand(),
-      AutoBuilder.followPath(path)
-        .deadlineWith(Commands.run(() -> PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.of(ScreamUtil.calculateAngleToPoint(drivetrain.getPose().getTranslation(), robotState.getActiveSpeaker().toTranslation2d()).plus(new Rotation2d(Math.PI)))))),
-      Commands.runOnce(() -> System.out.println(Timer.getFPGATimestamp() - startTime))
-    );
-  }
+    public Command getAutonomousCommand() {
+        PathPlannerPath path = PathPlannerPath.fromPathFile("Test Path");
+        return new SequentialCommandGroup(
+            Commands.runOnce(() -> startTime()),
+            Commands.runOnce(() -> drivetrain.seedFieldRelative(path.getPreviewStartingHolonomicPose())),
+            RobotState.shootSimNoteCommand(),
+            AutoBuilder.followPath(path)
+              .deadlineWith(Commands.run(() -> PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.of(ScreamMath.calculateAngleToPoint(drivetrain.getPose().getTranslation(), robotState.getActiveSpeaker().toTranslation2d()).plus(new Rotation2d(Math.PI)))))),
+            Commands.runOnce(() -> System.out.println(Timer.getFPGATimestamp() - startTime))
+        );
+    }
 }

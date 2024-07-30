@@ -1,102 +1,66 @@
 package frc2024.subsystems.pivot;
 
 import java.util.function.DoubleSupplier;
-
-import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
+import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
 import com.team4522.lib.drivers.TalonFXSubsystem;
-import com.team4522.lib.math.Conversions;
-
-import edu.wpi.first.math.controller.ArmFeedforward;
+import com.team4522.lib.drivers.TalonFXSubsystemGoal;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc2024.Robot;
 import frc2024.RobotContainer;
-import frc2024.constants.Constants;
-import frc2024.subsystems.elevator.ElevatorConstants;
 import lombok.Getter;
-import lombok.Setter;
 
 public class Pivot extends TalonFXSubsystem{
 
-    public final DCMotorSim sim = new DCMotorSim(DCMotor.getFalcon500(1), PivotConstants.PIVOT_CONSTANTS.rotorToSensorRatio, 0.366879329 + 0.03);
-    public final PIDController simController = new PIDController(150000.0, 0.0, 0.0);
-    private Notifier simNotifier = null;
-    private double lastSimTime;
-
     public Pivot(TalonFXSubsystemConstants constants) {
-        super(constants);
-
-        if(Utils.isSimulation()){
-            startSimThread();
-        }
-
-        setDefaultCommand(setGoalCommand(Goal.TRACKING));
+        super(constants, PivotGoal.TRACKING);
     }
     
-    public enum Goal{
-        HOME_INTAKE(() -> 26.317),
-        INTAKE_TRAP(() -> 53.937),
-        SUB(() -> 51.177),
-        SUB_DEFENDED(() -> 23.357),
-        AMP(() -> 22.317),
-        TRAP(() -> -8.203),
-        EJECT(() -> 24.067),
-        TRACKING(() -> RobotContainer.getRobotState().getActiveShotParameters().get().shootState().pivotAngle().getDegrees());
+    public enum PivotGoal implements TalonFXSubsystemGoal{
+        HOME_INTAKE(() -> 26.317, ControlType.MOTION_MAGIC_POSITION),
+        TRAP_INTAKE(() -> 53.937, ControlType.MOTION_MAGIC_POSITION),
+        SUB(() -> 51.177, ControlType.MOTION_MAGIC_POSITION),
+        SUB_DEFENDED(() -> 23.357, ControlType.MOTION_MAGIC_POSITION),
+        AMP(() -> 22.317, ControlType.MOTION_MAGIC_POSITION),
+        TRAP(() -> -8.203, ControlType.MOTION_MAGIC_POSITION),
+        EJECT(() -> 24.067, ControlType.MOTION_MAGIC_POSITION),
+        TRACKING(() -> RobotContainer.getRobotState().getActiveShotParameters().get().shootState().pivotAngle().getDegrees(), ControlType.POSITION);
 
         @Getter
         DoubleSupplier targetRotations;
-        
-        private Goal(DoubleSupplier targetAngle){
+
+        @Getter
+        ControlType controlType;
+
+        private PivotGoal(DoubleSupplier targetAngle, ControlType controlType){
             targetRotations = () -> Rotation2d.fromDegrees(targetAngle.getAsDouble()).getRotations();
+            this.controlType = controlType;
         }
-    }
 
-    @Getter @Setter @AutoLogOutput(key = "RobotState/Subsystems/Pivot/Goal")
-    private Goal goal = Goal.TRACKING;
+        @Override
+        public DoubleSupplier target() {
+            return targetRotations;
+        }
 
-    public Command setGoalCommand(Goal goal){
-        return run(() -> setGoal(goal));
+        @Override
+        public ControlType controlType() {
+            return controlType;
+        }
     }
 
     @Override
-    public void periodic() {
-        super.periodic();
-        if(!PivotConstants.updateFromTuner){
-            if(getGoal() == Goal.HOME_INTAKE && atGoal()){
-                stop();
-            } else if(getGoal() == Goal.TRACKING){
-                setSetpointPosition(getGoal().getTargetRotations().getAsDouble());
+    public Command applyGoal(TalonFXSubsystemGoal goal){
+        Supplier<Command> command;
+        command = () -> {
+            if(goal == PivotGoal.HOME_INTAKE && atGoal()){
+                return run(() -> stop());
             } else {
-                setSetpointMotionMagicPosition(getGoal().getTargetRotations().getAsDouble());
+                return super.applyGoal(goal);
             }
-        }
-    }
-
-    public void startSimThread(){
-        simNotifier = new Notifier(() -> {
-            final double currentTime = Utils.getCurrentTimeSeconds();
-            double deltaTime = currentTime - lastSimTime;
-            lastSimTime = currentTime;
-
-            double inputVoltage = simController.calculate(getPosition(), getSetpoint());
-            sim.update(deltaTime);
-            sim.setInputVoltage(inputVoltage);
-            setSimState(
-                new SimState(
-                    sim.getAngularPositionRotations(),
-                    Conversions.rpmToFalconRPS(sim.getAngularVelocityRPM(), PivotConstants.PIVOT_CONSTANTS.rotorToSensorRatio),
-                    RobotController.getBatteryVoltage()));
-        });
-        simNotifier.startPeriodic(Constants.SIM_PERIOD_SEC);
+        };
+        return command.get();
     }
 }

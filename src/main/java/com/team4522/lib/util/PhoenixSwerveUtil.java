@@ -1,5 +1,7 @@
 package com.team4522.lib.util;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.SteerRequestType;
@@ -29,10 +31,11 @@ public class PhoenixSwerveUtil {
     private final RobotCentric robotCentric;
     private final ApplyChassisSpeeds applyChassisSpeeds;
 
+    private final Supplier<Rotation2d> headingSupplier;
     private final double MAX_SPEED = TunerConstants.SPEED_12V_MPS;
     private final double MAX_ANGULAR_SPEED;
     
-    public PhoenixSwerveUtil(double maxAngularSpeed, ScreamPIDConstants snapConstants){
+    public PhoenixSwerveUtil(Supplier<Rotation2d> headingSupplier, double maxAngularSpeed, ScreamPIDConstants snapConstants){
         fieldCentricFacingAngle = new FieldCentricFacingAngle()
             .withDeadband(MAX_SPEED * 0.05)
             .withDriveRequestType(DriveRequestType.Velocity)
@@ -53,6 +56,7 @@ public class PhoenixSwerveUtil {
         fieldCentricFacingAngle.HeadingController = headingController;
         fieldCentricFacingAngle.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
 
+        this.headingSupplier = headingSupplier;
         this.MAX_ANGULAR_SPEED = maxAngularSpeed;
     }
 
@@ -64,8 +68,21 @@ public class PhoenixSwerveUtil {
             .withTargetDirection(targetAngle);
     }
 
-    public SwerveRequest getFacingAngleProfiled(Translation2d translation, Rotation2d currentAngle, Rotation2d targetAngle, ProfiledPIDController profile){
-        return getFieldCentric(translation, profile.calculate(currentAngle.getRadians(), targetAngle.getRadians()));
+    public SwerveRequest getFacingAngleProfiled(Translation2d translation, Rotation2d targetAngle, ProfiledPIDController profile){
+        return getFieldCentric(translation, profile.calculate(headingSupplier.get().getRadians(), targetAngle.getRadians()));
+    }
+
+    public SwerveRequest getFacingAngleCOR(Translation2d translation, Rotation2d targetAngle, Translation2d centerOfRotation){
+        Translation2d xy = translation.times(MAX_SPEED);
+        return fieldCentricFacingAngle
+            .withVelocityX(xy.getX())
+            .withVelocityY(xy.getY())
+            .withTargetDirection(targetAngle)
+            .withCenterOfRotation(centerOfRotation);
+    }
+
+    public SwerveRequest getFacingAngleProfiledCOR(Translation2d translation, Rotation2d targetAngle, ProfiledPIDController profile, Translation2d centerOfRotation){
+        return getFieldCentricCOR(translation, profile.calculate(headingSupplier.get().getRadians(), targetAngle.getRadians()), centerOfRotation);
     }
 
     public SwerveRequest getFieldCentric(Translation2d translation, double angularVelocity){
@@ -95,6 +112,16 @@ public class PhoenixSwerveUtil {
             .withVelocityX(xy.getX())
             .withVelocityY(xy.getY())
             .withRotationalRate(omega);
+    }
+
+    public SwerveRequest getRobotCentricCOR(Translation2d translation, double angularVelocity, Translation2d centerOfRotation){
+        Translation2d xy = translation.times(MAX_SPEED);
+        double omega = angularVelocity * MAX_ANGULAR_SPEED;
+        return robotCentric
+            .withVelocityX(xy.getX())
+            .withVelocityY(xy.getY())
+            .withRotationalRate(omega)
+            .withCenterOfRotation(centerOfRotation);
     }
 
     public SwerveRequest getApplyChassisSpeeds(ChassisSpeeds chassisSpeeds){

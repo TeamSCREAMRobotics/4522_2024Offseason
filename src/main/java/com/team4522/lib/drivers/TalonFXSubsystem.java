@@ -1,8 +1,13 @@
 package com.team4522.lib.drivers;
 
+import java.util.Optional;
+import java.util.function.DoubleSupplier;
 import java.util.function.UnaryOperator;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.Slot2Configs;
@@ -21,16 +26,22 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.team4522.lib.config.DeviceConfig;
-import com.team4522.lib.math.Conversions;
 import com.team4522.lib.pid.ScreamPIDConstants.MotionMagicConstants;
-import com.team4522.lib.sim.SimFlippable;
+import com.team4522.lib.sim.SimState;
+import com.team4522.lib.sim.SimWrapper;
+import com.team4522.lib.sim.SimulationThread;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc2024.Robot;
+import lombok.Getter;
+import lombok.Setter;
 
 public class TalonFXSubsystem extends SubsystemBase{
 
@@ -46,16 +57,22 @@ public class TalonFXSubsystem extends SubsystemBase{
         }
     }
 
-    public static record SimState(double position, double velocity, double supplyVoltage){}
+    public static enum ControlType{
+        MOTION_MAGIC_POSITION, MOTION_MAGIC_VELOCITY, POSITION, VELOCITY, VOLTAGE, DUTY_CYCLE;
+    }
 
     public static class TalonFXSubsystemConstants {
         public String name = "ERROR_ASSIGN_A_NAME";
 
+        public boolean codeEnabled = true;
         public boolean outputTelemetry = false;
 
-        public double looperDt = 0.01;
-        public double CANTimeout = 0.010; // use for important on the fly updates
-        public int longCANTimeoutMs = 100; // use for constructors
+        public double loopPeriodSec = 0.02;
+        public double simPeriodSec = 0.001;
+
+        public SimWrapper sim = null;
+        public PIDController simController = null;
+        public boolean limitSimVoltage = false;
 
         public TalonFXConstants masterConstants = new TalonFXConstants();
         public TalonFXConstants[] slaveConstants = new TalonFXConstants[0];
@@ -96,7 +113,13 @@ public class TalonFXSubsystem extends SubsystemBase{
     protected final TalonFX master;
     protected final TalonFX[] slaves;
 
-    protected final TalonFXSimState masterSimState;
+    @Getter
+    protected TalonFXSubsystemGoal goal;
+
+    protected TalonFXSimState masterSimState;
+    protected SimulationThread simulationThread;
+    protected PIDController simController;
+    protected DoubleSupplier simFeedforward;
 
     protected TalonFXConfiguration masterConfig;
     protected final TalonFXConfiguration[] slaveConfigs;
@@ -114,15 +137,21 @@ public class TalonFXSubsystem extends SubsystemBase{
     protected final MotionMagicVelocityVoltage motionMagicVelocityRequest;
 
     protected double setpoint = 0;
-    protected boolean inVelocityMode = false;
+    public boolean inVelocityMode = false;
 
-    protected TalonFXSubsystem(final TalonFXSubsystemConstants constants){
+    protected TalonFXSubsystem(final TalonFXSubsystemConstants constants, final TalonFXSubsystemGoal defaultGoal){
         this.constants = constants;
         master = new TalonFX(constants.masterConstants.device.id, constants.masterConstants.device.canbus);
         slaves = new TalonFX[constants.slaveConstants.length];
         slaveConfigs = new TalonFXConfiguration[constants.slaveConstants.length];
 
-        masterSimState = master.getSimState();
+        goal = defaultGoal;
+
+        if(Robot.isSimulation() && constants.sim != null){
+            masterSimState = master.getSimState();
+            simulationThread = new SimulationThread(constants.sim, this::setSimState, constants.simPeriodSec);
+            simController = constants.simController;
+        }
 
         voltageRequest = new VoltageOut(0.0);
         positionRequest = new PositionVoltage(0.0);
@@ -182,8 +211,6 @@ public class TalonFXSubsystem extends SubsystemBase{
         }
 
         configMaster(masterConfig);
-
-        stop();
     }
 
     public void configMaster(TalonFXConfiguration config){
@@ -274,13 +301,75 @@ public class TalonFXSubsystem extends SubsystemBase{
         return getVelocity() * wheelCircumference;
     }
 
+    public synchronized double getSimControllerOutput(){
+        double output;
+        switch(goal.controlType()){
+            case POSITION:
+            case MOTION_MAGIC_POSITION:
+                output = simController.calculate(getPosition(), setpoint);
+                break;
+            case VELOCITY:
+            case MOTION_MAGIC_VELOCITY:
+                output = simController.calculate(getVelocity(), setpoint);
+                break;
+            default:
+                output = 0;
+                break;
+        }
+        if(simFeedforward != null){
+            return output + simFeedforward.getAsDouble();
+        } else{
+            return output;
+        }
+    }
+
     public synchronized boolean atGoal(){
-        double err = Math.abs(getError());
-        return inVelocityMode ? err <= constants.velocityThreshold : err <= constants.positionThreshold;
+        double error = inVelocityMode ? goal.target().getAsDouble() - getVelocity() : goal.target().getAsDouble() - getPosition();
+        return inVelocityMode ? error <= constants.velocityThreshold : error <= constants.positionThreshold;
     }
 
     public synchronized boolean isActive(){
         return Math.abs(master.getVelocity().asSupplier().get()) > 0.0;
+    }
+
+    public synchronized Command applyGoal(TalonFXSubsystemGoal goal){
+        Command command;
+        command = run(() -> {
+            this.goal = goal;
+            switch(goal.controlType()){
+                case MOTION_MAGIC_POSITION:
+                    setSetpointMotionMagicPosition(goal.target().getAsDouble());
+                    break;
+                case MOTION_MAGIC_VELOCITY:
+                    setSetpointMotionMagicVelocity(goal.target().getAsDouble());
+                    break;
+                case POSITION:
+                    setSetpointPosition(goal.target().getAsDouble());
+                    break;
+                case VELOCITY:
+                    setSetpointVelocity(goal.target().getAsDouble());
+                    break;
+                case VOLTAGE:
+                    setVoltage(goal.target().getAsDouble());
+                    break;
+                default:
+                    stop();
+                    break;
+            }
+        });
+        if(Robot.isSimulation() && constants.sim != null){
+            return command.beforeStarting(() -> simulationThread.setSimVoltage(goal.controlType() == ControlType.VOLTAGE ? goal.target() : () -> getSimControllerOutput(), constants.limitSimVoltage));
+        } else {
+            return command;
+        }
+    }
+
+    public synchronized Command runVoltage(DoubleSupplier voltage){
+        if(Robot.isSimulation() && constants.sim != null){
+            return run(() -> setVoltage(voltage.getAsDouble())).beforeStarting(() -> simulationThread.setSimVoltage(voltage, constants.limitSimVoltage));
+        } else {
+            return run(() -> setVoltage(voltage.getAsDouble()));
+        }
     }
 
     public synchronized void setVoltage(double volts, double voltageFeedForward){
@@ -345,13 +434,17 @@ public class TalonFXSubsystem extends SubsystemBase{
     }
 
     public synchronized void setMaster(ControlRequest control){
-        master.setControl(control);
+        if(constants.codeEnabled){
+            master.setControl(control);
+        }
     }
 
     public synchronized void setSimState(SimState simState){;
-        masterSimState.setRawRotorPosition(simState.position);
-        masterSimState.setSupplyVoltage(simState.supplyVoltage);
-        masterSimState.setRotorVelocity(simState.velocity);
+        if(constants.codeEnabled){
+            masterSimState.setRawRotorPosition(simState.position());
+            masterSimState.setSupplyVoltage(simState.supplyVoltage());
+            masterSimState.setRotorVelocity(simState.velocity());
+        }
     }
 
     public synchronized void resetPosition(double position){
@@ -400,20 +493,21 @@ public class TalonFXSubsystem extends SubsystemBase{
         if(constants.outputTelemetry){
             outputTelemetry();
         }
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/Goal", goal.toString());
     }
 
     public void outputTelemetry(){
-        SmartDashboard.putNumber(constants.name + " Position", getPosition());
-        SmartDashboard.putNumberArray(constants.name + " Velocity", new double[]{getVelocity(), getVelocity() * 60.0});
-        SmartDashboard.putNumber(constants.name + " Rotor Position", getRotorPosition());
-        SmartDashboard.putNumberArray(constants.name + " Rotor Velocity", new double[]{getRotorVelocity(), getRotorVelocity() * 60.0});
-        SmartDashboard.putNumber(constants.name + " Supply Voltage", master.getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber(constants.name + " Supply Current", master.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber(constants.name + " Setpoint", getSetpoint());
-        SmartDashboard.putNumber(constants.name + " Error", getError());
-        SmartDashboard.putBoolean(constants.name + " At Goal?", atGoal());
-        SmartDashboard.putBoolean(constants.name + " In Velocity Mode", inVelocityMode);
-        SmartDashboard.putString(constants.name + " Control Mode", getControlMode().toString());
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/Position", getPosition());
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/Velocity", new double[]{getVelocity(), getVelocity() * 60.0});
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/Rotor Position", getRotorPosition());
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/Rotor Velocity", new double[]{getRotorVelocity(), getRotorVelocity() * 60.0});
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/Supply Voltage", master.getSupplyVoltage().getValueAsDouble());
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/Supply Current", master.getSupplyCurrent().getValueAsDouble());
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/Setpoint", getSetpoint());
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/Error", getError());
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/At Goal?", atGoal());
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/In Velocity Mode", inVelocityMode);
+        Logger.recordOutput("RobotState/Subsystems/" + constants.name + "/Control Mode", getControlMode().toString());
     }
 
     public void stop() {
