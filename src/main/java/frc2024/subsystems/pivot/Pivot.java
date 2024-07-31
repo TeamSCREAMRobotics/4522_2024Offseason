@@ -3,9 +3,9 @@ package frc2024.subsystems.pivot;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import com.SCREAMLib.drivers.TalonFXSubsystem;
+import com.SCREAMLib.drivers.TalonFXSubsystemGoal;
 import com.ctre.phoenix6.Utils;
-import com.team4522.lib.drivers.TalonFXSubsystem;
-import com.team4522.lib.drivers.TalonFXSubsystemGoal;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;

@@ -1,9 +1,9 @@
 package frc2024.subsystems.conveyor;
 
+import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import com.SCREAMLib.drivers.TalonFXSubsystem.CanDevice;
+import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXConstants;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.team4522.lib.drivers.TalonFXSubsystem.CanDevice;
-import com.team4522.lib.drivers.TalonFXSubsystem.TalonFXConstants;
-import com.team4522.lib.drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
 
 public class ConveyorConstants {
 

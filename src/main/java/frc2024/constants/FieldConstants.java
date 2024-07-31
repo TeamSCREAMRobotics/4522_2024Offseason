@@ -1,6 +1,6 @@
 package frc2024.constants;
 
-import com.team4522.lib.data.RectanglePoseArea;
+import com.SCREAMLib.data.RectanglePoseArea;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;

@@ -3,8 +3,6 @@ package frc2024.constants;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.team4522.lib.util.AllianceFlipUtil;
-
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;

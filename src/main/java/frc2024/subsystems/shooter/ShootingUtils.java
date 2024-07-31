@@ -1,10 +1,8 @@
 package frc2024.subsystems.shooter;
 
-import com.team4522.lib.data.DataConversions;
-import com.team4522.lib.data.Length;
-import com.team4522.lib.math.ScreamMath;
-import com.team4522.lib.util.AllianceFlipUtil;
-import com.team4522.lib.util.ScreamUtil;
+import com.SCREAMLib.data.DataConversions;
+import com.SCREAMLib.math.ScreamMath;
+import com.SCREAMLib.util.AllianceFlipUtil;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;

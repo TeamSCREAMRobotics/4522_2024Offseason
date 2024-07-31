@@ -4,8 +4,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import com.team4522.lib.util.AllianceFlipUtil;
-import com.team4522.lib.util.ScreamUtil;
+import com.SCREAMLib.util.AllianceFlipUtil;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;

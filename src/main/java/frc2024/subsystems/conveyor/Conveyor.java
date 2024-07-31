@@ -4,7 +4,7 @@ import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 
-import com.team4522.lib.drivers.TalonFXSubsystem;
+import com.SCREAMLib.drivers.TalonFXSubsystem;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc2024.RobotContainer;
