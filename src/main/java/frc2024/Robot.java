@@ -35,6 +35,8 @@ public class Robot extends LoggedRobot {
 
     private RunOnce autoConfigurator = new RunOnce();
 
+    public Robot(){}
+
     private static boolean isSim = LoggedRobot.isSimulation();
     public static boolean isSimulation(){
         return isSim;
@@ -73,7 +75,6 @@ public class Robot extends LoggedRobot {
 
         autoConfigurator.runOnceWhen(
             () -> {
-                RobotContainer.getRobotState().setActiveSpeaker(AllianceFlipUtil.MirroredTranslation3d(FieldConstants.SPEAKER_OPENING));
                 System.out.println("[Init] Ready to Enable!");
             },
             DriverStation.getAlliance().isPresent());

@@ -1,4 +1,4 @@
-package frc2024.dashboard;
+package frc2024.constants;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose3d;

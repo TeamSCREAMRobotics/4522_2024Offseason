@@ -18,7 +18,7 @@ import frc2024.RobotContainer.Subsystems;
 import frc2024.constants.Constants;
 import frc2024.constants.FieldConstants;
 import frc2024.constants.SimConstants;
-import frc2024.dashboard.ComponentConstants;
+import frc2024.logging.ComponentConstants;
 import frc2024.subsystems.elevator.ElevatorConstants;
 import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.PivotConstants;
@@ -83,10 +83,10 @@ public class ShootingUtils {
     }
 
     public static ShotParameters calculateShotParameters(Translation2d currentTranslation, Translation2d targetTranslation){
-        ChassisSpeeds robotSpeeds = subsystems.drivetrain().getFieldRelativeSpeeds();
-        double horizontalDistance = currentTranslation.getDistance(targetTranslation) + (Math.max(robotSpeeds.vxMetersPerSecond, 0) / 4.0);
+        Translation2d shotOffset = getMoveWhileShootOffset(subsystems.drivetrain().getFieldRelativeSpeeds());
+        double horizontalDistance = currentTranslation.getDistance(targetTranslation) + shotOffset.getX() / 4.0;
         Translation2d raw = targetTranslation.minus(currentTranslation);
-        Rotation2d targetHeading = raw.minus(DataConversions.chassisSpeedsToTranslation(new ChassisSpeeds(0, robotSpeeds.vyMetersPerSecond, 0)).div(3)).getAngle().minus(new Rotation2d(Math.PI));
+        Rotation2d targetHeading = raw.minus(new Translation2d(0, shotOffset.getY()).div(3)).getAngle().minus(new Rotation2d(Math.PI));
         ShootState calculated = ShooterConstants.SHOOTING_MAP.get(horizontalDistance);
         double velocity = withinRange() || DriverStation.isAutonomous() ? calculated.velocityRPM : 2000;
         
@@ -108,12 +108,22 @@ public class ShootingUtils {
     }
 
     public static ShotParameters calculateSimpleShotParameters(Translation2d currentTranslation, Translation2d targetTranslation){
-        ChassisSpeeds robotSpeeds = subsystems.drivetrain().getFieldRelativeSpeeds();
-        double horizontalDistance = currentTranslation.getDistance(targetTranslation) + (robotSpeeds.vxMetersPerSecond / 4.0);
+        Translation2d shotOffset = getMoveWhileShootOffset(subsystems.drivetrain().getFieldRelativeSpeeds());
+
+        double horizontalDistance = currentTranslation.getDistance(targetTranslation) + shotOffset.getX();
         Translation2d raw = targetTranslation.minus(currentTranslation);
-        Rotation2d targetHeading = raw.minus(DataConversions.chassisSpeedsToTranslation(new ChassisSpeeds(0, robotSpeeds.vyMetersPerSecond, 0)).div(3)).getAngle().minus(new Rotation2d(Math.PI));
+        Rotation2d targetHeading = raw.minus(new Translation2d(0, shotOffset.getY())).getAngle().minus(new Rotation2d(Math.PI));
+
         ShootState calculated = ShooterConstants.SHOOTING_MAP.get(horizontalDistance);
-        calculated = new ShootState(ScreamMath.calculateAngleToPoint(RobotContainer.getRobotState().getPivotRootPosition().get(), new Translation2d(horizontalDistance, FieldConstants.SPEAKER_OPENING.getZ() - PivotConstants.SHOOTER_DISTANCE_FROM_AXLE.getMeters())), calculated.elevatorHeight, calculated.velocityRPM);
+        calculated = new ShootState(
+            ScreamMath.calculateAngleToPoint(
+                RobotContainer.getRobotState().getPivotRootPosition().get(), 
+                new Translation2d(
+                    horizontalDistance, 
+                    FieldConstants.SPEAKER_OPENING.getZ() - PivotConstants.SHOOTER_DISTANCE_FROM_AXLE.getMeters())), 
+                calculated.elevatorHeight, 
+                calculated.velocityRPM);
+
         double velocity = withinRange() || DriverStation.isAutonomous() ? calculated.velocityRPM : 2000;
         
         Rotation2d adjustedAngle;
@@ -133,8 +143,13 @@ public class ShootingUtils {
         return new ShotParameters(targetHeading, adjusted, horizontalDistance);
     }
 
+    public static Translation2d getMoveWhileShootOffset(ChassisSpeeds robotSpeeds){
+        Translation2d temp = DataConversions.chassisSpeedsToTranslation(robotSpeeds);
+        return new Translation2d(temp.getX() / 4.0, temp.getY() * AllianceFlipUtil.getDirectionCoefficient() / 3.0);
+    }
+
     public static boolean withinRange(){
-        double horizontalDistance = RobotContainer.getSubsystems().drivetrain().getPose().getTranslation().getDistance(RobotContainer.getRobotState().getActiveSpeaker().toTranslation2d());
+        double horizontalDistance = RobotContainer.getSubsystems().drivetrain().getPose().getTranslation().getDistance(RobotContainer.getRobotState().getActiveSpeaker().get().toTranslation2d());
         return horizontalDistance < 8;
     }
 

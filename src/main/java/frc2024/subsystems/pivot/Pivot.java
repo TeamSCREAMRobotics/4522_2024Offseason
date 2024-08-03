@@ -50,17 +50,4 @@ public class Pivot extends TalonFXSubsystem{
             return controlType;
         }
     }
-
-    @Override
-    public Command applyGoal(TalonFXSubsystemGoal goal){
-        Supplier<Command> command;
-        command = () -> {
-            if(goal == PivotGoal.HOME_INTAKE && atGoal()){
-                return run(() -> stop());
-            } else {
-                return super.applyGoal(goal);
-            }
-        };
-        return command.get();
-    }
 }

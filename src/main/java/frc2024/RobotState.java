@@ -37,8 +37,8 @@ import frc2024.commands.ShootSimNote;
 import frc2024.constants.Constants;
 import frc2024.constants.FieldConstants;
 import frc2024.constants.SimConstants;
-import frc2024.dashboard.ComponentConstants;
 import frc2024.dashboard.MechanismVisualizer;
+import frc2024.logging.ComponentConstants;
 import frc2024.subsystems.conveyor.Conveyor;
 import frc2024.subsystems.elevator.Elevator;
 import frc2024.subsystems.elevator.ElevatorConstants;
@@ -84,17 +84,17 @@ public class RobotState {
     };
 
     @Getter @Setter
-    private Translation3d activeSpeaker = AllianceFlipUtil.MirroredTranslation3d(FieldConstants.SPEAKER_OPENING);
+    private Supplier<Translation3d> activeSpeaker = () -> AllianceFlipUtil.MirroredTranslation3d(FieldConstants.SPEAKER_OPENING);
 
     @Getter
     private final Supplier<ShotParameters> activeShotParameters =
-        () -> ShootingUtils.calculateSimpleShotParameters(drivetrain.getPose().getTranslation(), getActiveSpeaker().toTranslation2d());
+        () -> ShootingUtils.calculateSimpleShotParameters(drivetrain.getPose().getTranslation(), getActiveSpeaker().get().toTranslation2d());
 
     @Getter
     private final Supplier<Translation3d[]> activeTrajectory = 
         () -> ShootingUtils.calculateSimpleTrajectory(
                     drivetrain.getPose(),
-                    drivetrain.getPose().getTranslation().getDistance(activeSpeaker.toTranslation2d()) + 1);
+                    drivetrain.getPose().getTranslation().getDistance(activeSpeaker.get().toTranslation2d()) + 1);
 
     private final LimitedSizeList<Supplier<Pose3d>> activeNotes = new LimitedSizeList<>(SimConstants.MAX_SIM_NOTES);
 

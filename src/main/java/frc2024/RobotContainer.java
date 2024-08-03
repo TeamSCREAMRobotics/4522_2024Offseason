@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.SCREAMLib.math.ScreamMath;
+import com.SCREAMLib.util.AllianceFlipUtil;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -31,7 +32,7 @@ import frc2024.constants.FieldConstants;
 import frc2024.controlboard.Controlboard;
 import frc2024.subsystems.conveyor.Conveyor;
 import frc2024.subsystems.conveyor.ConveyorConstants;
-import frc2024.subsystems.conveyor.Conveyor.Goal;
+import frc2024.subsystems.conveyor.Conveyor.ConveyorGoal;
 import frc2024.subsystems.elevator.Elevator;
 import frc2024.subsystems.elevator.ElevatorConstants;
 import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
@@ -44,6 +45,7 @@ import frc2024.subsystems.shooter.ShootingUtils;
 import frc2024.subsystems.shooter.Shooter.ShooterGoal;
 import frc2024.subsystems.stabilizers.StabilizerConstants;
 import frc2024.subsystems.stabilizers.Stabilizers;
+import frc2024.subsystems.stabilizers.Stabilizers.StabilizerGoal;
 import frc2024.subsystems.swerve.Drivetrain;
 import frc2024.subsystems.swerve.SwerveConstants;
 import frc2024.subsystems.swerve.generated.TunerConstants;
@@ -69,8 +71,8 @@ public class RobotContainer {
     public RobotContainer() {
         NamedCommands.registerCommand("Shoot", RobotState.shootSimNoteCommand());
         NamedCommands.registerCommand("Intake", robotState.setSuperstructureGoalCommand(SuperstructureGoal.HOME_INTAKE).withTimeout(1.0));
-        configButtonBindings();
         configDefaultCommands();
+        configButtonBindings();
 
         if (Robot.isSimulation()) {
             drivetrain.seedFieldRelative(new Pose2d(FieldConstants.FIELD_DIMENSIONS.div(2.0), Rotation2d.fromDegrees(0)));
@@ -106,11 +108,11 @@ public class RobotContainer {
             .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.EJECT));
 
         Controlboard.driveController.y()
-            .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), Rotation2d.fromDegrees(0)))
+            .whileTrue(drivetrain.applyRequest(() -> drivetrain.getUtil().getFacingAngle(Controlboard.getTranslation().get(), AllianceFlipUtil.getForwardRotation()))
             .alongWith(robotState.setSuperstructureGoalCommand(SuperstructureGoal.SUB)));
 
         Controlboard.driveController.b()
-            .toggleOnTrue(stabilizers.setGoalCommand(Stabilizers.Goal.OUT).alongWith(elevator.applyGoal(ElevatorGoal.TRAP)));
+            .toggleOnTrue(stabilizers.applyGoal(StabilizerGoal.OUT).alongWith(elevator.applyGoal(ElevatorGoal.TRAP)));
     }
 
     private void configDefaultCommands(){
@@ -119,11 +121,6 @@ public class RobotContainer {
                 () -> Controlboard.getFieldCentric().getAsBoolean()
                     ? drivetrain.getUtil().getFieldCentric(Controlboard.getTranslation().get(), Controlboard.getRotation().getAsDouble()) 
                     : drivetrain.getUtil().getRobotCentric(Controlboard.getTranslation().get(), Controlboard.getRotation().getAsDouble())));
-        elevator.setDefaultCommand(elevator.applyGoal(ElevatorGoal.TRACKING));
-        pivot.setDefaultCommand(pivot.applyGoal(PivotGoal.TRACKING));
-        shooter.setDefaultCommand(shooter.applyGoal(ShooterGoal.TRACKING));
-        conveyor.setDefaultCommand(conveyor.setGoalCommand(Conveyor.Goal.IDLING));
-        stabilizers.setDefaultCommand(stabilizers.setGoalCommand(Stabilizers.Goal.IDLE));
     }
 
     double startTime = 0;
@@ -138,7 +135,7 @@ public class RobotContainer {
             Commands.runOnce(() -> drivetrain.seedFieldRelative(path.getPreviewStartingHolonomicPose())),
             RobotState.shootSimNoteCommand(),
             AutoBuilder.followPath(path)
-              .deadlineWith(Commands.run(() -> PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.of(ScreamMath.calculateAngleToPoint(drivetrain.getPose().getTranslation(), robotState.getActiveSpeaker().toTranslation2d()).plus(new Rotation2d(Math.PI)))))),
+              .deadlineWith(Commands.run(() -> PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.of(ScreamMath.calculateAngleToPoint(drivetrain.getPose().getTranslation(), robotState.getActiveSpeaker().get().toTranslation2d()).plus(new Rotation2d(Math.PI)))))),
             Commands.runOnce(() -> System.out.println(Timer.getFPGATimestamp() - startTime))
         );
     }

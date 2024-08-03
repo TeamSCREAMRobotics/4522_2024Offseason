@@ -5,6 +5,7 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 
 import com.SCREAMLib.drivers.TalonFXSubsystem;
+import com.SCREAMLib.drivers.TalonFXSubsystemGoal;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc2024.RobotContainer;
@@ -16,34 +17,35 @@ import lombok.Setter;
 public class Conveyor extends TalonFXSubsystem{
     
     public Conveyor(TalonFXSubsystemConstants constants){
-        super(constants, ElevatorGoal.TRACKING);
+        super(constants, ConveyorGoal.IDLING);
     }
 
-    public enum Goal {
-        IDLING(0.0),
-        INTAKING(9.0),
-        EJECTING(-11.0),
-        SHOOTING(11.0),
-        TRAPPING(6.0);
+    public enum ConveyorGoal implements TalonFXSubsystemGoal{
+        IDLING(0.0, ControlType.VOLTAGE),
+        INTAKING(9.0, ControlType.VOLTAGE),
+        EJECTING(-11.0, ControlType.VOLTAGE),
+        SHOOTING(11.0, ControlType.VOLTAGE),
+        TRAPPING(6.0, ControlType.VOLTAGE);
 
         @Getter
-        double targetOutput;
+        double targetVoltage;
 
-        private Goal(double output){
-            this.targetOutput = output;
+        @Getter
+        ControlType controlType;
+
+        private ConveyorGoal(double voltage, ControlType controlType){
+            this.targetVoltage = voltage;
+            this.controlType = controlType;
         }
-    }
 
-    @Getter @Setter @AutoLogOutput(key = "RobotState/Subsystems/Conveyor/Goal")
-    private Goal goalgaol = Goal.IDLING;
+        @Override
+        public DoubleSupplier target() {
+            return () -> targetVoltage;
+        }
 
-    public Command setGoalCommand(Goal goal){
-        return run(() -> setGoalgaol(goal));
-    }
-
-    @Override
-    public void periodic() {
-        super.periodic();
-        setVoltage(getGoalgaol().getTargetOutput());
+        @Override
+        public ControlType controlType() {
+            return controlType;
+        }
     }
 }

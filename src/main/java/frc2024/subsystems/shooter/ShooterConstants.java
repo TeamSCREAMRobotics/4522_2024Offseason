@@ -44,7 +44,7 @@ public class ShooterConstants {
         SUBSYSTEM_CONSTANTS.name = "Shooter";
 
         SUBSYSTEM_CONSTANTS.codeEnabled = true;
-        SUBSYSTEM_CONSTANTS.outputTelemetry = true;
+        SUBSYSTEM_CONSTANTS.outputTelemetry = false;
 
         SUBSYSTEM_CONSTANTS.sim = new SimWrapper(SIM);
         SUBSYSTEM_CONSTANTS.simController = SIM_GAINS.getPIDController();

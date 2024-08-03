@@ -1,11 +1,13 @@
 package frc2024.subsystems.stabilizers;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import com.SCREAMLib.drivers.TalonFXSubsystem;
+import com.SCREAMLib.drivers.TalonFXSubsystemGoal;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
 import com.SCREAMLib.math.Conversions;
 import com.SCREAMLib.sim.SimState;
@@ -21,73 +23,40 @@ import frc2024.Robot;
 import frc2024.RobotContainer;
 import frc2024.constants.Constants;
 import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
+import frc2024.subsystems.pivot.Pivot.PivotGoal;
 import frc2024.subsystems.pivot.PivotConstants;
 import lombok.Getter;
 import lombok.Setter;
 
 public class Stabilizers extends TalonFXSubsystem{
-    
-    public final DCMotorSim sim = new DCMotorSim(DCMotor.getFalcon500(1), StabilizerConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio, 0.05859096765521);
-    public final PIDController simController = new PIDController(100.0, 0.0, 0.0);
-    private Notifier simNotifier = null;
-    private double lastSimTime;
 
     public Stabilizers(TalonFXSubsystemConstants constants) {
-        super(constants, ElevatorGoal.TRACKING);
-
-        if(Robot.isSimulation()){
-            startSimThread();
-        }
-
-        setDefaultCommand(setGoalCommand(Goal.IDLE));
+        super(constants, StabilizerGoal.IDLE);
     }
 
-    public enum Goal{
-        IDLE(() -> 0.0),
-        OUT(() -> StabilizerConstants.MAX_ANGLE.getDegrees());
+    public enum StabilizerGoal implements TalonFXSubsystemGoal{
+        IDLE(() -> 0.0, ControlType.MOTION_MAGIC_POSITION),
+        OUT(() -> StabilizerConstants.MAX_ANGLE.getRotations(), ControlType.MOTION_MAGIC_POSITION);
 
         @Getter
         DoubleSupplier targetRotations;
+
+        @Getter
+        ControlType controlType;
         
-        private Goal(DoubleSupplier targetAngle){
-            targetRotations = () -> Rotation2d.fromDegrees(targetAngle.getAsDouble()).getRotations();
+        private StabilizerGoal(DoubleSupplier targetRotations, ControlType controlType){
+            this.targetRotations = targetRotations;
+            this.controlType = controlType;
         }
-    }
 
-    @Getter @Setter @AutoLogOutput(key = "RobotState/Subsystems/Stabilizers/Goal")
-    private Goal goalgoal = Goal.IDLE;
-
-    public Command setGoalCommand(Goal goal){
-        return run(() -> setGoalgoal(goal));
-    }
-
-    public Goal lastGoal = Goal.IDLE;
-    @Override
-    public void periodic() {
-        super.periodic();
-        if(getGoalgoal() == Goal.IDLE && (atGoal() && getGoalgoal() != lastGoal)){
-            stop();
-        } else {
-            setSetpointMotionMagicPosition(getGoalgoal().getTargetRotations().getAsDouble());
+        @Override
+        public DoubleSupplier target() {
+            return targetRotations;
         }
-        lastGoal = getGoalgoal();
-    }
 
-    public void startSimThread(){
-        simNotifier = new Notifier(() -> {
-            final double currentTime = Utils.getCurrentTimeSeconds();
-            double deltaTime = currentTime - lastSimTime;
-            lastSimTime = currentTime;
-
-            double inputVoltage = simController.calculate(getPosition(), getSetpoint());
-            sim.update(deltaTime);
-            sim.setInputVoltage(inputVoltage);
-            setSimState(
-                new SimState(
-                    sim.getAngularPositionRotations(),
-                    Conversions.rpmToRPS(sim.getAngularVelocityRPM(), StabilizerConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio),
-                    RobotController.getBatteryVoltage()));
-        });
-        simNotifier.startPeriodic(Constants.SIM_PERIOD_SEC);
+        @Override
+        public ControlType controlType() {
+            return controlType;
+        }
     }
 }

@@ -12,6 +12,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 
 public final class ElevatorConstants{
@@ -29,7 +30,7 @@ public final class ElevatorConstants{
     public static final ElevatorSim SIM = new ElevatorSim(
   	  	DCMotor.getKrakenX60(2), 
   	  	GEAR_RATIO, 
-  	  	Units.lbsToKilograms(28), 
+  	  	Units.lbsToKilograms(31), 
   	  	Units.inchesToMeters(2.211 / 2.0),
   	  	ElevatorConstants.MIN_HEIGHT, 
   		Units.inchesToMeters(ElevatorConstants.MAX_HEIGHT),
@@ -42,11 +43,11 @@ public final class ElevatorConstants{
   	  	SUBSYSTEM_CONSTANTS.name = "Elevator";
 
   	  	SUBSYSTEM_CONSTANTS.codeEnabled = true;
-  	  	SUBSYSTEM_CONSTANTS.outputTelemetry = false;
+  	  	SUBSYSTEM_CONSTANTS.outputTelemetry = true;
 
 		SUBSYSTEM_CONSTANTS.sim = new SimWrapper(SIM);
         SUBSYSTEM_CONSTANTS.simController = SIM_GAINS.getPIDController();
-        SUBSYSTEM_CONSTANTS.limitSimVoltage = true;
+        SUBSYSTEM_CONSTANTS.limitSimVoltage = false;
 
   	  	SUBSYSTEM_CONSTANTS.masterConstants = new TalonFXConstants(new CanDevice(15, ""), InvertedValue.CounterClockwise_Positive);
   	  	SUBSYSTEM_CONSTANTS.slaveConstants = 
