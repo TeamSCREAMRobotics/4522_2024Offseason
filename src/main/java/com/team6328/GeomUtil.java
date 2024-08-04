@@ -7,7 +7,6 @@ package com.team6328;
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;

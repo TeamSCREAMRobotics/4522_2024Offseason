@@ -4,23 +4,18 @@
 
 package frc2024;
 
+import com.SCREAMLib.util.RunnableUtil.RunOnce;
+import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc2024.constants.Constants;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.rlog.RLOGServer;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
-
-import com.SCREAMLib.util.AllianceFlipUtil;
-import com.SCREAMLib.util.RunnableUtil.RunOnce;
-import com.ctre.phoenix6.SignalLogger;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc2024.constants.Constants;
-import frc2024.constants.FieldConstants;
-import frc2024.subsystems.elevator.ElevatorConstants;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -29,96 +24,97 @@ import frc2024.subsystems.elevator.ElevatorConstants;
  * project.
  */
 public class Robot extends LoggedRobot {
-    private Command autonomousCommand;
+  private Command autonomousCommand;
 
-    private RobotContainer robotContainer;
+  private RobotContainer robotContainer;
 
-    private RunOnce autoConfigurator = new RunOnce();
+  private RunOnce autoConfigurator = new RunOnce();
 
-    public Robot(){}
+  public Robot() {}
 
-    private static boolean isSim = LoggedRobot.isSimulation();
-    public static boolean isSimulation(){
-        return isSim;
+  private static boolean isSim = LoggedRobot.isSimulation();
+
+  public static boolean isSimulation() {
+    return isSim;
+  }
+
+  @Override
+  public void robotInit() {
+    switch (Constants.ROBOT_MODE) {
+      case REAL:
+        Logger.addDataReceiver(new WPILOGWriter());
+        Logger.addDataReceiver(new RLOGServer());
+        SignalLogger.start();
+        break;
+
+      case SIM:
+        Logger.addDataReceiver(new RLOGServer());
+        break;
+
+      case REPLAY:
+        setUseTiming(false);
+        String logPath = LogFileUtil.findReplayLog();
+        Logger.setReplaySource(new WPILOGReader(logPath));
+        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"), 0.01));
+        break;
     }
 
-    @Override
-    public void robotInit() {
-        switch (Constants.ROBOT_MODE) {
-            case REAL:
-                Logger.addDataReceiver(new WPILOGWriter());
-                Logger.addDataReceiver(new RLOGServer());
-                SignalLogger.start();
-                break;
-            
-            case SIM:
-                Logger.addDataReceiver(new RLOGServer());
-                break;
-            
-            case REPLAY:
-                setUseTiming(false);
-                String logPath = LogFileUtil.findReplayLog();
-                Logger.setReplaySource(new WPILOGReader(logPath));
-                Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"), 0.01));
-                break;
-        }
+    Logger.start();
 
-        Logger.start();
+    robotContainer = new RobotContainer();
+  }
 
-        robotContainer = new RobotContainer();
+  @Override
+  public void robotPeriodic() {
+    CommandScheduler.getInstance().run();
+    RobotState.outputTelemetry();
+
+    autoConfigurator.runOnceWhen(
+        () -> {
+          System.out.println("[Init] Ready to Enable!");
+        },
+        DriverStation.getAlliance().isPresent());
+  }
+
+  @Override
+  public void disabledInit() {}
+
+  @Override
+  public void disabledPeriodic() {}
+
+  @Override
+  public void autonomousInit() {
+    autonomousCommand = robotContainer.getAutonomousCommand();
+
+    if (autonomousCommand != null) {
+      autonomousCommand.schedule();
     }
+  }
 
-    @Override
-    public void robotPeriodic() {
-        CommandScheduler.getInstance().run();
-        RobotContainer.getRobotState().outputTelemetry();
+  @Override
+  public void autonomousPeriodic() {}
 
-        autoConfigurator.runOnceWhen(
-            () -> {
-                System.out.println("[Init] Ready to Enable!");
-            },
-            DriverStation.getAlliance().isPresent());
+  @Override
+  public void teleopInit() {
+    if (autonomousCommand != null) {
+      autonomousCommand.cancel();
     }
+  }
 
-    @Override
-    public void disabledInit() {}
+  @Override
+  public void teleopPeriodic() {}
 
-    @Override
-    public void disabledPeriodic() {}
+  @Override
+  public void testInit() {
+    CommandScheduler.getInstance().cancelAll();
+  }
 
-    @Override
-    public void autonomousInit() {
-        autonomousCommand = robotContainer.getAutonomousCommand();
+  @Override
+  public void testPeriodic() {}
 
-        if (autonomousCommand != null) {
-            autonomousCommand.schedule();
-        }
-    }
+  @Override
+  public void simulationInit() {}
 
-    @Override
-    public void autonomousPeriodic() {}
-
-    @Override
-    public void teleopInit() {
-        if (autonomousCommand != null) {
-            autonomousCommand.cancel();
-        }
-    }
-
-    @Override
-    public void teleopPeriodic() {}
-
-    @Override
-    public void testInit() {
-      CommandScheduler.getInstance().cancelAll();
-    }
-
-    @Override
-    public void testPeriodic() {}
-
-    @Override
-    public void simulationInit() {}
-
-    @Override
-    public void simulationPeriodic() {}
+  @Override
+  public void simulationPeriodic() {}
 }

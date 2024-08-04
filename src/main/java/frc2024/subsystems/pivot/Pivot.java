@@ -1,53 +1,49 @@
 package frc2024.subsystems.pivot;
 
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
-
 import com.SCREAMLib.drivers.TalonFXSubsystem;
 import com.SCREAMLib.drivers.TalonFXSubsystemGoal;
-import com.ctre.phoenix6.Utils;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj2.command.Command;
-import frc2024.Robot;
-import frc2024.RobotContainer;
+import frc2024.RobotState;
+import java.util.function.DoubleSupplier;
 import lombok.Getter;
 
-public class Pivot extends TalonFXSubsystem{
+public class Pivot extends TalonFXSubsystem {
 
-    public Pivot(TalonFXSubsystemConstants constants) {
-        super(constants, PivotGoal.TRACKING);
+  public Pivot(TalonFXSubsystemConstants constants) {
+    super(constants, PivotGoal.TRACKING);
+  }
+
+  public enum PivotGoal implements TalonFXSubsystemGoal {
+    HOME_INTAKE(() -> 26.317, ControlType.MOTION_MAGIC_POSITION),
+    TRAP_INTAKE(() -> 53.937, ControlType.MOTION_MAGIC_POSITION),
+    SUB(() -> 51.177, ControlType.MOTION_MAGIC_POSITION),
+    SUB_DEFENDED(() -> 23.357, ControlType.MOTION_MAGIC_POSITION),
+    AMP(() -> 22.317, ControlType.MOTION_MAGIC_POSITION),
+    TRAP(() -> -8.203, ControlType.MOTION_MAGIC_POSITION),
+    EJECT(() -> 24.067, ControlType.MOTION_MAGIC_POSITION),
+    FEED_TO_WING(() -> 0, ControlType.MOTION_MAGIC_POSITION),
+    FEED_TO_CENTER(() -> 0, ControlType.MOTION_MAGIC_POSITION),
+    TRACKING(
+        () -> RobotState.getActiveShotParameters().get().shootState().getPivotAngle().getDegrees(),
+        ControlType.POSITION);
+
+    @Getter DoubleSupplier targetRotations;
+
+    @Getter ControlType controlType;
+
+    private PivotGoal(DoubleSupplier targetAngle, ControlType controlType) {
+      targetRotations = () -> Rotation2d.fromDegrees(targetAngle.getAsDouble()).getRotations();
+      this.controlType = controlType;
     }
-    
-    public enum PivotGoal implements TalonFXSubsystemGoal{
-        HOME_INTAKE(() -> 26.317, ControlType.MOTION_MAGIC_POSITION),
-        TRAP_INTAKE(() -> 53.937, ControlType.MOTION_MAGIC_POSITION),
-        SUB(() -> 51.177, ControlType.MOTION_MAGIC_POSITION),
-        SUB_DEFENDED(() -> 23.357, ControlType.MOTION_MAGIC_POSITION),
-        AMP(() -> 22.317, ControlType.MOTION_MAGIC_POSITION),
-        TRAP(() -> -8.203, ControlType.MOTION_MAGIC_POSITION),
-        EJECT(() -> 24.067, ControlType.MOTION_MAGIC_POSITION),
-        TRACKING(() -> RobotContainer.getRobotState().getActiveShotParameters().get().shootState().pivotAngle().getDegrees(), ControlType.POSITION);
 
-        @Getter
-        DoubleSupplier targetRotations;
-
-        @Getter
-        ControlType controlType;
-
-        private PivotGoal(DoubleSupplier targetAngle, ControlType controlType){
-            targetRotations = () -> Rotation2d.fromDegrees(targetAngle.getAsDouble()).getRotations();
-            this.controlType = controlType;
-        }
-
-        @Override
-        public DoubleSupplier target() {
-            return targetRotations;
-        }
-
-        @Override
-        public ControlType controlType() {
-            return controlType;
-        }
+    @Override
+    public DoubleSupplier target() {
+      return targetRotations;
     }
+
+    @Override
+    public ControlType controlType() {
+      return controlType;
+    }
+  }
 }
