@@ -16,6 +16,13 @@
       "name": "WPILib roboRIO Debug",
       "request": "launch",
       "desktop": false,
-    }
+    },
+    {
+      "type": "wpilib",
+      "name": "WPILib Java Simulate",
+      "preLaunchTask": "build", 
+      "request": "launch",
+      "desktop": true,
+    },
   ]
 }

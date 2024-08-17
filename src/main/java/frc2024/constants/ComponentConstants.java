@@ -44,7 +44,7 @@ public class ComponentConstants {
         .plus(new Transform3d(y, new Rotation3d(0, pivotAngle.getRadians(), 0)));
   }
 
-  public static Pose3d getStabilizersPose(Rotation2d stabilizerAngle) {
+  public static Pose3d getStabilizerPose(Rotation2d stabilizerAngle) {
     return STABLIZER_BARS_POSE.transformBy(
         new Transform3d(new Translation3d(), new Rotation3d(0, stabilizerAngle.getRadians(), 0)));
   }

@@ -10,20 +10,25 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import lombok.Setter;
-import org.littletonrobotics.junction.Logger;
 
 public class MechanismVisualizer extends SubsystemBase {
 
-  @Setter public static boolean enabled = false;
+  @Setter public static boolean enabled = true;
+  private static BiConsumer<Mechanism2d, Mechanism2d> telemetryFunc;
 
   public static Mechanism2d MEASURED_MECHANISM;
   public static Mechanism2d SETPOINT_MECHANISM;
 
   public static void setDimensions(double width, double height) {
-    MEASURED_MECHANISM = new Mechanism2d(width, height);
-    SETPOINT_MECHANISM = new Mechanism2d(width, height);
+    MechanismVisualizer.MEASURED_MECHANISM = new Mechanism2d(width, height);
+    MechanismVisualizer.SETPOINT_MECHANISM = new Mechanism2d(width, height);
+  }
+
+  public static void registerTelemetry(BiConsumer<Mechanism2d, Mechanism2d> telemetryFunc) {
+    MechanismVisualizer.telemetryFunc = telemetryFunc;
   }
 
   private MechanismRoot2d measuredRoot;
@@ -120,11 +125,6 @@ public class MechanismVisualizer extends SubsystemBase {
     this.position = () -> position;
   }
 
-  private static void outputToDashboard() {
-    Logger.recordOutput("RobotState/Mechanisms/Measured", MechanismVisualizer.MEASURED_MECHANISM);
-    Logger.recordOutput("RobotState/Mechanisms/Setpoint", MechanismVisualizer.SETPOINT_MECHANISM);
-  }
-
   @Override
   public void periodic() {
     if (enabled) {
@@ -134,7 +134,8 @@ public class MechanismVisualizer extends SubsystemBase {
       this.measuredLig.setAngle(measuredAngle.get().getDegrees());
       this.setpointRoot.setPosition(position.get().getX(), position.get().getY());
       this.measuredRoot.setPosition(position.get().getX(), position.get().getY());
-      MechanismVisualizer.outputToDashboard();
+      telemetryFunc.accept(
+          MechanismVisualizer.MEASURED_MECHANISM, MechanismVisualizer.SETPOINT_MECHANISM);
     }
   }
 }

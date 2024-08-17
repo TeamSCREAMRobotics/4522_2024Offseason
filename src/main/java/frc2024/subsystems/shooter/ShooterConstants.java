@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
 import frc2024.subsystems.elevator.ElevatorConstants;
 import frc2024.subsystems.pivot.Pivot.PivotGoal;
-import frc2024.subsystems.shooter.ShootingUtils.ShootState;
+import frc2024.subsystems.shooter.ShootStateInterpolatingTreeMap.ShootState;
 
 public class ShooterConstants {
 
@@ -50,7 +50,6 @@ public class ShooterConstants {
 
     SUBSYSTEM_CONSTANTS.sim = new SimWrapper(SIM);
     SUBSYSTEM_CONSTANTS.simController = SIM_GAINS.getPIDController();
-    SUBSYSTEM_CONSTANTS.limitSimVoltage = true;
 
     SUBSYSTEM_CONSTANTS.masterConstants =
         new TalonFXConstants(new CanDevice(11, ""), InvertedValue.CounterClockwise_Positive);
@@ -83,7 +82,7 @@ public class ShooterConstants {
         new ShootState(
             Rotation2d.fromDegrees(47.4 - 6.0),
             Length.fromRotations(
-                    ElevatorGoal.SUB.getTargetRotations().getAsDouble(),
+                    ElevatorGoal.SUB.getTarget().getAsDouble(),
                     ElevatorConstants.PULLEY_CIRCUMFERENCE)
                 .getInches(),
             3500.0));
@@ -92,16 +91,16 @@ public class ShooterConstants {
         new ShootState(
             Rotation2d.fromDegrees(55.0 - 6.0),
             Length.fromRotations(
-                    ElevatorGoal.SUB.getTargetRotations().getAsDouble(),
+                    ElevatorGoal.SUB.getTarget().getAsDouble(),
                     ElevatorConstants.PULLEY_CIRCUMFERENCE)
                 .getInches(),
             3250.0));
     SHOOTING_MAP.put(
         1.0,
         new ShootState(
-            Rotation2d.fromRotations(PivotGoal.SUB.getTargetRotations().getAsDouble()),
+            Rotation2d.fromRotations(PivotGoal.SUB.getTarget().getAsDouble()),
             Length.fromRotations(
-                    ElevatorGoal.SUB.getTargetRotations().getAsDouble(),
+                    ElevatorGoal.SUB.getTarget().getAsDouble(),
                     ElevatorConstants.PULLEY_CIRCUMFERENCE)
                 .getInches(),
             3000.0));

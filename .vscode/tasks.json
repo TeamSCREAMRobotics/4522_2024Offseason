@@ -1,0 +1,24 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "build",
+        "type": "shell",
+        "command": "./gradlew build",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+      },
+      {
+        "label": "deploy",
+        "type": "shell",
+        "command": "./gradlew deploy",
+        "group": {
+          "kind": "build",
+          "isDefault": false
+        },
+      }
+    ]
+  }
+  

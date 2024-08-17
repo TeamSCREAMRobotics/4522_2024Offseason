@@ -1,5 +1,6 @@
 package frc2024;
 
+import com.SCREAMLib.data.DataConversions;
 import com.SCREAMLib.data.Length;
 import com.SCREAMLib.data.LimitedSizeList;
 import com.SCREAMLib.util.AllianceFlipUtil;
@@ -9,6 +10,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc2024.RobotContainer.Subsystems;
@@ -18,6 +20,7 @@ import frc2024.constants.SimConstants;
 import frc2024.controlboard.Controlboard;
 import frc2024.dashboard.MechanismVisualizer;
 import frc2024.logging.ComponentConstants;
+import frc2024.logging.ScreamLogger;
 import frc2024.subsystems.conveyor.Conveyor;
 import frc2024.subsystems.elevator.Elevator;
 import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
@@ -25,16 +28,15 @@ import frc2024.subsystems.elevator.ElevatorConstants;
 import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.Pivot.PivotGoal;
 import frc2024.subsystems.shooter.Shooter;
+import frc2024.subsystems.shooter.Shooter.ShooterGoal;
 import frc2024.subsystems.shooter.ShootingUtils;
 import frc2024.subsystems.shooter.ShootingUtils.ShotParameters;
-import frc2024.subsystems.stabilizers.Stabilizers;
+import frc2024.subsystems.stabilizer.Stabilizer;
 import frc2024.subsystems.swerve.Drivetrain;
 import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import lombok.Getter;
-import lombok.Setter;
-import org.littletonrobotics.junction.Logger;
 
 public class RobotState {
 
@@ -43,7 +45,7 @@ public class RobotState {
   private static Pivot pivot;
   private static Shooter shooter;
   private static Conveyor conveyor;
-  private static Stabilizers stabilizers;
+  private static Stabilizer stabilizer;
 
   public enum SuperstructureGoal {
     IDLE,
@@ -53,20 +55,19 @@ public class RobotState {
     SUB_DEFENDED,
     AMP,
     PASSING,
+    TRACKING,
     EJECT;
   }
 
   @Getter
   private static final Supplier<Translation2d> pivotRootPosition =
-      () -> {
-        Translation3d t =
-            ComponentConstants.getShooterPose(elevator.getHeight().getMeters(), new Rotation2d())
-                .getTranslation();
-        return new Translation2d(t.getX(), t.getZ());
-      };
+      () ->
+          DataConversions.projectTo2d(
+              ComponentConstants.getShooterPose(elevator.getHeight().getMeters(), pivot.getAngle())
+                  .getTranslation());
 
-  @Getter @Setter
-  private static Supplier<Translation3d> activeSpeaker =
+  @Getter
+  private static final Supplier<Translation3d> activeSpeaker =
       () -> AllianceFlipUtil.MirroredTranslation3d(FieldConstants.SPEAKER_OPENING);
 
   @Getter
@@ -96,6 +97,7 @@ public class RobotState {
   static {
     MechanismVisualizer.setEnabled(false);
     MechanismVisualizer.setDimensions(SimConstants.MECH_WIDTH, SimConstants.MECH_HEIGHT);
+    MechanismVisualizer.registerTelemetry(RobotState::telemeterizeMechanisms);
   }
 
   @SuppressWarnings("unused")
@@ -109,7 +111,7 @@ public class RobotState {
                           elevator.getGoal().target().getAsDouble(),
                           ElevatorConstants.PULLEY_CIRCUMFERENCE)
                       .plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR))
-          .withStaticPosition(new Translation2d(SimConstants.ELEVATOR_X, 0));
+          .withStaticPosition(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0));
 
   @SuppressWarnings("unused")
   private final MechanismVisualizer shooterFrontVisualizer =
@@ -119,7 +121,8 @@ public class RobotState {
               () -> pivot.getAngle().unaryMinus(),
               () -> Rotation2d.fromRotations(-pivot.getGoal().target().getAsDouble()))
           .withDynamicPosition(
-              () -> pivotRootPosition.get().plus(new Translation2d(SimConstants.ELEVATOR_X, 0)));
+              () ->
+                  pivotRootPosition.get().plus(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0)));
 
   @SuppressWarnings("unused")
   private final MechanismVisualizer shooterBackVisualizer =
@@ -129,7 +132,8 @@ public class RobotState {
               () -> pivot.getAngle().unaryMinus().plus(Rotation2d.fromRotations(0.5)),
               () -> Rotation2d.fromRotations(0.5 - pivot.getGoal().target().getAsDouble()))
           .withDynamicPosition(
-              () -> pivotRootPosition.get().plus(new Translation2d(SimConstants.ELEVATOR_X, 0)));
+              () ->
+                  pivotRootPosition.get().plus(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0)));
 
   public RobotState(Subsystems subsystems) {
     drivetrain = subsystems.drivetrain();
@@ -137,7 +141,7 @@ public class RobotState {
     pivot = subsystems.pivot();
     shooter = subsystems.shooter();
     conveyor = subsystems.conveyor();
-    stabilizers = subsystems.stabilizers();
+    stabilizer = subsystems.stabilizer();
 
     if (Robot.isSimulation()) {
       activeTrajectory =
@@ -160,7 +164,7 @@ public class RobotState {
     return Commands.runOnce(() -> new ShootSimNote(RobotContainer.getSubsystems()).schedule());
   }
 
-  public Command setSuperstructureGoalCommand(SuperstructureGoal goal) {
+  public Command applySuperstructureGoal(SuperstructureGoal goal) {
     return Commands.defer(
         () -> {
           switch (goal) {
@@ -168,69 +172,79 @@ public class RobotState {
               return elevator
                   .applyGoal(ElevatorGoal.HOME_INTAKE)
                   .alongWith(pivot.applyGoal(PivotGoal.HOME_INTAKE))
-                  .alongWith(shooter.applyGoal(Shooter.ShooterGoal.TRACKING));
+                  .alongWith(shooter.applyGoal(ShooterGoal.TRACKING));
             case TRAP_INTAKE:
               return elevator
                   .applyGoal(ElevatorGoal.TRAP_INTAKE)
                   .alongWith(pivot.applyGoal(PivotGoal.TRAP_INTAKE))
-                  .alongWith(shooter.applyGoal(Shooter.ShooterGoal.TRACKING));
+                  .alongWith(shooter.applyGoal(ShooterGoal.TRACKING));
             case AMP:
               return elevator
                   .applyGoal(ElevatorGoal.AMP)
                   .alongWith(pivot.applyGoal(PivotGoal.AMP))
-                  .alongWith(shooter.applyGoal(Shooter.ShooterGoal.TRACKING));
+                  .alongWith(shooter.applyGoal(ShooterGoal.TRACKING));
             case PASSING:
               return elevator
                   .applyGoal(ElevatorGoal.TRACKING)
                   .alongWith(pivot.applyGoal(PivotGoal.TRACKING))
-                  .alongWith(shooter.applyGoal(Shooter.ShooterGoal.TRACKING));
+                  .alongWith(shooter.applyGoal(ShooterGoal.TRACKING));
             case SUB:
               return elevator
                   .applyGoal(ElevatorGoal.SUB)
                   .alongWith(pivot.applyGoal(PivotGoal.SUB))
-                  .alongWith(shooter.applyGoal(Shooter.ShooterGoal.SUB));
+                  .alongWith(shooter.applyGoal(ShooterGoal.SUB));
             case SUB_DEFENDED:
               return elevator
                   .applyGoal(ElevatorGoal.SUB_DEFENDED)
                   .alongWith(pivot.applyGoal(PivotGoal.SUB_DEFENDED))
-                  .alongWith(shooter.applyGoal(Shooter.ShooterGoal.SUB));
+                  .alongWith(shooter.applyGoal(ShooterGoal.SUB));
             case EJECT:
               return elevator
                   .applyGoal(ElevatorGoal.EJECT)
                   .alongWith(pivot.applyGoal(PivotGoal.EJECT))
-                  .alongWith(shooter.applyGoal(Shooter.ShooterGoal.TRACKING));
-            case IDLE:
-            default:
+                  .alongWith(shooter.applyGoal(ShooterGoal.TRACKING));
+            case TRACKING:
               return elevator
                   .applyGoal(ElevatorGoal.TRACKING)
                   .alongWith(pivot.applyGoal(PivotGoal.TRACKING))
-                  .alongWith(shooter.applyGoal(Shooter.ShooterGoal.TRACKING));
+                  .alongWith(shooter.applyGoal(ShooterGoal.TRACKING));
+            case IDLE:
+            default:
+              return elevator
+                  .applyGoal(ElevatorGoal.HOME_INTAKE)
+                  .alongWith(pivot.applyGoal(PivotGoal.HOME_INTAKE))
+                  .alongWith(shooter.applyGoal(ShooterGoal.IDLE));
           }
         },
         Set.of());
   }
 
   public static void outputTelemetry() {
-    Logger.recordOutput(
+    ScreamLogger.log(
         "Simulation/ActiveNotes", activeNotes.stream().map(Supplier::get).toArray(Pose3d[]::new));
-    Logger.recordOutput("Simulation/NoteTrajectory", getActiveTrajectory().get());
-    Logger.recordOutput(
+    ScreamLogger.log("Simulation/NoteTrajectory", getActiveTrajectory().get());
+    ScreamLogger.log(
         "RobotState/HorizontalDistanceFromGoal",
         getActiveShotParameters().get().effectiveDistance());
-    Logger.recordOutput(
+    ScreamLogger.log(
         "Simulation/ComponentPoses",
         new Pose3d[] {
           ComponentConstants.getElevStage1Pose(elevator.getHeight().getMeters()),
           ComponentConstants.getElevStage2Pose(elevator.getHeight().getMeters()),
           ComponentConstants.getShooterPose(elevator.getHeight().getMeters(), pivot.getAngle()),
-          ComponentConstants.getStabilizersPose(stabilizers.getAngle())
+          ComponentConstants.getStabilizerPose(stabilizer.getAngle())
         });
-    Logger.recordOutput("RobotState/SpeedLimit", speedLimit.getAsDouble());
+    ScreamLogger.log("RobotState/SpeedLimit", speedLimit.getAsDouble());
   }
 
   public static void telemeterizeDrivetrain(SwerveDriveState state) {
-    Logger.recordOutput("RobotState/RobotPose", state.Pose);
-    Logger.recordOutput("RobotState/Subsystems/Swerve/MeasuredStates", state.ModuleStates);
-    Logger.recordOutput("RobotState/Subsystems/Swerve/SetpointStates", state.ModuleTargets);
+    ScreamLogger.log("RobotState/RobotPose", state.Pose);
+    ScreamLogger.log("RobotState/Subsystems/Swerve/MeasuredStates", state.ModuleStates);
+    ScreamLogger.log("RobotState/Subsystems/Swerve/SetpointStates", state.ModuleTargets);
+  }
+
+  public static void telemeterizeMechanisms(Mechanism2d measured, Mechanism2d setpoint) {
+    ScreamLogger.log("RobotState/Mechanisms/Measured", measured);
+    ScreamLogger.log("RobotState/Mechanisms/Setpoint", setpoint);
   }
 }

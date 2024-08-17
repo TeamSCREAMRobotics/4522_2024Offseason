@@ -1,7 +1,7 @@
 package frc2024.subsystems.swerve;
 
+import com.SCREAMLib.drivers.PhoenixSwerveHelper;
 import com.SCREAMLib.util.AllianceFlipUtil;
-import com.SCREAMLib.util.PhoenixSwerveUtil;
 import com.SCREAMLib.util.ScreamUtil;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
@@ -32,7 +32,7 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   private Notifier simNotifier = null;
   private double lastSimTime;
 
-  @Getter private final PhoenixSwerveUtil util;
+  @Getter private final PhoenixSwerveHelper helper;
 
   public Drivetrain(
       SwerveDrivetrainConstants driveTrainConstants,
@@ -51,9 +51,9 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
      * -> optimizeModuleUtilization(mod)); }
      */
 
-    util =
-        new PhoenixSwerveUtil(
-            this::getHeading, SwerveConstants.MAX_ANGULAR_SPEED, SwerveConstants.SNAP_CONSTANTS);
+    helper =
+        new PhoenixSwerveHelper(
+            this::getPose, SwerveConstants.MAX_ANGULAR_SPEED, SwerveConstants.SNAP_CONSTANTS);
 
     AutoBuilder.configureHolonomic(
         this::getPose,
@@ -64,7 +64,7 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
         AllianceFlipUtil.shouldFlip(),
         this);
 
-    System.out.println("[Init] Drivetrain Initialization Complete!");
+    System.out.println("[Init] Drivetrain initialization complete!");
   }
 
   public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
@@ -89,7 +89,7 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   }
 
   private void setChassisSpeeds(ChassisSpeeds speeds) {
-    setControl(util.getApplyChassisSpeeds(speeds));
+    setControl(helper.getApplyChassisSpeeds(speeds));
   }
 
   public void setNeutralModes(NeutralModeValue driveMode, NeutralModeValue steerMode) {

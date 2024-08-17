@@ -10,7 +10,7 @@ public class SimConstants {
   public static final double MECH_WIDTH = Units.inchesToMeters(26 + EDGE_WIDTH);
   public static final double MECH_HEIGHT = Units.inchesToMeters(42 + EDGE_WIDTH);
 
-  public static final double ELEVATOR_X = Units.inchesToMeters(14.329305 + EDGE_WIDTH / 2.0);
+  public static final double MECH_ELEVATOR_X = Units.inchesToMeters(14.329305 + EDGE_WIDTH / 2.0);
 
   public static final Mechanism2d ACTUAL_MECHANISM =
       new Mechanism2d(SimConstants.MECH_WIDTH, SimConstants.MECH_HEIGHT);

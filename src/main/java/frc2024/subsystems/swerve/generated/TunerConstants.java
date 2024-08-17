@@ -73,7 +73,7 @@ public class TunerConstants {
   private static final double DRIVE_KS = 0.25;
 
   private static final TalonFXConfiguration DRIVE_CONFIG = new TalonFXConfiguration();
-  
+
   static {
   }
 

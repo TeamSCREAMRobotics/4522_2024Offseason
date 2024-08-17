@@ -2,9 +2,7 @@ package frc2024.subsystems.elevator;
 
 import com.SCREAMLib.data.Length;
 import com.SCREAMLib.drivers.TalonFXSubsystem;
-import com.SCREAMLib.drivers.TalonFXSubsystemGoal;
 import com.SCREAMLib.math.Conversions;
-import com.SCREAMLib.sim.SimState;
 import frc2024.RobotState;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
@@ -13,6 +11,8 @@ public class Elevator extends TalonFXSubsystem {
 
   public Elevator(TalonFXSubsystemConstants constants) {
     super(constants, ElevatorGoal.TRACKING);
+
+    simFeedforwardSup = () -> 0.3;
   }
 
   public enum ElevatorGoal implements TalonFXSubsystemGoal {
@@ -27,12 +27,12 @@ public class Elevator extends TalonFXSubsystem {
         () -> RobotState.getActiveShotParameters().get().shootState().getElevatorHeight(),
         ControlType.POSITION);
 
-    @Getter DoubleSupplier targetRotations;
+    @Getter DoubleSupplier target;
 
     @Getter ControlType controlType;
 
     private ElevatorGoal(DoubleSupplier targetHeightInches, ControlType controlType) {
-      targetRotations =
+      this.target =
           () ->
               Conversions.linearDistanceToRotations(
                   Length.fromInches(targetHeightInches.getAsDouble()),
@@ -42,7 +42,7 @@ public class Elevator extends TalonFXSubsystem {
 
     @Override
     public DoubleSupplier target() {
-      return targetRotations;
+      return target;
     }
 
     @Override
@@ -56,16 +56,14 @@ public class Elevator extends TalonFXSubsystem {
   }
 
   @Override
-  public void setSimState(SimState simState) {
+  public void setSimState(double position, double velocity) {
     super.setSimState(
-        new SimState(
-            Conversions.linearDistanceToRotations(
-                    Length.fromMeters(simState.position()), ElevatorConstants.PULLEY_CIRCUMFERENCE)
-                * ElevatorConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio,
-            Conversions.mpsToRPS(
-                simState.velocity(),
-                ElevatorConstants.PULLEY_CIRCUMFERENCE.getMeters(),
-                ElevatorConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio),
-            simState.supplyVoltage()));
+        Conversions.linearDistanceToRotations(
+                Length.fromMeters(position), ElevatorConstants.PULLEY_CIRCUMFERENCE)
+            * ElevatorConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio,
+        Conversions.mpsToRPS(
+            velocity,
+            ElevatorConstants.PULLEY_CIRCUMFERENCE.getMeters(),
+            ElevatorConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio));
   }
 }

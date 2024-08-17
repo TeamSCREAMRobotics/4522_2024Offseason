@@ -39,13 +39,7 @@ public class Buttonboard {
   HashMap<Integer, ButtonboardPort> switchMap = new HashMap<Integer, ButtonboardPort>();
   private final int joystickXAxis;
   private final int joystickYAxis;
-  private final int joystickIndex = 1; // the driverstation port
-
-  // that the joystick is
-  // on.
-
-  // HashMap<Direction, ButtonboardPort> bigSwitchMap = new HashMap<Direction,
-  // ButtonboardPort>();
+  private final int joystickIndex = 1; // the driverstation port that the joystick is on.
 
   public Buttonboard(int portA, int portB) {
     usbDevices[0] = new Joystick(portA);

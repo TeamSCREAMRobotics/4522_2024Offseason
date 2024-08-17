@@ -2,7 +2,8 @@ package frc2024.subsystems.shooter;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import frc2024.subsystems.shooter.ShootingUtils.ShootState;
+import lombok.Getter;
+import lombok.Setter;
 
 public class ShootStateInterpolatingTreeMap {
   private InterpolatingDoubleTreeMap angleInterpolator = new InterpolatingDoubleTreeMap();
@@ -20,5 +21,24 @@ public class ShootStateInterpolatingTreeMap {
         Rotation2d.fromDegrees(angleInterpolator.get(distance)),
         heightInterpolator.get(distance),
         velocityInterpolator.get(distance));
+  }
+
+  public static class ShootState {
+
+    @Getter @Setter Rotation2d pivotAngle;
+
+    @Getter @Setter double elevatorHeight, velocityRPM;
+
+    public ShootState(Rotation2d pivotAngle, double elevatorHeight, double velocityRPM) {
+      this.pivotAngle = pivotAngle;
+      this.elevatorHeight = elevatorHeight;
+      this.velocityRPM = velocityRPM;
+    }
+
+    public ShootState() {
+      this.pivotAngle = new Rotation2d();
+      this.elevatorHeight = 0;
+      this.velocityRPM = 0;
+    }
   }
 }

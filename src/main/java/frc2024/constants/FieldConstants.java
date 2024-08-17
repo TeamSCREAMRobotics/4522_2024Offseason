@@ -41,7 +41,10 @@ public final class FieldConstants {
   public static final RectanglePoseArea CENTER_AREA =
       new RectanglePoseArea(
           new Translation2d(5.85, 0), new Translation2d(10.7, FIELD_DIMENSIONS.getY()));
-  public static final RectanglePoseArea OPPOSING_WING_AREA =
+  public static final RectanglePoseArea BLUE_WING_AREA =
+      new RectanglePoseArea(
+          new Translation2d(0.0, 0.0), new Translation2d(5.87, FIELD_DIMENSIONS.getY()));
+  public static final RectanglePoseArea RED_WING_AREA =
       new RectanglePoseArea(new Translation2d(10.7, 0.0), FIELD_DIMENSIONS);
 
   public static final class StagingLocations {

@@ -32,8 +32,8 @@ public final class ElevatorConstants {
           GEAR_RATIO,
           Units.lbsToKilograms(31),
           Units.inchesToMeters(2.211 / 2.0),
-          ElevatorConstants.MIN_HEIGHT,
-          Units.inchesToMeters(ElevatorConstants.MAX_HEIGHT),
+          MIN_HEIGHT,
+          MAX_HEIGHT_AS_LENGTH.getMeters(),
           false,
           0.0);
   public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(10.0, 0.0, 0.0);
@@ -49,10 +49,9 @@ public final class ElevatorConstants {
 
     SUBSYSTEM_CONSTANTS.sim = new SimWrapper(SIM);
     SUBSYSTEM_CONSTANTS.simController = SIM_GAINS.getPIDController();
-    SUBSYSTEM_CONSTANTS.limitSimVoltage = false;
 
     SUBSYSTEM_CONSTANTS.masterConstants =
-        new TalonFXConstants(new CanDevice(15, ""), InvertedValue.CounterClockwise_Positive);
+        new TalonFXConstants(new CanDevice(15, ""), InvertedValue.Clockwise_Positive);
     SUBSYSTEM_CONSTANTS.slaveConstants =
         new TalonFXConstants[] {
           new TalonFXConstants(new CanDevice(16, ""), InvertedValue.CounterClockwise_Positive)

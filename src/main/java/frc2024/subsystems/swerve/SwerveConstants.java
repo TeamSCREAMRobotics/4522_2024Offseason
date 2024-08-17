@@ -19,8 +19,7 @@ public final class SwerveConstants {
   public static final ProfiledPIDController HEADING_CONTROLLER =
       new ProfiledPIDController(1.25, 0, 0, new Constraints(15, 4));
 
-  public static final ScreamPIDConstants SNAP_CONSTANTS =
-      new ScreamPIDConstants(10, 0.0, 0.0); // 14
+  public static final ScreamPIDConstants SNAP_CONSTANTS = new ScreamPIDConstants(10, 0.0, 0.0);
 
   public static final HolonomicPathFollowerConfig PATH_FOLLOWER_CONFIG =
       new HolonomicPathFollowerConfig(

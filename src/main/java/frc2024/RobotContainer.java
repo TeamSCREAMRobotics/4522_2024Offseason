@@ -27,9 +27,9 @@ import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.PivotConstants;
 import frc2024.subsystems.shooter.Shooter;
 import frc2024.subsystems.shooter.ShooterConstants;
-import frc2024.subsystems.stabilizers.StabilizerConstants;
-import frc2024.subsystems.stabilizers.Stabilizers;
-import frc2024.subsystems.stabilizers.Stabilizers.StabilizerGoal;
+import frc2024.subsystems.stabilizer.Stabilizer;
+import frc2024.subsystems.stabilizer.Stabilizer.StabilizerGoal;
+import frc2024.subsystems.stabilizer.StabilizerConstants;
 import frc2024.subsystems.swerve.Drivetrain;
 import frc2024.subsystems.swerve.generated.TunerConstants;
 import java.util.Optional;
@@ -43,19 +43,19 @@ public class RobotContainer {
       Pivot pivot,
       Shooter shooter,
       Conveyor conveyor,
-      Stabilizers stabilizers) {}
+      Stabilizer stabilizer) {}
 
   private static final Drivetrain drivetrain = TunerConstants.DriveTrain;
   private static final Elevator elevator = new Elevator(ElevatorConstants.SUBSYSTEM_CONSTANTS);
   private static final Pivot pivot = new Pivot(PivotConstants.SUBSYSTEM_CONSTANTS);
   private static final Shooter shooter = new Shooter(ShooterConstants.SUBSYSTEM_CONSTANTS);
   private static final Conveyor conveyor = new Conveyor(ConveyorConstants.SUBSYSTEM_CONSTANTS);
-  private static final Stabilizers stabilizers =
-      new Stabilizers(StabilizerConstants.SUBSYSTEM_CONSTANTS);
+  private static final Stabilizer stabilizer =
+      new Stabilizer(StabilizerConstants.SUBSYSTEM_CONSTANTS);
 
   @Getter
   private static final Subsystems subsystems =
-      new Subsystems(drivetrain, elevator, pivot, shooter, conveyor, stabilizers);
+      new Subsystems(drivetrain, elevator, pivot, shooter, conveyor, stabilizer);
 
   @Getter private static final RobotState robotState = new RobotState(subsystems);
 
@@ -63,7 +63,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("Shoot", RobotState.shootSimNoteCommand());
     NamedCommands.registerCommand(
         "Intake",
-        robotState.setSuperstructureGoalCommand(SuperstructureGoal.HOME_INTAKE).withTimeout(1.0));
+        robotState.applySuperstructureGoal(SuperstructureGoal.HOME_INTAKE).withTimeout(1.0));
     configDefaultCommands();
     configButtonBindings();
 
@@ -82,7 +82,7 @@ public class RobotContainer {
             drivetrain.applyRequest(
                 () ->
                     drivetrain
-                        .getUtil()
+                        .getHelper()
                         .getFacingAngle(
                             Controlboard.getTranslation().get(),
                             RobotState.getActiveShotParameters().get().targetHeading())));
@@ -93,7 +93,7 @@ public class RobotContainer {
             drivetrain.applyRequest(
                 () ->
                     drivetrain
-                        .getUtil()
+                        .getHelper()
                         .getFacingAngle(
                             Controlboard.getTranslation().get(), Rotation2d.fromDegrees(90))));
 
@@ -103,7 +103,7 @@ public class RobotContainer {
             () ->
                 drivetrain.getWithinAngleThreshold(
                     Rotation2d.fromDegrees(90), Rotation2d.fromDegrees(30)))
-        .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.AMP));
+        .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.AMP));
 
     /*
      * Controlboard.driveController.rightBumper() .and(() ->
@@ -113,7 +113,7 @@ public class RobotContainer {
 
     Controlboard.driveController
         .rightTrigger()
-        .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.HOME_INTAKE));
+        .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.HOME_INTAKE));
 
     Controlboard.driveController
         .x()
@@ -123,7 +123,7 @@ public class RobotContainer {
 
     Controlboard.driveController
         .povRight()
-        .whileTrue(robotState.setSuperstructureGoalCommand(SuperstructureGoal.EJECT));
+        .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.EJECT));
 
     Controlboard.driveController
         .y()
@@ -132,16 +132,16 @@ public class RobotContainer {
                 .applyRequest(
                     () ->
                         drivetrain
-                            .getUtil()
+                            .getHelper()
                             .getFacingAngle(
                                 Controlboard.getTranslation().get(),
                                 AllianceFlipUtil.getForwardRotation()))
-                .alongWith(robotState.setSuperstructureGoalCommand(SuperstructureGoal.SUB)));
+                .alongWith(robotState.applySuperstructureGoal(SuperstructureGoal.SUB)));
 
     Controlboard.driveController
         .b()
         .toggleOnTrue(
-            stabilizers
+            stabilizer
                 .applyGoal(StabilizerGoal.OUT)
                 .alongWith(elevator.applyGoal(ElevatorGoal.TRAP)));
   }
@@ -152,12 +152,12 @@ public class RobotContainer {
             () ->
                 Controlboard.getFieldCentric().getAsBoolean()
                     ? drivetrain
-                        .getUtil()
+                        .getHelper()
                         .getFieldCentric(
                             Controlboard.getTranslation().get(),
                             Controlboard.getRotation().getAsDouble())
                     : drivetrain
-                        .getUtil()
+                        .getHelper()
                         .getRobotCentric(
                             Controlboard.getTranslation().get(),
                             Controlboard.getRotation().getAsDouble())));

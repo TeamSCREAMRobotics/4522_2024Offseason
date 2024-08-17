@@ -6,16 +6,14 @@ package frc2024;
 
 import com.SCREAMLib.util.RunnableUtil.RunOnce;
 import com.ctre.phoenix6.SignalLogger;
+import dev.doglog.DogLogOptions;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc2024.constants.Constants;
-import org.littletonrobotics.junction.LogFileUtil;
-import org.littletonrobotics.junction.LoggedRobot;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.rlog.RLOGServer;
-import org.littletonrobotics.junction.wpilog.WPILOGReader;
-import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import frc2024.logging.ScreamLogger;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -23,7 +21,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
  * the package after creating this project, you must also update the build.gradle file in the
  * project.
  */
-public class Robot extends LoggedRobot {
+public class Robot extends TimedRobot {
   private Command autonomousCommand;
 
   private RobotContainer robotContainer;
@@ -32,7 +30,7 @@ public class Robot extends LoggedRobot {
 
   public Robot() {}
 
-  private static boolean isSim = LoggedRobot.isSimulation();
+  private static boolean isSim = TimedRobot.isSimulation();
 
   public static boolean isSimulation() {
     return isSim;
@@ -42,24 +40,19 @@ public class Robot extends LoggedRobot {
   public void robotInit() {
     switch (Constants.ROBOT_MODE) {
       case REAL:
-        Logger.addDataReceiver(new WPILOGWriter());
-        Logger.addDataReceiver(new RLOGServer());
+      ScreamLogger.setPdh(new PowerDistribution());
+        ScreamLogger.setOptions(
+            new DogLogOptions().withCaptureDs(true).withCaptureNt(true).withLogExtras(true).withNtPublish(false));
         SignalLogger.start();
         break;
 
       case SIM:
-        Logger.addDataReceiver(new RLOGServer());
-        break;
-
-      case REPLAY:
-        setUseTiming(false);
-        String logPath = LogFileUtil.findReplayLog();
-        Logger.setReplaySource(new WPILOGReader(logPath));
-        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"), 0.01));
+        ScreamLogger.setOptions(
+            new DogLogOptions().withCaptureDs(true).withCaptureNt(true).withLogExtras(false).withNtPublish(true));
         break;
     }
 
-    Logger.start();
+    ScreamLogger.setEnabled(true);
 
     robotContainer = new RobotContainer();
   }

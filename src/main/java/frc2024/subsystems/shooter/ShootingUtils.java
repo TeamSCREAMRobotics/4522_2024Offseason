@@ -21,8 +21,7 @@ import frc2024.constants.SimConstants;
 import frc2024.logging.ComponentConstants;
 import frc2024.subsystems.pivot.Pivot.PivotGoal;
 import frc2024.subsystems.pivot.PivotConstants;
-import lombok.Getter;
-import lombok.Setter;
+import frc2024.subsystems.shooter.ShootStateInterpolatingTreeMap.ShootState;
 
 public class ShootingUtils {
   public record ShotParameters(
@@ -141,15 +140,14 @@ public class ShootingUtils {
                 AllianceFlipUtil.MirroredRotation2d(Rotation2d.fromDegrees(180)),
                 Rotation2d.fromDegrees(90))
         || !withinRange()) {
-      adjustedAngle =
-          Rotation2d.fromRotations(PivotGoal.HOME_INTAKE.getTargetRotations().getAsDouble());
+      adjustedAngle = Rotation2d.fromRotations(PivotGoal.HOME_INTAKE.getTarget().getAsDouble());
     } else {
       adjustedAngle =
           Rotation2d.fromDegrees(
               MathUtil.clamp(
                   calculated.pivotAngle.plus(PivotConstants.MAP_OFFSET).getDegrees(),
                   subsystems.elevator().getHeight().getInches() > 1.5 ? 0 : 4,
-                  Units.rotationsToDegrees(PivotGoal.SUB.getTargetRotations().getAsDouble())));
+                  Units.rotationsToDegrees(PivotGoal.SUB.getTarget().getAsDouble())));
     }
 
     ShootState adjusted =
@@ -175,34 +173,34 @@ public class ShootingUtils {
     double horizontalDistance =
         currentTranslation.getDistance(targetTranslation) + shotOffset.getX();
 
-    ShootState map = ShooterConstants.SHOOTING_MAP.get(horizontalDistance);
+    ShootState mapped = ShooterConstants.SHOOTING_MAP.get(horizontalDistance);
     ShootState calculated = new ShootState();
     if (pointedAwayFromGoal()) {
       calculated.setPivotAngle(
-          Rotation2d.fromRotations(PivotGoal.HOME_INTAKE.getTargetRotations().getAsDouble()));
+          Rotation2d.fromRotations(PivotGoal.HOME_INTAKE.getTarget().getAsDouble()));
     } else if (!withinRange()
-        && FieldConstants.CENTER_AREA.isPoseWithinArea(currentTranslation)) { // Feed to wing
+        && FieldConstants.CENTER_AREA.contains(currentTranslation)) { // Feed to wing
       targetTranslation = AllianceFlipUtil.MirroredTranslation2d(new Translation2d(2.0, 6.6));
       calculated.setPivotAngle(
-          Rotation2d.fromRotations(PivotGoal.FEED_TO_WING.getTargetRotations().getAsDouble()));
-    } else if (AllianceFlipUtil.PoseArea(FieldConstants.OPPOSING_WING_AREA)
-        .isPoseWithinArea(currentTranslation)) { // Feed to center
+          Rotation2d.fromRotations(PivotGoal.FEED_TO_WING.getTarget().getAsDouble()));
+    } else if (AllianceFlipUtil.get(FieldConstants.RED_WING_AREA, FieldConstants.BLUE_WING_AREA)
+        .contains(currentTranslation)) { // Feed to center
       targetTranslation = AllianceFlipUtil.MirroredTranslation2d(new Translation2d(6.85, 6.65));
       calculated.setPivotAngle(
-          Rotation2d.fromRotations(PivotGoal.FEED_TO_CENTER.getTargetRotations().getAsDouble()));
+          Rotation2d.fromRotations(PivotGoal.FEED_TO_CENTER.getTarget().getAsDouble()));
     } else {
       calculated.setPivotAngle(
           Rotation2d.fromDegrees(
               MathUtil.clamp(
-                  getAngleToGoal(horizontalDistance, FieldConstants.SPEAKER_OPENING.getZ())
+                  getPivotAngleToGoal(horizontalDistance, FieldConstants.SPEAKER_OPENING.getZ())
                       .getDegrees(),
                   subsystems.elevator().getHeight().getInches() > 1.5 ? 0 : 4,
-                  Units.rotationsToDegrees(PivotGoal.SUB.getTargetRotations().getAsDouble()))));
-      calculated.setElevatorHeight(map.elevatorHeight);
+                  Units.rotationsToDegrees(PivotGoal.SUB.getTarget().getAsDouble()))));
+      calculated.setElevatorHeight(mapped.elevatorHeight);
     }
     calculated.setVelocityRPM(
         (subsystems.conveyor().hasNote() && withinRange()) || DriverStation.isAutonomous()
-            ? map.velocityRPM
+            ? mapped.velocityRPM
             : 2000);
 
     Translation2d raw = targetTranslation.minus(currentTranslation);
@@ -214,7 +212,7 @@ public class ShootingUtils {
     return new ShotParameters(targetHeading, calculated, horizontalDistance);
   }
 
-  private static Rotation2d getAngleToGoal(double horizontalDistance, double goalHeight) {
+  private static Rotation2d getPivotAngleToGoal(double horizontalDistance, double goalHeight) {
     return ScreamMath.calculateAngleToPoint(
         RobotState.getPivotRootPosition().get(),
         new Translation2d(
@@ -223,9 +221,9 @@ public class ShootingUtils {
   }
 
   public static Translation2d getMoveWhileShootOffset(ChassisSpeeds robotSpeeds) {
-    Translation2d temp = DataConversions.chassisSpeedsToTranslation(robotSpeeds);
+    double[] temp = DataConversions.chassisSpeedsToArray(robotSpeeds);
     return new Translation2d(
-        temp.getX() / 4.0, temp.getY() * AllianceFlipUtil.getDirectionCoefficient() / 3.0);
+        temp[0] / 4.0, temp[1] * AllianceFlipUtil.getDirectionCoefficient() / 3.0);
   }
 
   private static boolean pointedAwayFromGoal() {
@@ -255,31 +253,12 @@ public class ShootingUtils {
             .getWithinAngleThreshold(
                 RobotState.getActiveShotParameters().get().targetHeading(),
                 Rotation2d.fromDegrees((1 / horizontalDistance) * 13.0))
-        && ScreamMath.getLinearSpeed(subsystems.drivetrain().getRobotRelativeSpeeds()) < 0.5
+        && ScreamMath.getLinearVelocity(subsystems.drivetrain().getRobotRelativeSpeeds()) < 0.5
         && withinRange();
   }
 
   private static Rotation2d filterAngle(Rotation2d angle) {
     return Rotation2d.fromDegrees(
         headingFilter.calculate(Math.abs(angle.getDegrees())) * Math.signum(angle.getDegrees()));
-  }
-
-  public static class ShootState {
-
-    @Getter @Setter Rotation2d pivotAngle;
-
-    @Getter @Setter double elevatorHeight, velocityRPM;
-
-    public ShootState(Rotation2d pivotAngle, double elevatorHeight, double velocityRPM) {
-      this.pivotAngle = pivotAngle;
-      this.elevatorHeight = elevatorHeight;
-      this.velocityRPM = velocityRPM;
-    }
-
-    public ShootState() {
-      this.pivotAngle = new Rotation2d();
-      this.elevatorHeight = 0;
-      this.velocityRPM = 0;
-    }
   }
 }

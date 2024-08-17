@@ -32,13 +32,11 @@ public class Controlboard {
     return () ->
         new Translation2d(
             -MathUtil.applyDeadband(
-                    AllianceFlipUtil.Number(
-                        driveController.getLeftY(), -driveController.getLeftY()),
+                    AllianceFlipUtil.get(driveController.getLeftY(), -driveController.getLeftY()),
                     STICK_DEADBAND)
                 * RobotState.getSpeedLimit().getAsDouble(),
             -MathUtil.applyDeadband(
-                    AllianceFlipUtil.Number(
-                        driveController.getLeftX(), -driveController.getLeftX()),
+                    AllianceFlipUtil.get(driveController.getLeftX(), -driveController.getLeftX()),
                     STICK_DEADBAND)
                 * RobotState.getSpeedLimit().getAsDouble());
   }
