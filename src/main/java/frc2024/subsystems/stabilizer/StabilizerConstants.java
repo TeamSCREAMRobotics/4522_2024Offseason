@@ -1,5 +1,6 @@
 package frc2024.subsystems.stabilizer;
 
+import com.SCREAMLib.data.DataHelpers.SimConstants;
 import com.SCREAMLib.drivers.TalonFXSubsystem.CanDevice;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXConstants;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
@@ -33,8 +34,8 @@ public class StabilizerConstants {
     SUBSYSTEM_CONSTANTS.codeEnabled = true;
     SUBSYSTEM_CONSTANTS.outputTelemetry = false;
 
-    SUBSYSTEM_CONSTANTS.sim = new SimWrapper(SIM);
-    SUBSYSTEM_CONSTANTS.simController = SIM_GAINS.getPIDController();
+    SUBSYSTEM_CONSTANTS.simConstants =
+        new SimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
 
     SUBSYSTEM_CONSTANTS.masterConstants =
         new TalonFXConstants(new CanDevice(13, ""), InvertedValue.CounterClockwise_Positive);

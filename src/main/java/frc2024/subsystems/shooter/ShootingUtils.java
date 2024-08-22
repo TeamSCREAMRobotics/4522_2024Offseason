@@ -15,77 +15,21 @@ import edu.wpi.first.wpilibj.DriverStation;
 import frc2024.RobotContainer;
 import frc2024.RobotContainer.Subsystems;
 import frc2024.RobotState;
-import frc2024.constants.Constants;
 import frc2024.constants.FieldConstants;
-import frc2024.constants.SimConstants;
-import frc2024.logging.ComponentConstants;
 import frc2024.subsystems.pivot.Pivot.PivotGoal;
 import frc2024.subsystems.pivot.PivotConstants;
 import frc2024.subsystems.shooter.ShootStateInterpolatingTreeMap.ShootState;
 
 public class ShootingUtils {
   public record ShotParameters(
-      Rotation2d targetHeading, ShootState shootState, double effectiveDistance) {}
+      Rotation2d targetHeading,
+      ShootState shootState,
+      double effectiveDistance,
+      double actualDistance) {}
 
   private static final LinearFilter headingFilter = LinearFilter.movingAverage(5);
 
   private static final Subsystems subsystems = RobotContainer.getSubsystems();
-
-  public static Translation3d[] calculateTrajectory(
-      Rotation2d launchAngle, double initialVelocity, Pose2d pose) {
-    Translation3d[] trajectoryPoints = new Translation3d[SimConstants.NUM_TRAJECTORY_POINTS + 1];
-
-    Translation3d temp =
-        ComponentConstants.getShooterPose(
-                RobotContainer.getSubsystems().elevator().getHeight().getMeters(), new Rotation2d())
-            .getTranslation(); // new
-    // Translation2d(absoluteHeight.minus(PivotConstants.AXLE_DISTANCE_FROM_ELEVATOR_TOP).plus(PivotConstants.SHOOTER_DISTANCE_FROM_AXLE).getMeters(),
-    // Rotation2d.fromDegrees(80));
-    Translation2d shooterRootPos =
-        new Translation2d(temp.getX(), temp.getZ())
-            .plus(
-                new Translation2d(
-                    PivotConstants.SHOOTER_DISTANCE_FROM_AXLE.getMeters(),
-                    RobotContainer.getSubsystems().pivot().getAngle()));
-
-    launchAngle = launchAngle.plus(new Rotation2d(Math.PI)).unaryMinus();
-    double totalTime =
-        (initialVelocity * launchAngle.getSin()
-                + Math.sqrt(
-                    Math.pow(initialVelocity * launchAngle.getSin(), 2)
-                        + 2 * Constants.GRAVITY * temp.getY()))
-            / Constants.GRAVITY;
-
-    double timeInterval = totalTime / SimConstants.NUM_TRAJECTORY_POINTS;
-
-    int index = 0;
-
-    for (int i = 0; i <= SimConstants.NUM_TRAJECTORY_POINTS; i++) {
-      double time = i * timeInterval;
-      double x = initialVelocity * launchAngle.getCos() * time;
-      double y =
-          (initialVelocity * launchAngle.getSin() * time)
-              - (0.5 * Constants.GRAVITY * time * time)
-              + shooterRootPos.getY();
-      double z = 0;
-      if (y < 0) {
-        y = 0;
-      }
-
-      Translation3d rotatedPoint =
-          ScreamMath.rotatePoint(
-              new Translation3d(x, z, y).plus(new Translation3d(shooterRootPos.getX(), 0.0, 0.0)),
-              pose.getRotation());
-
-      double relX = rotatedPoint.getX() + pose.getX();
-      double relY = rotatedPoint.getY() + pose.getY();
-      double relZ = rotatedPoint.getZ();
-
-      trajectoryPoints[index++] = new Translation3d(relX, relY, relZ);
-    }
-
-    return trajectoryPoints;
-  }
 
   public static Translation3d[] calculateSimpleTrajectory(Pose2d pose, double horizontalDistance) {
     Translation2d shooterExitPos =
@@ -119,61 +63,15 @@ public class ShootingUtils {
     return new Translation3d[] {startPoint, endPoint};
   }
 
-  public static ShotParameters calculateShotParameters(
-      Translation2d currentTranslation, Translation2d targetTranslation) {
-    Translation2d shotOffset =
-        getMoveWhileShootOffset(subsystems.drivetrain().getFieldRelativeSpeeds());
-    double horizontalDistance =
-        currentTranslation.getDistance(targetTranslation) + shotOffset.getX() / 4.0;
-    Translation2d raw = targetTranslation.minus(currentTranslation);
-    Rotation2d targetHeading =
-        raw.minus(new Translation2d(0, shotOffset.getY()).div(3))
-            .getAngle()
-            .minus(new Rotation2d(Math.PI));
-    ShootState calculated = ShooterConstants.SHOOTING_MAP.get(horizontalDistance);
-    double velocity = withinRange() || DriverStation.isAutonomous() ? calculated.velocityRPM : 2000;
-
-    Rotation2d adjustedAngle;
-    if (subsystems
-            .drivetrain()
-            .getWithinAngleThreshold(
-                AllianceFlipUtil.MirroredRotation2d(Rotation2d.fromDegrees(180)),
-                Rotation2d.fromDegrees(90))
-        || !withinRange()) {
-      adjustedAngle = Rotation2d.fromRotations(PivotGoal.HOME_INTAKE.getTarget().getAsDouble());
-    } else {
-      adjustedAngle =
-          Rotation2d.fromDegrees(
-              MathUtil.clamp(
-                  calculated.pivotAngle.plus(PivotConstants.MAP_OFFSET).getDegrees(),
-                  subsystems.elevator().getHeight().getInches() > 1.5 ? 0 : 4,
-                  Units.rotationsToDegrees(PivotGoal.SUB.getTarget().getAsDouble())));
-    }
-
-    ShootState adjusted =
-        new ShootState(
-            adjustedAngle,
-            subsystems
-                    .drivetrain()
-                    .getWithinAngleThreshold(
-                        AllianceFlipUtil.MirroredRotation2d(Rotation2d.fromDegrees(180)),
-                        Rotation2d.fromDegrees(90))
-                ? 0
-                : calculated.elevatorHeight,
-            velocity);
-
-    return new ShotParameters(targetHeading, adjusted, horizontalDistance);
-  }
-
   public static ShotParameters calculateSimpleShotParameters(
       Translation2d currentTranslation, Translation2d targetTranslation) {
     Translation2d shotOffset =
         getMoveWhileShootOffset(subsystems.drivetrain().getFieldRelativeSpeeds());
 
-    double horizontalDistance =
-        currentTranslation.getDistance(targetTranslation) + shotOffset.getX();
+    double actualDistance = currentTranslation.getDistance(targetTranslation);
+    double effectiveDistance = actualDistance + shotOffset.getX();
 
-    ShootState mapped = ShooterConstants.SHOOTING_MAP.get(horizontalDistance);
+    ShootState mapped = ShooterConstants.SHOOTING_MAP.get(effectiveDistance);
     ShootState calculated = new ShootState();
     if (pointedAwayFromGoal()) {
       calculated.setPivotAngle(
@@ -192,7 +90,7 @@ public class ShootingUtils {
       calculated.setPivotAngle(
           Rotation2d.fromDegrees(
               MathUtil.clamp(
-                  getPivotAngleToGoal(horizontalDistance, FieldConstants.SPEAKER_OPENING.getZ())
+                  getPivotAngleToGoal(effectiveDistance, FieldConstants.SPEAKER_OPENING.getZ())
                       .getDegrees(),
                   subsystems.elevator().getHeight().getInches() > 1.5 ? 0 : 4,
                   Units.rotationsToDegrees(PivotGoal.SUB.getTarget().getAsDouble()))));
@@ -209,7 +107,7 @@ public class ShootingUtils {
             .getAngle()
             .minus(new Rotation2d(Math.PI));
 
-    return new ShotParameters(targetHeading, calculated, horizontalDistance);
+    return new ShotParameters(targetHeading, calculated, effectiveDistance, actualDistance);
   }
 
   private static Rotation2d getPivotAngleToGoal(double horizontalDistance, double goalHeight) {

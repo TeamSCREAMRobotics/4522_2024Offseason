@@ -28,27 +28,40 @@ public class Robot extends TimedRobot {
 
   private RunOnce autoConfigurator = new RunOnce();
 
-  public Robot() {}
-
   private static boolean isSim = TimedRobot.isSimulation();
 
   public static boolean isSimulation() {
     return isSim;
   }
 
+  public Robot() {
+    if (isSimulation()) {
+      addPeriodic(
+          RobotContainer.getSubsystems().drivetrain()::updateSimState, Constants.SIM_PERIOD_SEC);
+    }
+  }
+
   @Override
   public void robotInit() {
     switch (Constants.ROBOT_MODE) {
       case REAL:
-      ScreamLogger.setPdh(new PowerDistribution());
+        ScreamLogger.setPdh(new PowerDistribution());
         ScreamLogger.setOptions(
-            new DogLogOptions().withCaptureDs(true).withCaptureNt(true).withLogExtras(true).withNtPublish(false));
+            new DogLogOptions()
+                .withCaptureDs(true)
+                .withCaptureNt(true)
+                .withLogExtras(true)
+                .withNtPublish(false));
         SignalLogger.start();
         break;
 
       case SIM:
         ScreamLogger.setOptions(
-            new DogLogOptions().withCaptureDs(true).withCaptureNt(true).withLogExtras(false).withNtPublish(true));
+            new DogLogOptions()
+                .withCaptureDs(true)
+                .withCaptureNt(true)
+                .withLogExtras(false)
+                .withNtPublish(true));
         break;
     }
 

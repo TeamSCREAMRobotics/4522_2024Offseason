@@ -19,8 +19,6 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import frc2024.Robot;
-import frc2024.constants.Constants;
 import java.util.function.Supplier;
 import lombok.Getter;
 
@@ -42,15 +40,6 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
 
     CommandScheduler.getInstance().registerSubsystem(this);
 
-    if (Robot.isSimulation()) {
-      startSimThread();
-    }
-
-    /*
-     * for(SwerveModule mod : getModules()){ new RunnableUtil.RunUntil().tryUntil(()
-     * -> optimizeModuleUtilization(mod)); }
-     */
-
     helper =
         new PhoenixSwerveHelper(
             this::getPose, SwerveConstants.MAX_ANGULAR_SPEED, SwerveConstants.SNAP_CONSTANTS);
@@ -71,21 +60,13 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
     return run(() -> this.setControl(requestSupplier.get()));
   }
 
-  private void startSimThread() {
-    lastSimTime = Utils.getCurrentTimeSeconds();
+  public void updateSimState() {
+    final double currentTime = Utils.getCurrentTimeSeconds();
+    double deltaTime = currentTime - lastSimTime;
+    lastSimTime = currentTime;
 
-    /* Run simulation at a faster rate so PID gains behave more reasonably */
-    simNotifier =
-        new Notifier(
-            () -> {
-              final double currentTime = Utils.getCurrentTimeSeconds();
-              double deltaTime = currentTime - lastSimTime;
-              lastSimTime = currentTime;
-
-              /* use the measured time delta, get battery voltage from WPILib */
-              updateSimState(deltaTime, RobotController.getBatteryVoltage());
-            });
-    simNotifier.startPeriodic(Constants.SIM_PERIOD_SEC);
+    /* use the measured time delta, get battery voltage from WPILib */
+    updateSimState(deltaTime, RobotController.getBatteryVoltage());
   }
 
   private void setChassisSpeeds(ChassisSpeeds speeds) {

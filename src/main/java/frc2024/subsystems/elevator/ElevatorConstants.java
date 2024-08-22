@@ -1,5 +1,6 @@
 package frc2024.subsystems.elevator;
 
+import com.SCREAMLib.data.DataHelpers.SimConstants;
 import com.SCREAMLib.data.Length;
 import com.SCREAMLib.drivers.TalonFXSubsystem.CanDevice;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXConstants;
@@ -47,8 +48,8 @@ public final class ElevatorConstants {
     SUBSYSTEM_CONSTANTS.codeEnabled = true;
     SUBSYSTEM_CONSTANTS.outputTelemetry = true;
 
-    SUBSYSTEM_CONSTANTS.sim = new SimWrapper(SIM);
-    SUBSYSTEM_CONSTANTS.simController = SIM_GAINS.getPIDController();
+    SUBSYSTEM_CONSTANTS.simConstants =
+        new SimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
 
     SUBSYSTEM_CONSTANTS.masterConstants =
         new TalonFXConstants(new CanDevice(15, ""), InvertedValue.Clockwise_Positive);

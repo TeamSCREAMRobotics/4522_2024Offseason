@@ -18,6 +18,7 @@ import frc2024.commands.ShootSimNote;
 import frc2024.constants.FieldConstants;
 import frc2024.constants.SimConstants;
 import frc2024.controlboard.Controlboard;
+import frc2024.dashboard.Mechanism;
 import frc2024.dashboard.MechanismVisualizer;
 import frc2024.logging.ComponentConstants;
 import frc2024.logging.ScreamLogger;
@@ -80,7 +81,7 @@ public class RobotState {
   private static final DoubleSupplier speedLimit =
       () -> {
         if (ShootingUtils.withinRange() && Controlboard.driveController.getHID().getLeftBumper()) {
-          return MathUtil.clamp(activeShotParameters.get().effectiveDistance() / 8.0, 0.5, 1);
+          return MathUtil.clamp(activeShotParameters.get().actualDistance() / 7.0, 0.5, 1);
         } else if (Controlboard.driveController.getLeftTriggerAxis()
             > Controlboard.TRIGGER_DEADBAND) {
           return 0.5;
@@ -94,15 +95,8 @@ public class RobotState {
   private static final LimitedSizeList<Supplier<Pose3d>> activeNotes =
       new LimitedSizeList<>(SimConstants.MAX_SIM_NOTES);
 
-  static {
-    MechanismVisualizer.setEnabled(false);
-    MechanismVisualizer.setDimensions(SimConstants.MECH_WIDTH, SimConstants.MECH_HEIGHT);
-    MechanismVisualizer.registerTelemetry(RobotState::telemeterizeMechanisms);
-  }
-
-  @SuppressWarnings("unused")
-  private final MechanismVisualizer elevatorVisualizer =
-      new MechanismVisualizer("Elevator")
+  private final Mechanism elevatorMech =
+      new Mechanism("Elevator")
           .withStaticAngle(Rotation2d.fromDegrees(80))
           .withDynamicLength(
               () -> elevator.getHeight().plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR),
@@ -113,9 +107,8 @@ public class RobotState {
                       .plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR))
           .withStaticPosition(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0));
 
-  @SuppressWarnings("unused")
-  private final MechanismVisualizer shooterFrontVisualizer =
-      new MechanismVisualizer("Pivot Front")
+  private final Mechanism shooterFrontMech =
+      new Mechanism("Pivot Front")
           .withStaticLength(Length.fromInches(17))
           .withDynamicAngle(
               () -> pivot.getAngle().unaryMinus(),
@@ -124,9 +117,8 @@ public class RobotState {
               () ->
                   pivotRootPosition.get().plus(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0)));
 
-  @SuppressWarnings("unused")
-  private final MechanismVisualizer shooterBackVisualizer =
-      new MechanismVisualizer("Pivot Back")
+  private final Mechanism shooterBackMech =
+      new Mechanism("Pivot Back")
           .withStaticLength(Length.fromInches(9))
           .withDynamicAngle(
               () -> pivot.getAngle().unaryMinus().plus(Rotation2d.fromRotations(0.5)),
@@ -135,6 +127,10 @@ public class RobotState {
               () ->
                   pivotRootPosition.get().plus(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0)));
 
+  private final MechanismVisualizer mechanismVisualizer =
+      new MechanismVisualizer(
+          RobotState::telemeterizeMechanisms, elevatorMech, shooterFrontMech, shooterBackMech);
+
   public RobotState(Subsystems subsystems) {
     drivetrain = subsystems.drivetrain();
     elevator = subsystems.elevator();
@@ -142,6 +138,8 @@ public class RobotState {
     shooter = subsystems.shooter();
     conveyor = subsystems.conveyor();
     stabilizer = subsystems.stabilizer();
+
+    mechanismVisualizer.setEnabled(true);
 
     if (Robot.isSimulation()) {
       activeTrajectory =

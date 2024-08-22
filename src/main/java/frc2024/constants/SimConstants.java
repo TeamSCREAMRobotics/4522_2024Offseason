@@ -12,7 +12,7 @@ public class SimConstants {
 
   public static final double MECH_ELEVATOR_X = Units.inchesToMeters(14.329305 + EDGE_WIDTH / 2.0);
 
-  public static final Mechanism2d ACTUAL_MECHANISM =
+  public static final Mechanism2d MEASURED_MECHANISM =
       new Mechanism2d(SimConstants.MECH_WIDTH, SimConstants.MECH_HEIGHT);
   public static final Mechanism2d SETPOINT_MECHANISM =
       new Mechanism2d(SimConstants.MECH_WIDTH, SimConstants.MECH_HEIGHT);
