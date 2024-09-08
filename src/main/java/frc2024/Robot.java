@@ -5,7 +5,6 @@
 package frc2024;
 
 import com.SCREAMLib.util.RunnableUtil.RunOnce;
-import com.ctre.phoenix6.SignalLogger;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -52,7 +51,8 @@ public class Robot extends TimedRobot {
                 .withCaptureNt(true)
                 .withLogExtras(true)
                 .withNtPublish(false));
-        SignalLogger.start();
+        // SignalLogger.setPath("/media/sda1/");
+        // SignalLogger.start();
         break;
 
       case SIM:

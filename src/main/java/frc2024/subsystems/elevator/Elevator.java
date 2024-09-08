@@ -10,7 +10,7 @@ import lombok.Getter;
 public class Elevator extends TalonFXSubsystem {
 
   public Elevator(TalonFXSubsystemConstants constants) {
-    super(constants, ElevatorGoal.TRACKING);
+    super(constants, ElevatorGoal.HOME_INTAKE);
 
     simFeedforwardSup = () -> 0.3;
   }
@@ -25,7 +25,7 @@ public class Elevator extends TalonFXSubsystem {
     EJECT(() -> 5.43, ControlType.MOTION_MAGIC_POSITION),
     TRACKING(
         () -> RobotState.getActiveShotParameters().get().shootState().getElevatorHeight(),
-        ControlType.POSITION);
+        ControlType.MOTION_MAGIC_POSITION);
 
     @Getter DoubleSupplier target;
 
@@ -35,8 +35,8 @@ public class Elevator extends TalonFXSubsystem {
       this.target =
           () ->
               Conversions.linearDistanceToRotations(
-                  Length.fromInches(targetHeightInches.getAsDouble()),
-                  ElevatorConstants.PULLEY_CIRCUMFERENCE);
+                      Length.fromInches(targetHeightInches.getAsDouble()),
+                      ElevatorConstants.PULLEY_CIRCUMFERENCE);
       this.controlType = controlType;
     }
 

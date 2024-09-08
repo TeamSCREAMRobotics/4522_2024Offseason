@@ -14,8 +14,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -27,7 +27,6 @@ import lombok.Getter;
  * in command-based projects easily.
  */
 public class Drivetrain extends SwerveDrivetrain implements Subsystem {
-  private Notifier simNotifier = null;
   private double lastSimTime;
 
   @Getter private final PhoenixSwerveHelper helper;
@@ -78,6 +77,10 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
       mod.getDriveMotor().setNeutralMode(driveMode);
       mod.getSteerMotor().setNeutralMode(steerMode);
     }
+  }
+
+  public void resetHeading(){
+    seedFieldRelative(new Pose2d(getPose().getTranslation(), AllianceFlipUtil.getForwardRotation()));
   }
 
   public boolean getWithinAngleThreshold(Rotation2d targetAngle, Rotation2d threshold) {

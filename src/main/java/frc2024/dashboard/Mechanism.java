@@ -61,6 +61,12 @@ public class Mechanism {
     return this;
   }
 
+  public Mechanism withDynamicAngle(Supplier<Rotation2d> angle) {
+    this.measuredAngle = angle;
+    this.setpointAngle = angle;
+    return this;
+  }
+
   public Mechanism withStaticLength(Length length) {
     this.measuredLength = () -> length;
     this.setpointLength = () -> length;
@@ -70,6 +76,12 @@ public class Mechanism {
   public Mechanism withDynamicLength(Supplier<Length> measured, Supplier<Length> setpoint) {
     this.measuredLength = measured;
     this.setpointLength = setpoint;
+    return this;
+  }
+
+  public Mechanism withDynamicLength(Supplier<Length> length) {
+    this.measuredLength = length;
+    this.setpointLength = length;
     return this;
   }
 

@@ -9,7 +9,7 @@ public final class Constants {
 
   public static final double PERIOD_SEC = 0.02; // 20 ms
   public static final double PERIOD_HZ = 1 / PERIOD_SEC; // 50 hz
-  public static final double SIM_PERIOD_SEC = 0.001; // 1 ms
+  public static final double SIM_PERIOD_SEC = 0.01; // 8 ms
 
   public static final Mode ROBOT_MODE = Mode.SIM;
 

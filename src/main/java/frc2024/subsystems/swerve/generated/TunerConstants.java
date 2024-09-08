@@ -20,17 +20,17 @@ public class TunerConstants {
   // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
   private static final Slot0Configs STEER_GAINS =
       new Slot0Configs()
-          .withKP(100)
+          .withKP(75) // 100
           .withKI(0)
-          .withKD(0.2) // 100
+          .withKD(0) //0.2
           .withKS(0)
-          .withKV(1.5)
+          .withKV(0) // 1.5
           .withKA(0);
   // When using closed-loop control, the drive motor uses the control
   // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
   private static final Slot0Configs DRIVE_GAINS =
       new Slot0Configs()
-          .withKP(3)
+          .withKP(0.12) // 0.12
           .withKI(0)
           .withKD(0) // 3
           .withKS(0)
@@ -50,7 +50,7 @@ public class TunerConstants {
 
   // Theoretical free speed (m/s) at 12v applied output;
   // This needs to be tuned to your individual robot
-  public static final double SPEED_12V_MPS = 5.0;
+  public static final double SPEED_12V_MPS = 4.9;
 
   // Every 1 rotation of the azimuth results in COUPLE_RATIO drive motor turns;
   // This may need to be tuned to your individual robot
@@ -60,7 +60,7 @@ public class TunerConstants {
   private static final double STEER_GEAR_RATIO = 21.428571428571427;
   private static final double WHEEL_RADIUS = 2; // inches
 
-  private static final boolean STEER_INVERTED = false;
+  private static final boolean STEER_INVERTED = true;
 
   private static final String CANBUS = "canivore";
   private static final int PIGEON_ID = 0;
@@ -75,6 +75,7 @@ public class TunerConstants {
   private static final TalonFXConfiguration DRIVE_CONFIG = new TalonFXConfiguration();
 
   static {
+    DRIVE_CONFIG.OpenLoopRamps.VoltageOpenLoopRampPeriod = 1;
   }
 
   private static final TalonFXConfiguration STEER_CONFIG = new TalonFXConfiguration();

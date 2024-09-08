@@ -12,14 +12,18 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc2024.RobotState.SuperstructureGoal;
 import frc2024.constants.FieldConstants;
 import frc2024.controlboard.Controlboard;
 import frc2024.subsystems.conveyor.Conveyor;
 import frc2024.subsystems.conveyor.ConveyorConstants;
+import frc2024.subsystems.conveyor.Conveyor.ConveyorGoal;
 import frc2024.subsystems.elevator.Elevator;
 import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
 import frc2024.subsystems.elevator.ElevatorConstants;
@@ -31,6 +35,7 @@ import frc2024.subsystems.stabilizer.Stabilizer;
 import frc2024.subsystems.stabilizer.Stabilizer.StabilizerGoal;
 import frc2024.subsystems.stabilizer.StabilizerConstants;
 import frc2024.subsystems.swerve.Drivetrain;
+import frc2024.subsystems.swerve.SwerveConstants;
 import frc2024.subsystems.swerve.generated.TunerConstants;
 import java.util.Optional;
 import lombok.Getter;
@@ -76,6 +81,8 @@ public class RobotContainer {
   }
 
   private void configButtonBindings() {
+    Controlboard.driveController.back().onTrue(new InstantCommand(() -> drivetrain.seedFieldRelative(AllianceFlipUtil.MirroredPose2d(new Pose2d(1.37, 5.54, Rotation2d.fromDegrees(0))))));
+
     Controlboard.driveController
         .leftBumper()
         .whileTrue(
@@ -94,8 +101,8 @@ public class RobotContainer {
                 () ->
                     drivetrain
                         .getHelper()
-                        .getFacingAngle(
-                            Controlboard.getTranslation().get(), Rotation2d.fromDegrees(90))));
+                        .getFacingAngleProfiled(
+                            Controlboard.getTranslation().get(), Rotation2d.fromDegrees(90), SwerveConstants.HEADING_CONTROLLER)));
 
     Controlboard.driveController
         .a()
@@ -113,13 +120,13 @@ public class RobotContainer {
 
     Controlboard.driveController
         .rightTrigger()
-        .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.HOME_INTAKE));
+        .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.HOME_INTAKE).alongWith(conveyor.applyGoal(ConveyorGoal.INTAKE)));
 
     Controlboard.driveController
         .x()
         .toggleOnTrue(elevator.runVoltage(() -> -Controlboard.driveController.getRightY() * 12));
 
-    Controlboard.driveController.rightBumper().onTrue(RobotState.shootSimNoteCommand());
+    Controlboard.driveController.rightBumper().and(() -> Robot.isSimulation()).onTrue(RobotState.shootSimNoteCommand());
 
     Controlboard.driveController
         .povRight()
@@ -170,20 +177,20 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    PathPlannerPath path = PathPlannerPath.fromPathFile("6PieceNuggets");
+    PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory("TestPath");
     return new SequentialCommandGroup(
         Commands.runOnce(() -> startTime()),
         Commands.runOnce(
-            () -> drivetrain.seedFieldRelative(path.getPreviewStartingHolonomicPose())),
+            () -> drivetrain.seedFieldRelative(AllianceFlipUtil.MirroredPose2d(path.getPreviewStartingHolonomicPose()))),
         // RobotState.shootSimNoteCommand(),
         AutoBuilder.followPath(path)
-            .deadlineWith(
+            /* .deadlineWith(
                 Commands.run(
                     () ->
                         PPHolonomicDriveController.setRotationTargetOverride(
                             () ->
                                 Optional.of(
-                                    RobotState.getActiveShotParameters().get().targetHeading())))),
+                                    RobotState.getActiveShotParameters().get().targetHeading())))) */,
         Commands.runOnce(() -> System.out.println(Timer.getFPGATimestamp() - startTime)));
   }
 }

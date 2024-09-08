@@ -218,9 +218,11 @@ public class RobotState {
   }
 
   public static void outputTelemetry() {
-    ScreamLogger.log(
-        "Simulation/ActiveNotes", activeNotes.stream().map(Supplier::get).toArray(Pose3d[]::new));
-    ScreamLogger.log("Simulation/NoteTrajectory", getActiveTrajectory().get());
+    if (Robot.isSimulation()) {
+      ScreamLogger.log(
+          "Simulation/ActiveNotes", activeNotes.stream().map(Supplier::get).toArray(Pose3d[]::new));
+      ScreamLogger.log("Simulation/NoteTrajectory", getActiveTrajectory().get());
+    }
     ScreamLogger.log(
         "RobotState/HorizontalDistanceFromGoal",
         getActiveShotParameters().get().effectiveDistance());
