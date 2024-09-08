@@ -64,7 +64,7 @@ public class RobotState {
   private static final Supplier<Translation2d> pivotRootPosition =
       () ->
           DataConversions.projectTo2d(
-              ComponentConstants.getShooterPose(elevator.getHeight().getMeters(), pivot.getAngle())
+              ComponentConstants.getShooterPose(elevator.getMeasuredHeight().getMeters(), pivot.getAngle())
                   .getTranslation());
 
   @Getter
@@ -99,7 +99,7 @@ public class RobotState {
       new Mechanism("Elevator")
           .withStaticAngle(Rotation2d.fromDegrees(80))
           .withDynamicLength(
-              () -> elevator.getHeight().plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR),
+              () -> elevator.getMeasuredHeight().plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR),
               () ->
                   Length.fromRotations(
                           elevator.getGoal().target().getAsDouble(),
@@ -227,12 +227,20 @@ public class RobotState {
         "RobotState/HorizontalDistanceFromGoal",
         getActiveShotParameters().get().effectiveDistance());
     ScreamLogger.log(
-        "Simulation/ComponentPoses",
+        "Simulation/MeasuredComponentPoses",
         new Pose3d[] {
-          ComponentConstants.getElevStage1Pose(elevator.getHeight().getMeters()),
-          ComponentConstants.getElevStage2Pose(elevator.getHeight().getMeters()),
-          ComponentConstants.getShooterPose(elevator.getHeight().getMeters(), pivot.getAngle()),
+          ComponentConstants.getElevStage1Pose(elevator.getMeasuredHeight().getMeters()),
+          ComponentConstants.getElevStage2Pose(elevator.getMeasuredHeight().getMeters()),
+          ComponentConstants.getShooterPose(elevator.getMeasuredHeight().getMeters(), pivot.getAngle()),
           ComponentConstants.getStabilizerPose(stabilizer.getAngle())
+        });
+    ScreamLogger.log(
+        "Simulation/SetpointComponentPoses",
+        new Pose3d[] {
+          ComponentConstants.getElevStage1Pose(elevator.getSetpointHeight().getMeters()),
+          ComponentConstants.getElevStage2Pose(elevator.getSetpointHeight().getMeters()),
+          ComponentConstants.getShooterPose(elevator.getSetpointHeight().getMeters(), Rotation2d.fromRotations(pivot.getSetpoint())),
+          ComponentConstants.getStabilizerPose(Rotation2d.fromRotations(stabilizer.getSetpoint()))
         });
     ScreamLogger.log("RobotState/SpeedLimit", speedLimit.getAsDouble());
   }

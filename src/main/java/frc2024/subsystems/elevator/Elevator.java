@@ -51,8 +51,12 @@ public class Elevator extends TalonFXSubsystem {
     }
   }
 
-  public Length getHeight() {
+  public Length getMeasuredHeight() {
     return Length.fromRotations(getPosition(), ElevatorConstants.PULLEY_CIRCUMFERENCE);
+  }
+
+  public Length getSetpointHeight(){
+    return Length.fromRotations(getSetpoint(), ElevatorConstants.PULLEY_CIRCUMFERENCE);
   }
 
   @Override

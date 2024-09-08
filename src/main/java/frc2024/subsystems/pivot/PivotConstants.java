@@ -35,15 +35,15 @@ public final class PivotConstants {
   static {
     SUBSYSTEM_CONSTANTS.name = "Pivot";
 
-    SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.outputTelemetry = false;
+    SUBSYSTEM_CONSTANTS.codeEnabled = false;
+    SUBSYSTEM_CONSTANTS.outputTelemetry = true;
 
     SUBSYSTEM_CONSTANTS.simConstants =
         new SimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false);
 
     SUBSYSTEM_CONSTANTS.masterConstants =
         new TalonFXConstants(new CanDevice(17, ""), InvertedValue.CounterClockwise_Positive);
-    SUBSYSTEM_CONSTANTS.neutralMode = NeutralModeValue.Brake;
+    SUBSYSTEM_CONSTANTS.neutralMode = NeutralModeValue.Coast;
 
     SUBSYSTEM_CONSTANTS.rotorToSensorRatio = GEAR_RATIO;
     SUBSYSTEM_CONSTANTS.sensorToMechRatio = 1.0;
@@ -52,8 +52,10 @@ public final class PivotConstants {
     SUBSYSTEM_CONSTANTS.feedbackRemoteSensorOffset = 0.2470703125;
     SUBSYSTEM_CONSTANTS.enableSupplyCurrentLimit = true;
     SUBSYSTEM_CONSTANTS.supplyCurrentLimit = 40;
+    SUBSYSTEM_CONSTANTS.cruiseVelocity = 5.0;
+    SUBSYSTEM_CONSTANTS.acceleration = 2.5;
     SUBSYSTEM_CONSTANTS.slot0 =
-        new ScreamPIDConstants(400.0, 0, 0).getSlot0Configs(new FeedforwardConstants());
+        new ScreamPIDConstants(100.0, 0, 0).getSlot0Configs(new FeedforwardConstants());
     SUBSYSTEM_CONSTANTS.positionThreshold = Units.degreesToRotations(2.0);
   }
 }

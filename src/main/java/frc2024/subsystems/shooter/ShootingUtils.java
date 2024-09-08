@@ -92,7 +92,7 @@ public class ShootingUtils {
               MathUtil.clamp(
                   getPivotAngleToGoal(effectiveDistance, FieldConstants.SPEAKER_OPENING.getZ())
                       .getDegrees(),
-                  subsystems.elevator().getHeight().getInches() > 1.5 ? 0 : 4,
+                  subsystems.elevator().getMeasuredHeight().getInches() > 1.5 ? 0 : 4,
                   Units.rotationsToDegrees(PivotGoal.SUB.getTarget().getAsDouble()))));
       calculated.setElevatorHeight(mapped.elevatorHeight);
     }

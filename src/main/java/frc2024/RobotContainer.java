@@ -81,7 +81,7 @@ public class RobotContainer {
   }
 
   private void configButtonBindings() {
-    Controlboard.driveController.back().onTrue(new InstantCommand(() -> drivetrain.seedFieldRelative(AllianceFlipUtil.MirroredPose2d(new Pose2d(1.37, 5.54, Rotation2d.fromDegrees(0))))));
+    Controlboard.driveController.back().onTrue(Commands.runOnce(() -> drivetrain.seedFieldRelative(AllianceFlipUtil.MirroredPose2d(new Pose2d(1.37, 5.54, Rotation2d.fromDegrees(0))))));
 
     Controlboard.driveController
         .leftBumper()
@@ -102,7 +102,8 @@ public class RobotContainer {
                     drivetrain
                         .getHelper()
                         .getFacingAngleProfiled(
-                            Controlboard.getTranslation().get(), Rotation2d.fromDegrees(90), SwerveConstants.HEADING_CONTROLLER)));
+                            Controlboard.getTranslation().get(), Rotation2d.fromDegrees(90), SwerveConstants.HEADING_CONTROLLER)))
+                            .onFalse(Commands.runOnce(() -> SwerveConstants.HEADING_CONTROLLER.reset(drivetrain.getHeading().getRadians())));
 
     Controlboard.driveController
         .a()
