@@ -22,7 +22,7 @@ public class TunerConstants {
       new Slot0Configs()
           .withKP(75) // 100
           .withKI(0)
-          .withKD(0) //0.2
+          .withKD(0) // 0.2
           .withKS(0)
           .withKV(0) // 1.5
           .withKA(0);

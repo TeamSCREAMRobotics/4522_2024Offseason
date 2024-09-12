@@ -4,26 +4,26 @@ import com.SCREAMLib.drivers.TalonFXSubsystem;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc2024.RobotState;
 import frc2024.logging.ScreamLogger;
-
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
 
 public class Pivot extends TalonFXSubsystem {
 
   public Pivot(TalonFXSubsystemConstants constants) {
-    super(constants, new TalonFXSubsystemGoal() {
+    super(
+        constants,
+        new TalonFXSubsystemGoal() {
 
-      @Override
-      public DoubleSupplier target() {
-        return () -> 0.0;
-      }
+          @Override
+          public DoubleSupplier target() {
+            return () -> 0.0;
+          }
 
-      @Override
-      public ControlType controlType() {
-        return ControlType.MOTION_MAGIC_POSITION;
-      }
-      
-    });
+          @Override
+          public ControlType controlType() {
+            return ControlType.MOTION_MAGIC_POSITION;
+          }
+        });
   }
 
   public enum PivotGoal implements TalonFXSubsystemGoal {
@@ -62,7 +62,7 @@ public class Pivot extends TalonFXSubsystem {
 
   @Override
   public void periodic() {
-      super.periodic();
-      ScreamLogger.log("RobotState/Subsystems/Pivot/Angle", getAngle().getDegrees());
+    super.periodic();
+    ScreamLogger.log("RobotState/Subsystems/Pivot/Angle", getAngle().getDegrees());
   }
 }

@@ -7,7 +7,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc2024.RobotState;
 import frc2024.subsystems.swerve.SwerveConstants;
-
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -26,7 +25,7 @@ public class Controlboard {
     driveController.start().onTrue(Commands.runOnce(() -> fieldCentric = !fieldCentric));
   }
 
-  public static double applyPower(double value, int power){
+  public static double applyPower(double value, int power) {
     return Math.pow(value, power) * (power % 2 == 0 ? Math.signum(value) : 1);
   }
 
@@ -37,19 +36,27 @@ public class Controlboard {
   public static Supplier<Translation2d> getTranslation() {
     return () ->
         new Translation2d(
-            applyPower(-MathUtil.applyDeadband(
-                    AllianceFlipUtil.get(driveController.getLeftY(), -driveController.getLeftY()),
-                    STICK_DEADBAND), 2)
-                * RobotState.getSpeedLimit().getAsDouble(),
-            applyPower(-MathUtil.applyDeadband(
-                    AllianceFlipUtil.get(driveController.getLeftX(), -driveController.getLeftX()),
-                    STICK_DEADBAND), 2)
-                * RobotState.getSpeedLimit().getAsDouble()).times(SwerveConstants.MAX_SPEED);
+                applyPower(
+                        -MathUtil.applyDeadband(
+                            AllianceFlipUtil.get(
+                                driveController.getLeftY(), -driveController.getLeftY()),
+                            STICK_DEADBAND),
+                        2)
+                    * RobotState.getSpeedLimit().getAsDouble(),
+                applyPower(
+                        -MathUtil.applyDeadband(
+                            AllianceFlipUtil.get(
+                                driveController.getLeftX(), -driveController.getLeftX()),
+                            STICK_DEADBAND),
+                        2)
+                    * RobotState.getSpeedLimit().getAsDouble())
+            .times(SwerveConstants.MAX_SPEED);
   }
 
   public static DoubleSupplier getRotation() {
     return () ->
-        applyPower(-MathUtil.applyDeadband(driveController.getRightX(), STICK_DEADBAND), 3) * SwerveConstants.MAX_ANGULAR_SPEED;
+        applyPower(-MathUtil.applyDeadband(driveController.getRightX(), STICK_DEADBAND), 3)
+            * SwerveConstants.MAX_ANGULAR_SPEED;
   }
 
   public static BooleanSupplier getFieldCentric() {
