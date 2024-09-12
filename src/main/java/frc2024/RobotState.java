@@ -64,7 +64,8 @@ public class RobotState {
   private static final Supplier<Translation2d> pivotRootPosition =
       () ->
           DataConversions.projectTo2d(
-              ComponentConstants.getShooterPose(elevator.getMeasuredHeight().getMeters(), pivot.getAngle())
+              ComponentConstants.getShooterPose(
+                      elevator.getMeasuredHeight().getMeters(), pivot.getAngle())
                   .getTranslation());
 
   @Getter
@@ -231,7 +232,8 @@ public class RobotState {
         new Pose3d[] {
           ComponentConstants.getElevStage1Pose(elevator.getMeasuredHeight().getMeters()),
           ComponentConstants.getElevStage2Pose(elevator.getMeasuredHeight().getMeters()),
-          ComponentConstants.getShooterPose(elevator.getMeasuredHeight().getMeters(), pivot.getAngle()),
+          ComponentConstants.getShooterPose(
+              elevator.getMeasuredHeight().getMeters(), pivot.getAngle()),
           ComponentConstants.getStabilizerPose(stabilizer.getAngle())
         });
     ScreamLogger.log(
@@ -239,7 +241,9 @@ public class RobotState {
         new Pose3d[] {
           ComponentConstants.getElevStage1Pose(elevator.getSetpointHeight().getMeters()),
           ComponentConstants.getElevStage2Pose(elevator.getSetpointHeight().getMeters()),
-          ComponentConstants.getShooterPose(elevator.getSetpointHeight().getMeters(), Rotation2d.fromRotations(pivot.getSetpoint())),
+          ComponentConstants.getShooterPose(
+              elevator.getSetpointHeight().getMeters(),
+              Rotation2d.fromRotations(pivot.getSetpoint())),
           ComponentConstants.getStabilizerPose(Rotation2d.fromRotations(stabilizer.getSetpoint()))
         });
     ScreamLogger.log("RobotState/SpeedLimit", speedLimit.getAsDouble());

@@ -35,8 +35,8 @@ public class Elevator extends TalonFXSubsystem {
       this.target =
           () ->
               Conversions.linearDistanceToRotations(
-                      Length.fromInches(targetHeightInches.getAsDouble()),
-                      ElevatorConstants.PULLEY_CIRCUMFERENCE);
+                  Length.fromInches(targetHeightInches.getAsDouble()),
+                  ElevatorConstants.PULLEY_CIRCUMFERENCE);
       this.controlType = controlType;
     }
 
@@ -55,7 +55,7 @@ public class Elevator extends TalonFXSubsystem {
     return Length.fromRotations(getPosition(), ElevatorConstants.PULLEY_CIRCUMFERENCE);
   }
 
-  public Length getSetpointHeight(){
+  public Length getSetpointHeight() {
     return Length.fromRotations(getSetpoint(), ElevatorConstants.PULLEY_CIRCUMFERENCE);
   }
 
