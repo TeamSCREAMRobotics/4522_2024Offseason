@@ -3,6 +3,8 @@ package frc2024.subsystems.conveyor;
 import com.SCREAMLib.drivers.TalonFXSubsystem;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc2024.Robot;
+import frc2024.logging.NoteVisualizer;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
 
@@ -42,7 +44,7 @@ public class Conveyor extends TalonFXSubsystem {
     }
   }
 
-  public boolean hasNote() {
-    return !noteSensor.get() || Robot.isSimulation();
+  public BooleanSupplier hasNote() {
+    return () -> !noteSensor.get() || (Robot.isSimulation() && NoteVisualizer.hasNote);
   }
 }

@@ -5,6 +5,7 @@
 package frc2024;
 
 import com.SCREAMLib.util.RunnableUtil.RunOnce;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -12,7 +13,9 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc2024.constants.Constants;
-import frc2024.logging.ScreamLogger;
+import frc2024.logging.Logger;
+import frc2024.logging.NoteVisualizer;
+import java.util.Optional;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -44,8 +47,8 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     switch (Constants.ROBOT_MODE) {
       case REAL:
-        ScreamLogger.setPdh(new PowerDistribution());
-        ScreamLogger.setOptions(
+        Logger.setPdh(new PowerDistribution());
+        Logger.setOptions(
             new DogLogOptions()
                 .withCaptureDs(true)
                 .withCaptureNt(true)
@@ -56,7 +59,7 @@ public class Robot extends TimedRobot {
         break;
 
       case SIM:
-        ScreamLogger.setOptions(
+        Logger.setOptions(
             new DogLogOptions()
                 .withCaptureDs(true)
                 .withCaptureNt(true)
@@ -65,7 +68,7 @@ public class Robot extends TimedRobot {
         break;
     }
 
-    ScreamLogger.setEnabled(true);
+    Logger.setEnabled(true);
 
     robotContainer = new RobotContainer();
   }
@@ -90,6 +93,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
+    NoteVisualizer.resetNotes();
+    NoteVisualizer.hasNote = true;
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (autonomousCommand != null) {
@@ -102,6 +107,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
+    PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.empty());
+    NoteVisualizer.resetNotes();
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }

@@ -17,7 +17,7 @@ public final class SwerveConstants {
   public static final ScreamPIDConstants PATH_ROTATION_CONSTANTS =
       new ScreamPIDConstants(10.0, 0.0, 0.0);
   public static final ProfiledPIDController HEADING_CONTROLLER =
-      new ProfiledPIDController(1.25, 0, 0, new Constraints(15, 4));
+      new ProfiledPIDController(1.0, 0, 0, new Constraints(30, 15));
 
   static {
     HEADING_CONTROLLER.enableContinuousInput(-Math.PI, Math.PI);

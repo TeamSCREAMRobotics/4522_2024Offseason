@@ -1,10 +1,10 @@
 package frc2024.subsystems.shooter;
 
-import com.SCREAMLib.data.DataHelpers.SimConstants;
 import com.SCREAMLib.data.Length;
-import com.SCREAMLib.drivers.TalonFXSubsystem.CanDevice;
+import com.SCREAMLib.drivers.TalonFXSubsystem.CANDevice;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXConstants;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import com.SCREAMLib.pid.ScreamPIDConstants;
 import com.SCREAMLib.pid.ScreamPIDConstants.FeedforwardConstants;
 import com.SCREAMLib.sim.SimWrapper;
@@ -50,13 +50,13 @@ public class ShooterConstants {
     SUBSYSTEM_CONSTANTS.outputTelemetry = false;
 
     SUBSYSTEM_CONSTANTS.simConstants =
-        new SimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
+        new TalonFXSubsystemSimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
 
     SUBSYSTEM_CONSTANTS.masterConstants =
-        new TalonFXConstants(new CanDevice(11, ""), InvertedValue.CounterClockwise_Positive);
+        new TalonFXConstants(new CANDevice(11, ""), InvertedValue.CounterClockwise_Positive);
     SUBSYSTEM_CONSTANTS.slaveConstants =
         new TalonFXConstants[] {
-          new TalonFXConstants(new CanDevice(12, ""), InvertedValue.Clockwise_Positive)
+          new TalonFXConstants(new CANDevice(12, ""), InvertedValue.Clockwise_Positive)
         };
 
     SUBSYSTEM_CONSTANTS.velocityThreshold = 1.25;
@@ -78,15 +78,7 @@ public class ShooterConstants {
     SHOOTING_MAP.put(3.5, new ShootState(Rotation2d.fromDegrees(33.3 - 4.0), 0.0, 4000.0));
     SHOOTING_MAP.put(3.0, new ShootState(Rotation2d.fromDegrees(37.0 - 5.0), 0.0, 4000.0));
     SHOOTING_MAP.put(2.5, new ShootState(Rotation2d.fromDegrees(41.3 - 5.0), 0.0, 4000.0));
-    SHOOTING_MAP.put(
-        2.0,
-        new ShootState(
-            Rotation2d.fromDegrees(47.4 - 6.0),
-            Length.fromRotations(
-                    ElevatorGoal.SUB.getTarget().getAsDouble(),
-                    ElevatorConstants.PULLEY_CIRCUMFERENCE)
-                .getInches(),
-            3500.0));
+    SHOOTING_MAP.put(2.0, new ShootState(Rotation2d.fromDegrees(47.4 - 6.0), 0.0, 3500.0));
     SHOOTING_MAP.put(
         1.5,
         new ShootState(

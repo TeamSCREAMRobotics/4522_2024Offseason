@@ -1,6 +1,7 @@
 package frc2024.constants;
 
-import com.SCREAMLib.data.RectanglePoseArea;
+import com.SCREAMLib.data.Length;
+import com.SCREAMLib.zones.RectangularPoseArea;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
@@ -9,43 +10,48 @@ public final class FieldConstants {
 
   public static final Translation2d FIELD_DIMENSIONS = new Translation2d(16.541, 8.211);
 
-  public static final Translation3d SPEAKER_TOP_RIGHT =
-      new Translation3d(
-          Units.inchesToMeters(18.055),
-          Units.inchesToMeters(238.815),
-          Units.inchesToMeters(83.091));
-  public static final Translation3d SPEAKER_TOP_LEFT =
-      new Translation3d(
-          Units.inchesToMeters(18.055),
-          Units.inchesToMeters(197.765),
-          Units.inchesToMeters(83.091));
-  public static final Translation3d SPEAKER_BOTTOM_RIGHT =
-      new Translation3d(0.0, Units.inchesToMeters(238.815), Units.inchesToMeters(78.324));
-  public static final Translation3d SPEAKER_BOTTOM_LEFT =
-      new Translation3d(0.0, Units.inchesToMeters(197.765), Units.inchesToMeters(78.324));
+  public static final Length NOTE_DIAMETER = Length.fromInches(14.0);
 
-  public static final double SPEAKER_HEIGHT_OFFSET = -Units.inchesToMeters(2.5);
-  public static final Translation3d SPEAKER_OPENING =
-      SPEAKER_BOTTOM_LEFT
-          .interpolate(SPEAKER_TOP_RIGHT, 0.5)
-          .plus(new Translation3d(0, 0, SPEAKER_HEIGHT_OFFSET));
-  public static final Translation2d SPEAKER_GOAL_OFFSET_RIGHT =
-      new Translation2d(Units.inchesToMeters(12.5), Units.inchesToMeters(9.0));
-  public static final Translation2d SPEAKER_GOAL_OFFSET_LEFT =
-      new Translation2d(Units.inchesToMeters(5.0), Units.inchesToMeters(9.0));
-  public static final Translation2d SPEAKER_GOAL_OFFSET_CENTER =
-      new Translation2d(Units.inchesToMeters(4.0), 0);
+  public static final class Zones {
+    public static final RectangularPoseArea FIELD_AREA =
+        new RectangularPoseArea(new Translation2d(0, 0), FIELD_DIMENSIONS);
+    public static final RectangularPoseArea CENTER_AREA =
+        new RectangularPoseArea(
+            new Translation2d(5.85, 0), new Translation2d(10.7, FIELD_DIMENSIONS.getY()));
+    public static final RectangularPoseArea BLUE_WING_AREA =
+        new RectangularPoseArea(
+            new Translation2d(0.0, 0.0), new Translation2d(5.87, FIELD_DIMENSIONS.getY()));
+    public static final RectangularPoseArea RED_WING_AREA =
+        new RectangularPoseArea(new Translation2d(10.7, 0.0), FIELD_DIMENSIONS);
+  }
 
-  public static final RectanglePoseArea FIELD_AREA =
-      new RectanglePoseArea(new Translation2d(0, 0), FIELD_DIMENSIONS);
-  public static final RectanglePoseArea CENTER_AREA =
-      new RectanglePoseArea(
-          new Translation2d(5.85, 0), new Translation2d(10.7, FIELD_DIMENSIONS.getY()));
-  public static final RectanglePoseArea BLUE_WING_AREA =
-      new RectanglePoseArea(
-          new Translation2d(0.0, 0.0), new Translation2d(5.87, FIELD_DIMENSIONS.getY()));
-  public static final RectanglePoseArea RED_WING_AREA =
-      new RectanglePoseArea(new Translation2d(10.7, 0.0), FIELD_DIMENSIONS);
+  public static final class PointsOfInterest {
+    public static final Translation2d BLUE_WING_FEED_TRANSLATION = new Translation2d(2.0, 6.6);
+    public static final Translation2d BLUE_CENTER_FEED_TRANSLATION = new Translation2d(6.85, 6.65);
+  }
+
+  public static final class ScoringLocations {
+    public static final Translation3d SPEAKER_TOP_RIGHT =
+        new Translation3d(
+            Units.inchesToMeters(18.055),
+            Units.inchesToMeters(238.815),
+            Units.inchesToMeters(83.091));
+    public static final Translation3d SPEAKER_TOP_LEFT =
+        new Translation3d(
+            Units.inchesToMeters(18.055),
+            Units.inchesToMeters(197.765),
+            Units.inchesToMeters(83.091));
+    public static final Translation3d SPEAKER_BOTTOM_RIGHT =
+        new Translation3d(0.0, Units.inchesToMeters(238.815), Units.inchesToMeters(78.324));
+    public static final Translation3d SPEAKER_BOTTOM_LEFT =
+        new Translation3d(0.0, Units.inchesToMeters(197.765), Units.inchesToMeters(78.324));
+
+    public static final double SPEAKER_HEIGHT_OFFSET = -Units.inchesToMeters(0.0);
+    public static final Translation3d SPEAKER_OPENING =
+        SPEAKER_BOTTOM_LEFT
+            .interpolate(SPEAKER_TOP_RIGHT, 0.5)
+            .plus(new Translation3d(0, 0, SPEAKER_HEIGHT_OFFSET));
+  }
 
   public static final class StagingLocations {
     public static final double centerlineX = FIELD_DIMENSIONS.getX() / 2.0;

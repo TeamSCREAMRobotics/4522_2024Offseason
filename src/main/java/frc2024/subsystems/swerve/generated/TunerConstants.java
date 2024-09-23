@@ -67,7 +67,7 @@ public class TunerConstants {
 
   // These are only used for simulation
   private static final double STEER_INERTIA = 0.001; // 0.00001
-  private static final double DRIVE_INERTIA = 0.02; // 0.05
+  private static final double DRIVE_INERTIA = 0.05; // 0.05
   // Simulated voltage necessary to overcome friction
   private static final double STEER_KS = 0.25;
   private static final double DRIVE_KS = 0.25;

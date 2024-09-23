@@ -3,6 +3,10 @@ package frc2024.subsystems.elevator;
 import com.SCREAMLib.data.Length;
 import com.SCREAMLib.drivers.TalonFXSubsystem;
 import com.SCREAMLib.math.Conversions;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc2024.Robot;
+import frc2024.RobotContainer;
 import frc2024.RobotState;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
@@ -10,7 +14,7 @@ import lombok.Getter;
 public class Elevator extends TalonFXSubsystem {
 
   public Elevator(TalonFXSubsystemConstants constants) {
-    super(constants, ElevatorGoal.HOME_INTAKE);
+    super(constants, Robot.isSimulation() ? ElevatorGoal.TRACKING : ElevatorGoal.HOME_INTAKE);
 
     simFeedforwardSup = () -> 0.3;
   }
@@ -51,6 +55,12 @@ public class Elevator extends TalonFXSubsystem {
     }
   }
 
+  @Override
+  public synchronized Command applyGoal(TalonFXSubsystemGoal goal) {
+    return Commands.waitUntil(() -> RobotContainer.getSubsystems().pivot().atGoal())
+        .andThen(super.applyGoal(goal));
+  }
+
   public Length getMeasuredHeight() {
     return Length.fromRotations(getPosition(), ElevatorConstants.PULLEY_CIRCUMFERENCE);
   }
@@ -60,14 +70,14 @@ public class Elevator extends TalonFXSubsystem {
   }
 
   @Override
-  public void setSimState(double position, double velocity) {
+  public synchronized void setSimState(double position, double velocity) {
     super.setSimState(
         Conversions.linearDistanceToRotations(
                 Length.fromMeters(position), ElevatorConstants.PULLEY_CIRCUMFERENCE)
-            * ElevatorConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio,
+            * ElevatorConstants.GEAR_RATIO,
         Conversions.mpsToRPS(
             velocity,
             ElevatorConstants.PULLEY_CIRCUMFERENCE.getMeters(),
-            ElevatorConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio));
+            ElevatorConstants.GEAR_RATIO));
   }
 }

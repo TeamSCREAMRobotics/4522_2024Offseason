@@ -18,5 +18,4 @@ public class SimConstants {
       new Mechanism2d(SimConstants.MECH_WIDTH, SimConstants.MECH_HEIGHT);
 
   public static final int MAX_SIM_NOTES = 10;
-  public static final int NUM_TRAJECTORY_POINTS = 30;
 }
