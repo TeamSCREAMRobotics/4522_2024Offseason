@@ -1,9 +1,9 @@
 package frc2024.subsystems.stabilizer;
 
-import com.SCREAMLib.data.DataHelpers.SimConstants;
-import com.SCREAMLib.drivers.TalonFXSubsystem.CanDevice;
+import com.SCREAMLib.drivers.TalonFXSubsystem.CANDevice;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXConstants;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import com.SCREAMLib.pid.ScreamPIDConstants;
 import com.SCREAMLib.pid.ScreamPIDConstants.FeedforwardConstants;
 import com.SCREAMLib.sim.SimWrapper;
@@ -23,7 +23,7 @@ public class StabilizerConstants {
 
   public static final DCMotorSim SIM =
       new DCMotorSim(DCMotor.getFalcon500(1), GEAR_RATIO, 0.05859096765521);
-  public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(100.0, 0.0, 0.0);
+  public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(50.0, 0.0, 0.0);
 
   public static final TalonFXSubsystemConstants SUBSYSTEM_CONSTANTS =
       new TalonFXSubsystemConstants();
@@ -35,13 +35,14 @@ public class StabilizerConstants {
     SUBSYSTEM_CONSTANTS.outputTelemetry = false;
 
     SUBSYSTEM_CONSTANTS.simConstants =
-        new SimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
+        new TalonFXSubsystemSimConstants(
+            new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false);
 
     SUBSYSTEM_CONSTANTS.masterConstants =
-        new TalonFXConstants(new CanDevice(13, ""), InvertedValue.CounterClockwise_Positive);
+        new TalonFXConstants(new CANDevice(13, ""), InvertedValue.CounterClockwise_Positive);
     SUBSYSTEM_CONSTANTS.neutralMode = NeutralModeValue.Brake;
 
-    SUBSYSTEM_CONSTANTS.rotorToSensorRatio = GEAR_RATIO;
+    SUBSYSTEM_CONSTANTS.sensorToMechRatio = GEAR_RATIO;
     SUBSYSTEM_CONSTANTS.enableSupplyCurrentLimit = true;
     SUBSYSTEM_CONSTANTS.supplyCurrentLimit = 10;
     SUBSYSTEM_CONSTANTS.minUnitsLimit = 0.0;

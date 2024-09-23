@@ -40,7 +40,10 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
 
     helper =
         new PhoenixSwerveHelper(
-            this::getPose, SwerveConstants.MAX_ANGULAR_SPEED, SwerveConstants.SNAP_CONSTANTS);
+            this::getPose,
+            SwerveConstants.MAX_ANGULAR_SPEED,
+            SwerveConstants.MAX_SPEED,
+            SwerveConstants.SNAP_CONSTANTS);
 
     AutoBuilder.configureHolonomic(
         this::getPose,

@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc2024.RobotContainer.Subsystems;
 import frc2024.RobotState;
+import frc2024.logging.NoteVisualizer;
 import frc2024.subsystems.shooter.ShooterConstants;
 
 public class ShootSimNote extends Command {
@@ -65,5 +66,10 @@ public class ShootSimNote extends Command {
   @Override
   public boolean isFinished() {
     return true;
+  }
+
+  @Override
+  public void end(boolean interrupted) {
+    NoteVisualizer.hasNote = false;
   }
 }
