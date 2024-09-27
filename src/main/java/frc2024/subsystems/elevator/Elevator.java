@@ -70,7 +70,7 @@ public class Elevator extends TalonFXSubsystem {
   }
 
   @Override
-  public void setSimState(double position, double velocity) {
+  public synchronized void setSimState(double position, double velocity) {
     super.setSimState(
         Conversions.linearDistanceToRotations(
                 Length.fromMeters(position), ElevatorConstants.PULLEY_CIRCUMFERENCE)

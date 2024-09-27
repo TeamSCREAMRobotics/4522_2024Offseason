@@ -27,6 +27,9 @@ import frc2024.subsystems.conveyor.ConveyorConstants;
 import frc2024.subsystems.elevator.Elevator;
 import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
 import frc2024.subsystems.elevator.ElevatorConstants;
+import frc2024.subsystems.intake.Intake;
+import frc2024.subsystems.intake.Intake.IntakeGoal;
+import frc2024.subsystems.intake.IntakeConstants;
 import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.Pivot.PivotGoal;
 import frc2024.subsystems.pivot.PivotConstants;
@@ -51,6 +54,7 @@ public class RobotContainer {
       Pivot pivot,
       Shooter shooter,
       Conveyor conveyor,
+      Intake intake,
       Stabilizer stabilizer,
       Vision vision) {}
 
@@ -59,13 +63,14 @@ public class RobotContainer {
   private static final Pivot pivot = new Pivot(PivotConstants.SUBSYSTEM_CONSTANTS);
   private static final Shooter shooter = new Shooter(ShooterConstants.SUBSYSTEM_CONSTANTS);
   private static final Conveyor conveyor = new Conveyor(ConveyorConstants.SUBSYSTEM_CONSTANTS);
+  private static final Intake intake = new Intake(IntakeConstants.SUBSYSTEM_CONSTANTS);
   private static final Stabilizer stabilizer =
       new Stabilizer(StabilizerConstants.SUBSYSTEM_CONSTANTS);
   private static final Vision vision = new Vision();
 
   @Getter
   private static final Subsystems subsystems =
-      new Subsystems(drivetrain, elevator, pivot, shooter, conveyor, stabilizer, vision);
+      new Subsystems(drivetrain, elevator, pivot, shooter, conveyor, intake, stabilizer, vision);
 
   @Getter private static final RobotState robotState = new RobotState(subsystems);
 
@@ -145,7 +150,8 @@ public class RobotContainer {
         .whileTrue(
             robotState
                 .applySuperstructureGoal(SuperstructureGoal.HOME_INTAKE)
-                .alongWith(conveyor.applyGoal(ConveyorGoal.INTAKE)));
+                .alongWith(conveyor.applyGoal(ConveyorGoal.INTAKE))
+                .alongWith(intake.applyGoal(IntakeGoal.INTAKE)));
 
     Controlboard.driveController
         .x()
@@ -161,6 +167,7 @@ public class RobotContainer {
                 ShootingHelper.validShot(
                     RobotState.getActiveShotParameters().get().effectiveDistance()))
         .and(() -> Robot.isSimulation())
+        .whileTrue(conveyor.applyGoal(ConveyorGoal.INTAKE))
         .and(conveyor.hasNote())
         .whileTrue(RobotState.shootSimNoteCommand());
 

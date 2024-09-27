@@ -126,7 +126,9 @@ public class ShootingHelper {
     calculated.setPivotAngle(
         getPivotAngleToGoal(
             effectiveDistance, FieldConstants.ScoringLocations.SPEAKER_OPENING.getZ()));
-    calculated.setElevatorHeight(mapped.elevatorHeight);
+    if (!DriverStation.isAutonomous()) {
+      calculated.setElevatorHeight(mapped.elevatorHeight);
+    }
   }
 
   private static double calculateVelocityRPM(ShootState mapped) {
