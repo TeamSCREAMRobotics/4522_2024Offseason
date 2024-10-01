@@ -2,6 +2,7 @@ package frc2024.subsystems.shooter;
 
 import com.SCREAMLib.drivers.TalonFXSubsystem;
 import frc2024.Robot;
+import frc2024.RobotContainer;
 import frc2024.RobotState;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
@@ -23,7 +24,10 @@ public class Shooter extends TalonFXSubsystem {
     IDLE(() -> 0.0, ControlType.VOLTAGE),
     SUB(() -> 3000, ControlType.VELOCITY),
     TRACKING(
-        () -> RobotState.getActiveShotParameters().get().shootState().getVelocityRPM(),
+        () ->
+            RobotContainer.getRobotState() == null
+                ? IDLE.getTarget().getAsDouble()
+                : RobotState.getActiveShotParameters().get().shootState().getVelocityRPM(),
         ControlType.VELOCITY);
 
     @Getter DoubleSupplier target;

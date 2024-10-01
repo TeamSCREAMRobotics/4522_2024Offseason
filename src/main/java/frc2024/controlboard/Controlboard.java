@@ -7,7 +7,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc2024.RobotState;
 import frc2024.subsystems.swerve.SwerveConstants;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -41,19 +40,17 @@ public class Controlboard {
         snapTranslationToPole(
             new Translation2d(
                     applyPower(
-                            -MathUtil.applyDeadband(
-                                AllianceFlipUtil.get(
-                                    driveController.getLeftY(), -driveController.getLeftY()),
-                                STICK_DEADBAND),
-                            2)
-                        * RobotState.getSpeedLimit().getAsDouble(),
+                        -MathUtil.applyDeadband(
+                            AllianceFlipUtil.get(
+                                driveController.getLeftY(), -driveController.getLeftY()),
+                            STICK_DEADBAND),
+                        2),
                     applyPower(
-                            -MathUtil.applyDeadband(
-                                AllianceFlipUtil.get(
-                                    driveController.getLeftX(), -driveController.getLeftX()),
-                                STICK_DEADBAND),
-                            2)
-                        * RobotState.getSpeedLimit().getAsDouble())
+                        -MathUtil.applyDeadband(
+                            AllianceFlipUtil.get(
+                                driveController.getLeftX(), -driveController.getLeftX()),
+                            STICK_DEADBAND),
+                        2))
                 .times(SwerveConstants.MAX_SPEED));
   }
 

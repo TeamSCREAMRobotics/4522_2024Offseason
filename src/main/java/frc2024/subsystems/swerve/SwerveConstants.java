@@ -15,15 +15,17 @@ public final class SwerveConstants {
   public static final ScreamPIDConstants PATH_TRANSLATION_CONSTANTS =
       new ScreamPIDConstants(10.0, 0.0, 0.0);
   public static final ScreamPIDConstants PATH_ROTATION_CONSTANTS =
-      new ScreamPIDConstants(10.0, 0.0, 0.0);
+      new ScreamPIDConstants(3.0, 0.0, 0.0);
   public static final ProfiledPIDController HEADING_CONTROLLER =
-      new ProfiledPIDController(1.0, 0, 0, new Constraints(30, 15));
+      new ProfiledPIDController(8.0, 0, 0, new Constraints(30, 15));
 
   static {
     HEADING_CONTROLLER.enableContinuousInput(-Math.PI, Math.PI);
   }
 
-  public static final ScreamPIDConstants SNAP_CONSTANTS = new ScreamPIDConstants(10, 0.0, 0.0);
+  public static final ScreamPIDConstants SNAP_CONSTANTS = new ScreamPIDConstants(8.0, 0.0, 0.0);
+  public static final ScreamPIDConstants HEADING_CORRECTION_CONSTANTS =
+      new ScreamPIDConstants(2.0, 0.0, 0.0);
 
   public static final HolonomicPathFollowerConfig PATH_FOLLOWER_CONFIG =
       new HolonomicPathFollowerConfig(

@@ -23,7 +23,7 @@ public class StabilizerConstants {
 
   public static final DCMotorSim SIM =
       new DCMotorSim(DCMotor.getFalcon500(1), GEAR_RATIO, 0.05859096765521);
-  public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(50.0, 0.0, 0.0);
+  public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(75.0, 0.0, 0.0);
 
   public static final TalonFXSubsystemConstants SUBSYSTEM_CONSTANTS =
       new TalonFXSubsystemConstants();

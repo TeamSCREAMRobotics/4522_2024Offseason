@@ -1,75 +1,118 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc2024.commands;
 
 import com.SCREAMLib.math.Conversions;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation3d;
+import com.SCREAMLib.math.ScreamMath;
+import com.team6328.GeomUtil;
+import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc2024.RobotContainer.Subsystems;
 import frc2024.RobotState;
+import frc2024.constants.Constants;
 import frc2024.logging.NoteVisualizer;
 import frc2024.subsystems.shooter.ShooterConstants;
+import org.dyn4j.dynamics.Body;
+import org.dyn4j.geometry.MassType;
+import org.dyn4j.geometry.Transform;
+import org.dyn4j.world.World;
 
 public class ShootSimNote extends Command {
+  private static int noteIndex = -1;
+
   private final Subsystems subsystems;
+  private final World<Body> world = new World<>();
+  private final Body note = new Body();
 
-  private Translation3d[] calculatedTrajectory;
   private double shooterVelocity;
-  private double shooterAngle;
-  private double robotAngle;
-
+  private Rotation2d shooterAngle;
+  private Rotation2d robotAngle;
+  private ChassisSpeeds robotSpeed;
+  private Pose3d stagedNotePosition;
   private double startTime;
-  private double duration;
+
+  private Pose3d activeNote;
 
   public ShootSimNote(Subsystems subsystems) {
+    setName("ShootSimNote");
     this.subsystems = subsystems;
+    note.setMass(MassType.NORMAL);
+    world.setGravity(0, Constants.GRAVITY);
+    world.addBody(note);
   }
 
-  // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    calculatedTrajectory = RobotState.getActiveTrajectory().get();
-    shooterVelocity = subsystems.shooter().getVelocity();
+    shooterVelocity = calculateShooterVelocity();
     startTime = Timer.getFPGATimestamp();
-    duration =
-        calculatedTrajectory[0].getDistance(calculatedTrajectory[calculatedTrajectory.length - 1])
-            / Conversions.rpsToMPS(
-                shooterVelocity, ShooterConstants.WHEEL_CIRCUMFERENCE.getMeters(), 1.0);
-    shooterAngle = subsystems.pivot().getAngle().getRadians();
-    robotAngle = subsystems.drivetrain().getHeading().getRadians();
+    shooterAngle = subsystems.pivot().getAngle();
+    robotAngle = subsystems.drivetrain().getHeading();
+    robotSpeed = subsystems.drivetrain().getFieldRelativeSpeeds();
+    stagedNotePosition = NoteVisualizer.getStagedNote();
+    activeNote = stagedNotePosition;
+    NoteVisualizer.hasNote = false;
 
-    RobotState.addActiveNote(
-        () -> new Pose3d(getNoteTranslation(), new Rotation3d(0, shooterAngle, robotAngle)));
+    initializeNotePhysics();
+    noteIndex++;
+    if (noteIndex > 1) {
+      noteIndex = 0;
+    }
   }
 
-  private Translation3d getNoteTranslation() {
-    double totalDuration = duration * calculatedTrajectory.length;
-    double normalizedTime = (double) (Timer.getFPGATimestamp() - startTime) / totalDuration;
+  @Override
+  public void execute() {
+    activeNote = simulateNotePosition();
+    RobotState.activeNotes.set(noteIndex, activeNote);
+  }
 
-    int currentSegment = (int) Math.floor(normalizedTime * (calculatedTrajectory.length - 1));
-    currentSegment = Math.max(0, Math.min(currentSegment, calculatedTrajectory.length - 2));
+  private double calculateShooterVelocity() {
+    return Conversions.rpsToMPS(
+        subsystems.shooter().getVelocity() * 0.8,
+        ShooterConstants.WHEEL_CIRCUMFERENCE.getMeters(),
+        1.0);
+  }
 
-    double segmentDuration = 1.0 / (calculatedTrajectory.length - 1);
-    double segmentTime = (normalizedTime - currentSegment * segmentDuration) / segmentDuration;
+  private void initializeNotePhysics() {
+    note.setLinearVelocity(
+        shooterAngle.getCos() * shooterVelocity, shooterAngle.getSin() * shooterVelocity);
 
-    Translation3d t1 = calculatedTrajectory[currentSegment];
-    Translation3d t2 = calculatedTrajectory[currentSegment + 1];
+    Transform transform = new Transform();
+    transform.rotate(-shooterAngle.getRadians());
+    note.setTransform(transform);
+  }
 
-    return t1.interpolate(t2, segmentTime);
+  private Pose3d simulateNotePosition() {
+    double elapsedTime = Timer.getFPGATimestamp() - startTime;
+    world.update(elapsedTime);
+    updateNoteVelocity();
+
+    Translation3d noteTranslation = calculateNoteTranslation();
+    return calculateNotePose(noteTranslation);
+  }
+
+  private void updateNoteVelocity() {
+    note.setLinearVelocity(
+        note.getLinearVelocity().x - (robotSpeed.vxMetersPerSecond * Constants.PERIOD_SEC),
+        note.getLinearVelocity().y - (Constants.GRAVITY * Constants.PERIOD_SEC));
+  }
+
+  private Translation3d calculateNoteTranslation() {
+    return new Translation3d(
+        note.getTransform().getTranslationX(), 0.0, -note.getTransform().getTranslationY());
+  }
+
+  private Pose3d calculateNotePose(Translation3d noteTranslation) {
+    Translation3d rotatedTranslation = ScreamMath.rotatePoint(noteTranslation, robotAngle);
+    Transform3d tempPose =
+        stagedNotePosition.minus(new Pose3d(rotatedTranslation, new Rotation3d()));
+    return GeomUtil.transform3dToPose3d(
+        tempPose.plus(
+            new Transform3d(
+                0.0, robotSpeed.vyMetersPerSecond * Constants.PERIOD_SEC, 0.0, new Rotation3d())));
   }
 
   @Override
   public boolean isFinished() {
-    return true;
-  }
-
-  @Override
-  public void end(boolean interrupted) {
-    NoteVisualizer.hasNote = false;
+    return activeNote.getZ() < 0;
   }
 }

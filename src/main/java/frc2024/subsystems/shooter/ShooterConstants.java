@@ -11,6 +11,7 @@ import com.SCREAMLib.sim.SimWrapper;
 import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
@@ -66,15 +67,15 @@ public class ShooterConstants {
       new ShootStateInterpolatingTreeMap();
 
   static {
-    SHOOTING_MAP.put(8.0, new ShootState(Rotation2d.fromDegrees(20.15), 0.0, 4000.0));
-    SHOOTING_MAP.put(7.5, new ShootState(Rotation2d.fromDegrees(20.0), 0.0, 4000.0));
-    SHOOTING_MAP.put(7.0, new ShootState(Rotation2d.fromDegrees(20.5), 0.0, 4000.0));
-    SHOOTING_MAP.put(6.5, new ShootState(Rotation2d.fromDegrees(20.9), 0.0, 4000.0));
-    SHOOTING_MAP.put(6.0, new ShootState(Rotation2d.fromDegrees(21.5), 0.0, 4000.0));
-    SHOOTING_MAP.put(5.5, new ShootState(Rotation2d.fromDegrees(22.5), 0.0, 4000.0));
-    SHOOTING_MAP.put(5.0, new ShootState(Rotation2d.fromDegrees(23.1), 0.0, 4000.0));
+    SHOOTING_MAP.put(8.0, new ShootState(Rotation2d.fromDegrees(19.50), 0.0, 4500.0));
+    SHOOTING_MAP.put(7.5, new ShootState(Rotation2d.fromDegrees(19.75), 0.0, 4500.0));
+    SHOOTING_MAP.put(7.0, new ShootState(Rotation2d.fromDegrees(20.0), 0.0, 4500.0));
+    SHOOTING_MAP.put(6.5, new ShootState(Rotation2d.fromDegrees(21.3), 0.0, 4250.0));
+    SHOOTING_MAP.put(6.0, new ShootState(Rotation2d.fromDegrees(21.8), 0.0, 4250.0));
+    SHOOTING_MAP.put(5.5, new ShootState(Rotation2d.fromDegrees(22.3), 0.0, 4250.0));
+    SHOOTING_MAP.put(5.0, new ShootState(Rotation2d.fromDegrees(24.15), 0.0, 4000.0));
     SHOOTING_MAP.put(4.5, new ShootState(Rotation2d.fromDegrees(28.3 - 3.5), 0.0, 4000.0));
-    SHOOTING_MAP.put(4.0, new ShootState(Rotation2d.fromDegrees(30.5 - 3.5), 0.0, 4000.0));
+    SHOOTING_MAP.put(4.0, new ShootState(Rotation2d.fromDegrees(30.5 - 3.65), 0.0, 4000.0));
     SHOOTING_MAP.put(3.5, new ShootState(Rotation2d.fromDegrees(33.3 - 4.0), 0.0, 4000.0));
     SHOOTING_MAP.put(3.0, new ShootState(Rotation2d.fromDegrees(37.0 - 5.0), 0.0, 4000.0));
     SHOOTING_MAP.put(2.5, new ShootState(Rotation2d.fromDegrees(41.3 - 5.0), 0.0, 4000.0));
@@ -97,5 +98,14 @@ public class ShooterConstants {
                     ElevatorConstants.PULLEY_CIRCUMFERENCE)
                 .getInches(),
             3000.0));
+  }
+
+  public static final InterpolatingDoubleTreeMap SHOOT_AND_MOVE_DISTANCE_OFFSET_MAP =
+      new InterpolatingDoubleTreeMap();
+
+  static { // (distance, distance divisor)
+    SHOOT_AND_MOVE_DISTANCE_OFFSET_MAP.put(4.0, 5.0);
+    SHOOT_AND_MOVE_DISTANCE_OFFSET_MAP.put(6.0, 10.0);
+    SHOOT_AND_MOVE_DISTANCE_OFFSET_MAP.put(8.0, 15.0);
   }
 }

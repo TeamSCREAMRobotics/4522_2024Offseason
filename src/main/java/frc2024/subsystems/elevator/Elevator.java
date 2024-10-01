@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc2024.Robot;
 import frc2024.RobotContainer;
 import frc2024.RobotState;
+import frc2024.logging.Logger;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
 
@@ -28,7 +29,10 @@ public class Elevator extends TalonFXSubsystem {
     TRAP(() -> 21.75, ControlType.MOTION_MAGIC_POSITION),
     EJECT(() -> 5.43, ControlType.MOTION_MAGIC_POSITION),
     TRACKING(
-        () -> RobotState.getActiveShotParameters().get().shootState().getElevatorHeight(),
+        () ->
+            RobotContainer.getRobotState() == null
+                ? HOME_INTAKE.getTarget().getAsDouble()
+                : RobotState.getActiveShotParameters().get().shootState().getElevatorHeight(),
         ControlType.MOTION_MAGIC_POSITION);
 
     @Getter DoubleSupplier target;
@@ -58,7 +62,8 @@ public class Elevator extends TalonFXSubsystem {
   @Override
   public synchronized Command applyGoal(TalonFXSubsystemGoal goal) {
     return Commands.waitUntil(() -> RobotContainer.getSubsystems().pivot().atGoal())
-        .andThen(super.applyGoal(goal));
+        .andThen(super.applyGoal(goal))
+        .withName(super.applyGoal(goal).getName());
   }
 
   public Length getMeasuredHeight() {
@@ -79,5 +84,11 @@ public class Elevator extends TalonFXSubsystem {
             velocity,
             ElevatorConstants.PULLEY_CIRCUMFERENCE.getMeters(),
             ElevatorConstants.GEAR_RATIO));
+  }
+
+  @Override
+  public void periodic() {
+    super.periodic();
+    Logger.log("RobotState/Subsystems/Elevator/Height", getMeasuredHeight().getInches());
   }
 }

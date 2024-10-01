@@ -10,10 +10,10 @@ import dev.doglog.DogLogOptions;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc2024.constants.Constants;
+import frc2024.dashboard.Dashboard.DashboardValue;
 import frc2024.logging.Logger;
 import frc2024.logging.NoteVisualizer;
 import java.util.Optional;
@@ -72,7 +72,12 @@ public class Robot extends TimedRobot {
     Logger.setEnabled(true);
 
     robotContainer = new RobotContainer();
+    CommandScheduler.getInstance().onCommandInitialize(RobotState::addActiveCommand);
+    CommandScheduler.getInstance().onCommandFinish(RobotState::removeActiveCommand);
+    CommandScheduler.getInstance().onCommandInterrupt(RobotState::removeActiveCommand);
   }
+
+  DashboardValue noteReset = new DashboardValue("Reset Notes", false);
 
   @Override
   public void robotPeriodic() {
@@ -84,6 +89,11 @@ public class Robot extends TimedRobot {
           System.out.println("[Init] Ready to Enable!");
         },
         DriverStation.getAlliance().isPresent());
+
+    if (noteReset.get()) {
+      NoteVisualizer.resetNotes();
+      noteReset.set(false);
+    }
   }
 
   @Override
@@ -95,7 +105,6 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     NoteVisualizer.resetNotes();
-    NoteVisualizer.hasNote = true;
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (autonomousCommand != null) {
@@ -109,7 +118,6 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.empty());
-    NoteVisualizer.resetNotes();
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
@@ -127,9 +135,7 @@ public class Robot extends TimedRobot {
   public void testPeriodic() {}
 
   @Override
-  public void simulationInit() {
-    DriverStationSim.setEnabled(true);
-  }
+  public void simulationInit() {}
 
   @Override
   public void simulationPeriodic() {}
