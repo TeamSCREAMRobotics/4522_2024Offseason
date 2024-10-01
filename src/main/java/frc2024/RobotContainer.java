@@ -32,6 +32,7 @@ import frc2024.subsystems.intake.Intake.IntakeGoal;
 import frc2024.subsystems.intake.IntakeConstants;
 import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.PivotConstants;
+import frc2024.subsystems.pivot.Pivot.PivotGoal;
 import frc2024.subsystems.shooter.Shooter;
 import frc2024.subsystems.shooter.ShooterConstants;
 import frc2024.subsystems.shooter.ShootingHelper;
@@ -92,14 +93,22 @@ public class RobotContainer {
   }
 
   private void configButtonBindings() {
-    Controlboard.driveController
+    /* Controlboard.driveController
         .back()
         .onTrue(
             Commands.runOnce(
                 () -> {
                   drivetrain.resetHeading();
                   drivetrain.getHelper().setLastAngle(drivetrain.getHeading());
-                }));
+                })); */
+                Controlboard.driveController
+                .back()
+                .onTrue(
+                    Commands.runOnce(
+                        () ->
+                            drivetrain.seedFieldRelative(
+                                AllianceFlipUtil.MirroredPose2d(
+                                    new Pose2d(1.37, 5.54, Rotation2d.fromDegrees(0))))));
 
     Controlboard.driveController
         .leftBumper()
@@ -166,7 +175,7 @@ public class RobotContainer {
         .toggleOnTrue(
             elevator.runVoltage(
                 () ->
-                    -MathUtil.applyDeadband(Controlboard.driveController.getRightY(), 0.05) * 12));
+                    -MathUtil.applyDeadband(Controlboard.driveController.getRightY(), 0.05) * 3 + 0.3));
 
     Controlboard.driveController
         .rightBumper()
@@ -217,7 +226,7 @@ public class RobotContainer {
                     Controlboard.getFieldCentric().getAsBoolean()
                         ? drivetrain
                             .getHelper()
-                            .getHeadingCorrectedFieldCentric(
+                            .getFieldCentric(
                                 Controlboard.getTranslation()
                                     .get()
                                     .times(RobotState.getSpeedLimit().getAsDouble()),
@@ -258,7 +267,7 @@ public class RobotContainer {
             AutoBuilder.followPath(path),
             Commands.runOnce(() -> System.out.println(Timer.getFPGATimestamp() - startTime)),
             Commands.runOnce(() -> stopAll()))
-        .alongWith(intake.applyGoal(IntakeGoal.INTAKE), conveyor.applyGoal(ConveyorGoal.INTAKE));
+        .alongWith(intake.applyGoal(IntakeGoal.INTAKE), conveyor.applyGoal(ConveyorGoal.INTAKE), pivot.applyGoal(PivotGoal.HOME_INTAKE));
   }
 
   public Command startAiming() {

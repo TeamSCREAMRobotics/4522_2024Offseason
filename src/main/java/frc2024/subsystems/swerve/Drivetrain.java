@@ -5,6 +5,7 @@ import com.SCREAMLib.util.AllianceFlipUtil;
 import com.SCREAMLib.util.ScreamUtil;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.CustomSwerveDrivetrain;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
@@ -26,7 +27,7 @@ import lombok.Getter;
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem so it can be used
  * in command-based projects easily.
  */
-public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
+public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   private double lastSimTime;
 
   @Getter private final PhoenixSwerveHelper helper;

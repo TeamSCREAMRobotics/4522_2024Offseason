@@ -17,6 +17,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 public final class PivotConstants {
@@ -46,24 +47,26 @@ public final class PivotConstants {
             new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false);
 
     SUBSYSTEM_CONSTANTS.masterConstants =
-        new TalonFXConstants(new CANDevice(17, ""), InvertedValue.CounterClockwise_Positive);
+        new TalonFXConstants(new CANDevice(17, ""), InvertedValue.Clockwise_Positive);
 
     CANcoderConfiguration config = new CANcoderConfiguration();
     config.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
-    config.MagnetSensor.MagnetOffset = 0.0;
-    config.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+    config.MagnetSensor.MagnetOffset = -0.12646484375;
+    config.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
     SUBSYSTEM_CONSTANTS.cancoderConstants = new CANCoderConstants(new CANDevice(4, ""), config);
 
-    SUBSYSTEM_CONSTANTS.neutralMode = NeutralModeValue.Brake;
+    SUBSYSTEM_CONSTANTS.neutralMode = NeutralModeValue.Coast;
     SUBSYSTEM_CONSTANTS.rotorToSensorRatio = GEAR_RATIO;
     SUBSYSTEM_CONSTANTS.feedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
     SUBSYSTEM_CONSTANTS.feedbackRemoteSensorId = 4;
     SUBSYSTEM_CONSTANTS.enableSupplyCurrentLimit = true;
     SUBSYSTEM_CONSTANTS.supplyCurrentLimit = 40;
-    SUBSYSTEM_CONSTANTS.cruiseVelocity = 5.0;
-    SUBSYSTEM_CONSTANTS.acceleration = 2.5;
+    SUBSYSTEM_CONSTANTS.cruiseVelocity = 20.0;
+    SUBSYSTEM_CONSTANTS.acceleration = 10.0;
     SUBSYSTEM_CONSTANTS.slot0 =
-        new ScreamPIDConstants(100.0, 0, 0).getSlot0Configs(new FeedforwardConstants());
+        new ScreamPIDConstants(350.0, 0, 0).getSlot0Configs(new FeedforwardConstants());
     SUBSYSTEM_CONSTANTS.positionThreshold = 0.025;
+    SUBSYSTEM_CONSTANTS.minUnitsLimit = 0.0;
+    SUBSYSTEM_CONSTANTS.maxUnitsLimit = Units.degreesToRotations(54);;
   }
 }

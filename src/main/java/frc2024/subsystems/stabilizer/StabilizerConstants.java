@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 public class StabilizerConstants {
 
   public static final Rotation2d MIN_ANGLE = new Rotation2d();
-  public static final Rotation2d MAX_ANGLE = Rotation2d.fromDegrees(128.144763);
+  public static final Rotation2d MAX_ANGLE = Rotation2d.fromRotations(0.099);
 
   public static final double GEAR_RATIO = 16.0;
 

@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 
 public final class ElevatorConstants {
 
-  public static final double MAX_HEIGHT = 21.745;
+  public static final double MAX_HEIGHT = 21.513;
   public static final double MIN_HEIGHT = 0.0;
   public static final Length MAX_HEIGHT_AS_LENGTH = Length.fromInches(MAX_HEIGHT);
   public static final double ENCODER_MAX = 3.1;
@@ -52,10 +52,10 @@ public final class ElevatorConstants {
         new TalonFXSubsystemSimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
 
     SUBSYSTEM_CONSTANTS.masterConstants =
-        new TalonFXConstants(new CANDevice(15, ""), InvertedValue.CounterClockwise_Positive);
+        new TalonFXConstants(new CANDevice(15, ""), InvertedValue.Clockwise_Positive);
     SUBSYSTEM_CONSTANTS.slaveConstants =
         new TalonFXConstants[] {
-          new TalonFXConstants(new CANDevice(16, ""), InvertedValue.Clockwise_Positive)
+          new TalonFXConstants(new CANDevice(16, ""), InvertedValue.CounterClockwise_Positive)
         };
 
     SUBSYSTEM_CONSTANTS.neutralMode = NeutralModeValue.Brake;

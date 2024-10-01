@@ -15,16 +15,17 @@ import lombok.Getter;
 public class Elevator extends TalonFXSubsystem {
 
   public Elevator(TalonFXSubsystemConstants constants) {
-    super(constants, Robot.isSimulation() ? ElevatorGoal.TRACKING : ElevatorGoal.HOME_INTAKE);
+    super(constants, ElevatorGoal.TRACKING);
 
     simFeedforwardSup = () -> 0.3;
+    master.setPosition(0.0);
   }
 
   public enum ElevatorGoal implements TalonFXSubsystemGoal {
     HOME_INTAKE(() -> 0.0, ControlType.MOTION_MAGIC_POSITION),
     TRAP_INTAKE(() -> 3.41, ControlType.MOTION_MAGIC_POSITION),
     SUB(() -> 3.13, ControlType.MOTION_MAGIC_POSITION),
-    SUB_DEFENDED(() -> 21.75, ControlType.MOTION_MAGIC_POSITION),
+    SUB_DEFENDED(() -> 21.745, ControlType.MOTION_MAGIC_POSITION),
     AMP(() -> 19.71, ControlType.MOTION_MAGIC_POSITION),
     TRAP(() -> 21.75, ControlType.MOTION_MAGIC_POSITION),
     EJECT(() -> 5.43, ControlType.MOTION_MAGIC_POSITION),
@@ -57,13 +58,6 @@ public class Elevator extends TalonFXSubsystem {
     public ControlType controlType() {
       return controlType;
     }
-  }
-
-  @Override
-  public synchronized Command applyGoal(TalonFXSubsystemGoal goal) {
-    return Commands.waitUntil(() -> RobotContainer.getSubsystems().pivot().atGoal())
-        .andThen(super.applyGoal(goal))
-        .withName(super.applyGoal(goal).getName());
   }
 
   public Length getMeasuredHeight() {
