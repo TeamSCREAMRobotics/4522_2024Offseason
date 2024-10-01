@@ -1,10 +1,10 @@
 package frc2024.subsystems.elevator;
 
-import com.SCREAMLib.data.DataHelpers.SimConstants;
 import com.SCREAMLib.data.Length;
-import com.SCREAMLib.drivers.TalonFXSubsystem.CanDevice;
+import com.SCREAMLib.drivers.TalonFXSubsystem.CANDevice;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXConstants;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import com.SCREAMLib.pid.ScreamPIDConstants;
 import com.SCREAMLib.pid.ScreamPIDConstants.FeedforwardConstants;
 import com.SCREAMLib.sim.SimWrapper;
@@ -35,7 +35,7 @@ public final class ElevatorConstants {
           Units.inchesToMeters(2.211 / 2.0),
           MIN_HEIGHT,
           MAX_HEIGHT_AS_LENGTH.getMeters(),
-          false,
+          true,
           0.0);
   public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(10.0, 0.0, 0.0);
 
@@ -49,13 +49,13 @@ public final class ElevatorConstants {
     SUBSYSTEM_CONSTANTS.outputTelemetry = false;
 
     SUBSYSTEM_CONSTANTS.simConstants =
-        new SimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
+        new TalonFXSubsystemSimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
 
     SUBSYSTEM_CONSTANTS.masterConstants =
-        new TalonFXConstants(new CanDevice(15, ""), InvertedValue.Clockwise_Positive);
+        new TalonFXConstants(new CANDevice(15, ""), InvertedValue.CounterClockwise_Positive);
     SUBSYSTEM_CONSTANTS.slaveConstants =
         new TalonFXConstants[] {
-          new TalonFXConstants(new CanDevice(16, ""), InvertedValue.CounterClockwise_Positive)
+          new TalonFXConstants(new CANDevice(16, ""), InvertedValue.Clockwise_Positive)
         };
 
     SUBSYSTEM_CONSTANTS.neutralMode = NeutralModeValue.Brake;
@@ -64,12 +64,12 @@ public final class ElevatorConstants {
     SUBSYSTEM_CONSTANTS.supplyCurrentLimit = 40;
     SUBSYSTEM_CONSTANTS.minUnitsLimit = 0.0;
     SUBSYSTEM_CONSTANTS.maxUnitsLimit = 3.1;
-    SUBSYSTEM_CONSTANTS.cruiseVelocity = 15.0; // 235.0
+    SUBSYSTEM_CONSTANTS.cruiseVelocity = 20.0; // 235.0
     SUBSYSTEM_CONSTANTS.acceleration = 20.0; // 30.0
     SUBSYSTEM_CONSTANTS.slot0 =
         new ScreamPIDConstants(50.0, 0, 0) // 78.0
             .getSlot0Configs(
                 new FeedforwardConstants(0, 0, 0.3, 0, GravityTypeValue.Elevator_Static));
-    SUBSYSTEM_CONSTANTS.positionThreshold = 0.05 / PULLEY_CIRCUMFERENCE.getInches();
+    SUBSYSTEM_CONSTANTS.positionThreshold = 0.5;
   }
 }

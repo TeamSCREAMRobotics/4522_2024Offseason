@@ -3,14 +3,19 @@ package frc2024.subsystems.elevator;
 import com.SCREAMLib.data.Length;
 import com.SCREAMLib.drivers.TalonFXSubsystem;
 import com.SCREAMLib.math.Conversions;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc2024.Robot;
+import frc2024.RobotContainer;
 import frc2024.RobotState;
+import frc2024.logging.Logger;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
 
 public class Elevator extends TalonFXSubsystem {
 
   public Elevator(TalonFXSubsystemConstants constants) {
-    super(constants, ElevatorGoal.HOME_INTAKE);
+    super(constants, Robot.isSimulation() ? ElevatorGoal.TRACKING : ElevatorGoal.HOME_INTAKE);
 
     simFeedforwardSup = () -> 0.3;
   }
@@ -24,7 +29,10 @@ public class Elevator extends TalonFXSubsystem {
     TRAP(() -> 21.75, ControlType.MOTION_MAGIC_POSITION),
     EJECT(() -> 5.43, ControlType.MOTION_MAGIC_POSITION),
     TRACKING(
-        () -> RobotState.getActiveShotParameters().get().shootState().getElevatorHeight(),
+        () ->
+            RobotContainer.getRobotState() == null
+                ? HOME_INTAKE.getTarget().getAsDouble()
+                : RobotState.getActiveShotParameters().get().shootState().getElevatorHeight(),
         ControlType.MOTION_MAGIC_POSITION);
 
     @Getter DoubleSupplier target;
@@ -51,6 +59,13 @@ public class Elevator extends TalonFXSubsystem {
     }
   }
 
+  @Override
+  public synchronized Command applyGoal(TalonFXSubsystemGoal goal) {
+    return Commands.waitUntil(() -> RobotContainer.getSubsystems().pivot().atGoal())
+        .andThen(super.applyGoal(goal))
+        .withName(super.applyGoal(goal).getName());
+  }
+
   public Length getMeasuredHeight() {
     return Length.fromRotations(getPosition(), ElevatorConstants.PULLEY_CIRCUMFERENCE);
   }
@@ -60,14 +75,20 @@ public class Elevator extends TalonFXSubsystem {
   }
 
   @Override
-  public void setSimState(double position, double velocity) {
+  public synchronized void setSimState(double position, double velocity) {
     super.setSimState(
         Conversions.linearDistanceToRotations(
                 Length.fromMeters(position), ElevatorConstants.PULLEY_CIRCUMFERENCE)
-            * ElevatorConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio,
+            * ElevatorConstants.GEAR_RATIO,
         Conversions.mpsToRPS(
             velocity,
             ElevatorConstants.PULLEY_CIRCUMFERENCE.getMeters(),
-            ElevatorConstants.SUBSYSTEM_CONSTANTS.rotorToSensorRatio));
+            ElevatorConstants.GEAR_RATIO));
+  }
+
+  @Override
+  public void periodic() {
+    super.periodic();
+    Logger.log("RobotState/Subsystems/Elevator/Height", getMeasuredHeight().getInches());
   }
 }

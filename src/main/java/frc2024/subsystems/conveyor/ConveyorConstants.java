@@ -1,6 +1,6 @@
 package frc2024.subsystems.conveyor;
 
-import com.SCREAMLib.drivers.TalonFXSubsystem.CanDevice;
+import com.SCREAMLib.drivers.TalonFXSubsystem.CANDevice;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXConstants;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -21,6 +21,8 @@ public class ConveyorConstants {
     SUBSYSTEM_CONSTANTS.outputTelemetry = false;
 
     SUBSYSTEM_CONSTANTS.masterConstants =
-        new TalonFXConstants(new CanDevice(10, ""), InvertedValue.CounterClockwise_Positive);
+        new TalonFXConstants(new CANDevice(10, ""), InvertedValue.CounterClockwise_Positive);
+
+    SUBSYSTEM_CONSTANTS.sensorToMechRatio = 4.0;
   }
 }

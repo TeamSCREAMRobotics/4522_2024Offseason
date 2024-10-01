@@ -30,10 +30,10 @@ public class TunerConstants {
   // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
   private static final Slot0Configs DRIVE_GAINS =
       new Slot0Configs()
-          .withKP(0.12) // 0.12
+          .withKP(3.5) // 0.12
           .withKI(0)
           .withKD(0) // 3
-          .withKS(0)
+          .withKS(0.25)
           .withKV(0)
           .withKA(0);
 
@@ -67,7 +67,7 @@ public class TunerConstants {
 
   // These are only used for simulation
   private static final double STEER_INERTIA = 0.001; // 0.00001
-  private static final double DRIVE_INERTIA = 0.02; // 0.05
+  private static final double DRIVE_INERTIA = 0.05; // 0.05
   // Simulated voltage necessary to overcome friction
   private static final double STEER_KS = 0.25;
   private static final double DRIVE_KS = 0.25;

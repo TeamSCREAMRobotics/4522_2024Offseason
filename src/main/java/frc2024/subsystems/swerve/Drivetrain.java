@@ -4,7 +4,7 @@ import com.SCREAMLib.drivers.PhoenixSwerveHelper;
 import com.SCREAMLib.util.AllianceFlipUtil;
 import com.SCREAMLib.util.ScreamUtil;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.mechanisms.swerve.CustomSwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc2024.logging.Logger;
 import java.util.function.Supplier;
 import lombok.Getter;
 
@@ -25,7 +26,7 @@ import lombok.Getter;
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem so it can be used
  * in command-based projects easily.
  */
-public class Drivetrain extends SwerveDrivetrain implements Subsystem {
+public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
   private double lastSimTime;
 
   @Getter private final PhoenixSwerveHelper helper;
@@ -40,7 +41,10 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
 
     helper =
         new PhoenixSwerveHelper(
-            this::getPose, SwerveConstants.MAX_ANGULAR_SPEED, SwerveConstants.SNAP_CONSTANTS);
+            this::getPose,
+            SwerveConstants.MAX_SPEED,
+            SwerveConstants.SNAP_CONSTANTS,
+            SwerveConstants.HEADING_CORRECTION_CONSTANTS);
 
     AutoBuilder.configureHolonomic(
         this::getPose,
@@ -55,7 +59,8 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   }
 
   public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-    return run(() -> this.setControl(requestSupplier.get()));
+    return run(() -> this.setControl(requestSupplier.get()))
+        .withName("Drivetrain: applyRequest(" + requestSupplier.get().toString() + ")");
   }
 
   public void updateSimState() {
@@ -107,9 +112,20 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
     return getState().speeds;
   }
 
+  public void stop() {
+    setControl(new SwerveRequest.Idle());
+  }
+
   public void optimizeModuleUtilization(SwerveModule module) {
     module.getDriveMotor().optimizeBusUtilization();
     module.getSteerMotor().optimizeBusUtilization();
     module.getCANcoder().optimizeBusUtilization();
+  }
+
+  @Override
+  public void periodic() {
+    if (getCurrentCommand() != null) {
+      Logger.log("RobotState/Subsystems/Drivetrain/ActiveCommand", getCurrentCommand().getName());
+    }
   }
 }
