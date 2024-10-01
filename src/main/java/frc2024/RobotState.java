@@ -4,7 +4,7 @@ import com.SCREAMLib.data.DataConversions;
 import com.SCREAMLib.data.Length;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemGoal;
 import com.SCREAMLib.util.AllianceFlipUtil;
-import com.ctre.phoenix6.mechanisms.swerve.CustomSwerveDrivetrain.SwerveDriveState;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -198,11 +198,11 @@ public class RobotState {
               drivetrain.getPose(), intake.getGoal() == IntakeGoal.INTAKE));
       Logger.log("Simulation/StagedNote", NoteVisualizer.getStagedNote());
     }
-    Logger.log(
+    /* Logger.log(
         "ActiveCommands", activeCommands.stream().map(Command::getName).toArray(String[]::new));
     Logger.log(
         "RobotState/HorizontalDistanceFromGoal",
-        getActiveShotParameters().get().effectiveDistance());
+        getActiveShotParameters().get().effectiveDistance()); */
     Logger.log(
         "RobotState/Components/MeasuredComponents",
         new Pose3d[] {
@@ -210,7 +210,7 @@ public class RobotState {
           ComponentConstants.getElevStage2Pose(elevator.getMeasuredHeight().getMeters()),
           ComponentConstants.getShooterPose(
               elevator.getMeasuredHeight().getMeters(), pivot.getAngle()),
-          ComponentConstants.getStabilizerPose(stabilizer.getAngle())
+          ComponentConstants.getStabilizerPose(stabilizer.getAngle().times(3.5842))
         });
     Logger.log(
         "RobotState/Components/SetpointComponents",
@@ -220,12 +220,12 @@ public class RobotState {
           ComponentConstants.getShooterPose(
               elevator.getSetpointHeight().getMeters(),
               Rotation2d.fromRotations(pivot.getSetpoint())),
-          ComponentConstants.getStabilizerPose(Rotation2d.fromRotations(stabilizer.getSetpoint()))
+          ComponentConstants.getStabilizerPose(Rotation2d.fromRotations(stabilizer.getSetpoint()).times(3.5842))
         });
-    Logger.log("RobotState/SpeedLimit", speedLimit.getAsDouble());
+    /* Logger.log("RobotState/SpeedLimit", speedLimit.getAsDouble());
     Logger.log(
         "RobotState/PointedAtGoal",
-        ShootingHelper.pointedAtGoal(activeShotParameters.get().actualDistance()));
+        ShootingHelper.pointedAtGoal(activeShotParameters.get().actualDistance())); */
   }
 
   public static void telemeterizeDrivetrain(SwerveDriveState state) {

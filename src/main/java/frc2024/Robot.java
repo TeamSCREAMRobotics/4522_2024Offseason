@@ -84,13 +84,13 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().run();
     RobotState.outputTelemetry();
 
-    autoConfigurator.runOnceWhen(
+    /* autoConfigurator.runOnceWhen(
         () -> {
           System.out.println("[Init] Ready to Enable!");
         },
-        DriverStation.getAlliance().isPresent());
+        DriverStation.getAlliance().isPresent()); */
 
-    if (noteReset.get()) {
+    if (isSimulation() && noteReset.get()) {
       NoteVisualizer.resetNotes();
       noteReset.set(false);
     }

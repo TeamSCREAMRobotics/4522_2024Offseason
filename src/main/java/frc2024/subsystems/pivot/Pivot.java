@@ -12,7 +12,7 @@ import lombok.Getter;
 public class Pivot extends TalonFXSubsystem {
 
   public Pivot(TalonFXSubsystemConstants constants) {
-    super(constants, Robot.isSimulation() ? PivotGoal.TRACKING : PivotGoal.ZERO);
+    super(constants, PivotGoal.TRACKING);
   }
 
   public enum PivotGoal implements TalonFXSubsystemGoal {
