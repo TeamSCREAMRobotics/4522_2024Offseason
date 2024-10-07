@@ -4,7 +4,6 @@ import com.SCREAMLib.drivers.PhoenixSwerveHelper;
 import com.SCREAMLib.util.AllianceFlipUtil;
 import com.SCREAMLib.util.ScreamUtil;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.mechanisms.swerve.CustomSwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
@@ -14,6 +13,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -87,6 +87,27 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   public void resetHeading() {
     seedFieldRelative(
         new Pose2d(getPose().getTranslation(), AllianceFlipUtil.getForwardRotation()));
+  }
+
+  public SwerveRequest getNoteAssistRequest(
+      Translation2d translation, double angularVelocity, Translation2d closestNote) {
+    Translation2d robotPosition = getPose().getTranslation();
+    Translation2d noteToRobot = closestNote.minus(robotPosition);
+    double noteDistance = noteToRobot.getNorm();
+
+    if (noteDistance < 3.0) {
+      double dotProduct =
+          translation.getX() * noteToRobot.getX() + translation.getY() * noteToRobot.getY();
+
+      if (dotProduct > 0) { // Moving towards note
+        Rotation2d wanted = translation.getAngle();
+        Rotation2d toNote = noteToRobot.getAngle();
+        translation = new Translation2d(translation.getNorm(), wanted.plus(toNote));
+        return helper.getFacingAngle(translation, toNote);
+      }
+    }
+
+    return helper.getHeadingCorrectedFieldCentric(translation, angularVelocity);
   }
 
   public boolean getWithinAngleThreshold(Rotation2d targetAngle, Rotation2d threshold) {

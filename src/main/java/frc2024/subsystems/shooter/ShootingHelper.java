@@ -20,7 +20,8 @@ public class ShootingHelper {
       Rotation2d targetHeading,
       ShootState shootState,
       double effectiveDistance,
-      double actualDistance) {}
+      double actualDistance,
+      Translation2d shotLookahead) {}
 
   public enum Zone {
     ALLIANCE_WING,
@@ -33,9 +34,9 @@ public class ShootingHelper {
   public static ShotParameters calculateSimpleShotParameters(
       Translation2d currentTranslation, Translation2d targetTranslation) {
     double actualDistance = currentTranslation.getDistance(targetTranslation);
-    Translation2d shotOffset =
-        getMoveAndShootOffset(subsystems.drivetrain().getFieldRelativeSpeeds(), actualDistance);
-    double effectiveDistance = actualDistance + shotOffset.getX();
+    Translation2d shotLookahead =
+        getShotLookahead(subsystems.drivetrain().getFieldRelativeSpeeds(), actualDistance);
+    double effectiveDistance = actualDistance + shotLookahead.getX();
     ShootState mapped = ShooterConstants.SHOOTING_MAP.get(effectiveDistance);
     ShootState calculated = new ShootState();
 
@@ -43,9 +44,10 @@ public class ShootingHelper {
     calculated.setVelocityRPM(calculateVelocityRPM(mapped));
 
     Rotation2d targetHeading =
-        calculateTargetHeading(targetTranslation, currentTranslation, shotOffset);
+        calculateTargetHeading(targetTranslation, currentTranslation, shotLookahead);
 
-    return new ShotParameters(targetHeading, calculated, effectiveDistance, actualDistance);
+    return new ShotParameters(
+        targetHeading, calculated, effectiveDistance, actualDistance, shotLookahead);
   }
 
   private static void setPivotAngleAndElevatorHeight(
@@ -79,8 +81,7 @@ public class ShootingHelper {
             subsystems.elevator().getMeasuredHeight().getInches() > 1.5 ? 0 : 4));
   }
 
-  public static Translation2d getMoveAndShootOffset(
-      ChassisSpeeds robotSpeeds, double actualDistance) {
+  public static Translation2d getShotLookahead(ChassisSpeeds robotSpeeds, double actualDistance) {
     double[] temp = DataConversions.chassisSpeedsToArray(robotSpeeds);
     return new Translation2d(
         temp[0] / MathUtil.clamp((2.5 * actualDistance) - 4, 4.0, Double.MAX_VALUE),

@@ -11,7 +11,6 @@ import com.SCREAMLib.sim.SimWrapper;
 import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
@@ -48,7 +47,7 @@ public class ShooterConstants {
     SUBSYSTEM_CONSTANTS.name = "Shooter";
 
     SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.outputTelemetry = false;
+    SUBSYSTEM_CONSTANTS.logTelemetry = false;
 
     SUBSYSTEM_CONSTANTS.simConstants =
         new TalonFXSubsystemSimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
@@ -98,14 +97,5 @@ public class ShooterConstants {
                     ElevatorConstants.PULLEY_CIRCUMFERENCE)
                 .getInches(),
             3000.0));
-  }
-
-  public static final InterpolatingDoubleTreeMap SHOOT_AND_MOVE_DISTANCE_OFFSET_MAP =
-      new InterpolatingDoubleTreeMap();
-
-  static { // (distance, distance divisor)
-    SHOOT_AND_MOVE_DISTANCE_OFFSET_MAP.put(4.0, 5.0);
-    SHOOT_AND_MOVE_DISTANCE_OFFSET_MAP.put(6.0, 10.0);
-    SHOOT_AND_MOVE_DISTANCE_OFFSET_MAP.put(8.0, 15.0);
   }
 }

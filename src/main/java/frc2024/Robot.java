@@ -7,7 +7,6 @@ package frc2024;
 import com.SCREAMLib.util.RunnableUtil.RunOnce;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import dev.doglog.DogLogOptions;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -46,6 +45,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    robotContainer = new RobotContainer();
     switch (Constants.ROBOT_MODE) {
       case REAL:
         Logger.setPdh(new PowerDistribution());
@@ -70,8 +70,6 @@ public class Robot extends TimedRobot {
     }
 
     Logger.setEnabled(true);
-
-    robotContainer = new RobotContainer();
     CommandScheduler.getInstance().onCommandInitialize(RobotState::addActiveCommand);
     CommandScheduler.getInstance().onCommandFinish(RobotState::removeActiveCommand);
     CommandScheduler.getInstance().onCommandInterrupt(RobotState::removeActiveCommand);
@@ -85,10 +83,10 @@ public class Robot extends TimedRobot {
     RobotState.outputTelemetry();
 
     /* autoConfigurator.runOnceWhen(
-        () -> {
-          System.out.println("[Init] Ready to Enable!");
-        },
-        DriverStation.getAlliance().isPresent()); */
+    () -> {
+      System.out.println("[Init] Ready to Enable!");
+    },
+    DriverStation.getAlliance().isPresent()); */
 
     if (isSimulation() && noteReset.get()) {
       NoteVisualizer.resetNotes();

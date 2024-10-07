@@ -9,19 +9,19 @@ import com.SCREAMLib.util.AllianceFlipUtil;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc2024.RobotState.SuperstructureGoal;
 import frc2024.constants.FieldConstants;
 import frc2024.controlboard.Controlboard;
+import frc2024.logging.NoteVisualizer;
 import frc2024.subsystems.conveyor.Conveyor;
 import frc2024.subsystems.conveyor.Conveyor.ConveyorGoal;
 import frc2024.subsystems.conveyor.ConveyorConstants;
@@ -32,7 +32,6 @@ import frc2024.subsystems.intake.Intake.IntakeGoal;
 import frc2024.subsystems.intake.IntakeConstants;
 import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.PivotConstants;
-import frc2024.subsystems.pivot.Pivot.PivotGoal;
 import frc2024.subsystems.shooter.Shooter;
 import frc2024.subsystems.shooter.ShooterConstants;
 import frc2024.subsystems.shooter.ShootingHelper;
@@ -94,21 +93,21 @@ public class RobotContainer {
 
   private void configButtonBindings() {
     /* Controlboard.driveController
+    .back()
+    .onTrue(
+        Commands.runOnce(
+            () -> {
+              drivetrain.resetHeading();
+              drivetrain.getHelper().setLastAngle(drivetrain.getHeading());
+            })); */
+    Controlboard.driveController
         .back()
         .onTrue(
             Commands.runOnce(
-                () -> {
-                  drivetrain.resetHeading();
-                  drivetrain.getHelper().setLastAngle(drivetrain.getHeading());
-                })); */
-                Controlboard.driveController
-                .back()
-                .onTrue(
-                    Commands.runOnce(
-                        () ->
-                            drivetrain.seedFieldRelative(
-                                AllianceFlipUtil.MirroredPose2d(
-                                    new Pose2d(1.37, 5.54, Rotation2d.fromDegrees(0))))));
+                () ->
+                    drivetrain.seedFieldRelative(
+                        AllianceFlipUtil.MirroredPose2d(
+                            new Pose2d(1.37, 5.54, Rotation2d.fromDegrees(0))))));
 
     Controlboard.driveController
         .leftBumper()
@@ -123,7 +122,7 @@ public class RobotContainer {
                                 .times(RobotState.getSpeedLimit().getAsDouble()),
                             RobotState.getActiveShotParameters().get().targetHeading())));
 
-    /* Controlboard.driveController
+    Controlboard.driveController
         .a()
         .whileTrue(
             drivetrain
@@ -132,7 +131,9 @@ public class RobotContainer {
                         drivetrain
                             .getHelper()
                             .getFacingAngleProfiled(
-                                Controlboard.getTranslation().get(),
+                                Controlboard.getTranslation()
+                                    .get()
+                                    .times(RobotState.getSpeedLimit().getAsDouble()),
                                 Rotation2d.fromDegrees(90),
                                 SwerveConstants.HEADING_CONTROLLER))
                 .beforeStarting(
@@ -146,24 +147,32 @@ public class RobotContainer {
             () ->
                 drivetrain.getWithinAngleThreshold(
                     Rotation2d.fromDegrees(90), Rotation2d.fromDegrees(45)))
-        .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.AMP)); */
-
-    Controlboard.driveController
-        .a()
-        .whileTrue(
-            AutoBuilder.pathfindThenFollowPath(
-                PathPlannerPath.fromPathFile("To Amp"), new PathConstraints(5.0, 3.5, 7.0, 6.0)))
-        .and(
-            () ->
-                drivetrain
-                        .getPose()
-                        .getTranslation()
-                        .getDistance(new Translation2d(1.8, FieldConstants.FIELD_DIMENSIONS.getY()))
-                    < 2.0)
         .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.AMP));
+
+    /* Controlboard.driveController
+    .a()
+    .whileTrue(
+        AutoBuilder.pathfindThenFollowPath(
+            PathPlannerPath.fromPathFile("To Amp"), new PathConstraints(5.0, 3.5, 7.0, 6.0)))
+    .and(
+        () ->
+            drivetrain
+                    .getPose()
+                    .getTranslation()
+                    .getDistance(new Translation2d(1.8, FieldConstants.FIELD_DIMENSIONS.getY()))
+                < 2.0)
+    .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.AMP)); */
 
     Controlboard.driveController
         .rightTrigger()
+        .and(new Trigger(conveyor.hasNote()).negate())
+        .whileTrue(
+            drivetrain.applyRequest(
+                () ->
+                    drivetrain.getNoteAssistRequest(
+                        Controlboard.getTranslation().get(),
+                        Controlboard.getRotation().getAsDouble(),
+                        NoteVisualizer.getClosestNote(drivetrain.getPose()))))
         .whileTrue(
             robotState
                 .applySuperstructureGoal(SuperstructureGoal.HOME_INTAKE)
@@ -174,8 +183,8 @@ public class RobotContainer {
         .x()
         .toggleOnTrue(
             elevator.runVoltage(
-                () ->
-                    -MathUtil.applyDeadband(Controlboard.driveController.getRightY(), 0.05) * 3 + 0.3));
+                () -> -MathUtil.applyDeadband(Controlboard.driveController.getRightY(), 0.05) * 3,
+                () -> ElevatorConstants.SUBSYSTEM_CONSTANTS.slot0.kG));
 
     Controlboard.driveController
         .rightBumper()
@@ -186,7 +195,7 @@ public class RobotContainer {
                     RobotState.getActiveShotParameters().get().effectiveDistance()))
         .and(() -> Robot.isSimulation())
         .whileTrue(
-            conveyor.applyGoal(ConveyorGoal.INTAKE).alongWith(intake.applyGoal(IntakeGoal.INTAKE)))
+            conveyor.applyGoal(ConveyorGoal.SHOOT).alongWith(intake.applyGoal(IntakeGoal.INTAKE)))
         .and(conveyor.hasNote())
         .whileTrue(RobotState.shootSimNoteCommand());
 
@@ -226,7 +235,7 @@ public class RobotContainer {
                     Controlboard.getFieldCentric().getAsBoolean()
                         ? drivetrain
                             .getHelper()
-                            .getFieldCentric(
+                            .getHeadingCorrectedFieldCentric(
                                 Controlboard.getTranslation()
                                     .get()
                                     .times(RobotState.getSpeedLimit().getAsDouble()),
@@ -254,7 +263,7 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    PathPlannerPath path = PathPlannerPath.fromPathFile("2056");
+    PathPlannerPath path = PathPlannerPath.fromPathFile("7PieceNuggets");
     return new SequentialCommandGroup(
             Commands.runOnce(
                 () ->
@@ -267,7 +276,7 @@ public class RobotContainer {
             AutoBuilder.followPath(path),
             Commands.runOnce(() -> System.out.println(Timer.getFPGATimestamp() - startTime)),
             Commands.runOnce(() -> stopAll()))
-        .alongWith(intake.applyGoal(IntakeGoal.INTAKE), conveyor.applyGoal(ConveyorGoal.INTAKE), pivot.applyGoal(PivotGoal.HOME_INTAKE));
+        .alongWith(intake.applyGoal(IntakeGoal.INTAKE), conveyor.applyGoal(ConveyorGoal.INTAKE));
   }
 
   public Command startAiming() {

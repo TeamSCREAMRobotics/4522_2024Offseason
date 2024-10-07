@@ -7,6 +7,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import frc2024.constants.Constants;
 import frc2024.subsystems.swerve.generated.TunerConstants;
+import frc2024.utils.PathplannerUtil;
 
 public final class SwerveConstants {
   public static final double MAX_SPEED = TunerConstants.SPEED_12V_MPS;
@@ -29,8 +30,8 @@ public final class SwerveConstants {
 
   public static final HolonomicPathFollowerConfig PATH_FOLLOWER_CONFIG =
       new HolonomicPathFollowerConfig(
-          PATH_TRANSLATION_CONSTANTS.getPathPlannerPIDConstants(),
-          PATH_ROTATION_CONSTANTS.getPathPlannerPIDConstants(),
+          PathplannerUtil.screamPIDConstantsToPPConstants(PATH_TRANSLATION_CONSTANTS),
+          PathplannerUtil.screamPIDConstantsToPPConstants(PATH_ROTATION_CONSTANTS),
           MAX_SPEED,
           TunerConstants.DRIVE_BASE_RADIUS,
           new ReplanningConfig(),

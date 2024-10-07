@@ -2,7 +2,6 @@ package frc2024.subsystems.pivot;
 
 import com.SCREAMLib.drivers.TalonFXSubsystem;
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc2024.Robot;
 import frc2024.RobotContainer;
 import frc2024.RobotState;
 import frc2024.logging.Logger;
@@ -63,6 +62,6 @@ public class Pivot extends TalonFXSubsystem {
   @Override
   public void periodic() {
     super.periodic();
-    Logger.log("RobotState/Subsystems/Pivot/Angle", getAngle().getDegrees());
+    Logger.log(logPrefix + "Angle", getAngle().getDegrees());
   }
 }

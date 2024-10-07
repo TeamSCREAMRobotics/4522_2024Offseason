@@ -46,7 +46,7 @@ public final class ElevatorConstants {
     SUBSYSTEM_CONSTANTS.name = "Elevator";
 
     SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.outputTelemetry = false;
+    SUBSYSTEM_CONSTANTS.logTelemetry = false;
 
     SUBSYSTEM_CONSTANTS.simConstants =
         new TalonFXSubsystemSimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
@@ -64,8 +64,8 @@ public final class ElevatorConstants {
     SUBSYSTEM_CONSTANTS.supplyCurrentLimit = 40;
     SUBSYSTEM_CONSTANTS.minUnitsLimit = 0.0;
     SUBSYSTEM_CONSTANTS.maxUnitsLimit = 3.1;
-    SUBSYSTEM_CONSTANTS.cruiseVelocity = 20.0; // 235.0
-    SUBSYSTEM_CONSTANTS.acceleration = 20.0; // 30.0
+    SUBSYSTEM_CONSTANTS.cruiseVelocity = 20.0;
+    SUBSYSTEM_CONSTANTS.acceleration = SUBSYSTEM_CONSTANTS.cruiseVelocity / 0.8;
     SUBSYSTEM_CONSTANTS.slot0 =
         new ScreamPIDConstants(50.0, 0, 0) // 78.0
             .getSlot0Configs(

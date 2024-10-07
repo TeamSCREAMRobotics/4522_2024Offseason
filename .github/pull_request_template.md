@@ -1,42 +1,8 @@
-# This is a basic workflow to build robot code.
+### Summary of changes
+<!-- Please enter your changes here -->
 
-name: CI
+### How were these changes tested?
+<!-- Please describe how you tested the changes in this PR -->
 
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the main branch.
-on:
-  push:
-    branches: []
-  pull_request:
-    branches: []
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # This grabs the WPILib docker container
-    container: wpilib/roborio-cross-ubuntu:2024-22.04
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
-
-    # Declares the repository safe and not under dubious ownership.
-    - name: Add repository to git safe directories
-      run: git config --global --add safe.directory $GITHUB_WORKSPACE
-
-    # Grant execute permission for gradlew
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    # Runs a Spotless command to check for code lint
-    - name: Lint robot code
-      run: ./gradlew :spotlessCheck
-
-    # Runs a single command using the runners shell
-    - name: Compile and run tests on robot code
-      run: ./gradlew build
+### Issue these changes are linked to, if applicable
+<!-- Please put the issue this change is linked to -->

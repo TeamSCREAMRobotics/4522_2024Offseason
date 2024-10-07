@@ -19,6 +19,8 @@ public class StabilizerConstants {
   public static final Rotation2d MIN_ANGLE = new Rotation2d();
   public static final Rotation2d MAX_ANGLE = Rotation2d.fromRotations(0.099);
 
+  public static final double REAL_POS_TO_SIM_SCALAR = 3.5842;
+
   public static final double GEAR_RATIO = 16.0;
 
   public static final DCMotorSim SIM =
@@ -32,11 +34,11 @@ public class StabilizerConstants {
     SUBSYSTEM_CONSTANTS.name = "Stabilizer";
 
     SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.outputTelemetry = false;
+    SUBSYSTEM_CONSTANTS.logTelemetry = false;
 
     SUBSYSTEM_CONSTANTS.simConstants =
         new TalonFXSubsystemSimConstants(
-            new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false);
+            new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false, false);
 
     SUBSYSTEM_CONSTANTS.masterConstants =
         new TalonFXConstants(new CANDevice(13, ""), InvertedValue.CounterClockwise_Positive);

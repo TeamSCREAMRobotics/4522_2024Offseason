@@ -1,5 +1,7 @@
 package frc2024;
 
+import com.SCREAMLib.dashboard.Mechanism;
+import com.SCREAMLib.dashboard.MechanismVisualizer;
 import com.SCREAMLib.data.DataConversions;
 import com.SCREAMLib.data.Length;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemGoal;
@@ -18,8 +20,6 @@ import frc2024.commands.ShootSimNote;
 import frc2024.constants.FieldConstants;
 import frc2024.constants.SimConstants;
 import frc2024.controlboard.Controlboard;
-import frc2024.dashboard.Mechanism;
-import frc2024.dashboard.MechanismVisualizer;
 import frc2024.logging.ComponentConstants;
 import frc2024.logging.Logger;
 import frc2024.logging.NoteVisualizer;
@@ -36,6 +36,7 @@ import frc2024.subsystems.shooter.Shooter.ShooterGoal;
 import frc2024.subsystems.shooter.ShootingHelper;
 import frc2024.subsystems.shooter.ShootingHelper.ShotParameters;
 import frc2024.subsystems.stabilizer.Stabilizer;
+import frc2024.subsystems.stabilizer.StabilizerConstants;
 import frc2024.subsystems.swerve.Drivetrain;
 import frc2024.subsystems.vision.Vision;
 import java.util.ArrayList;
@@ -146,7 +147,7 @@ public class RobotState {
                   pivotRootPosition.get().plus(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0)));
 
   private final MechanismVisualizer mechanismVisualizer =
-      new MechanismVisualizer(
+      new MechanismVisualizer(SimConstants.MEASURED_MECHANISM, SimConstants.SETPOINT_MECHANISM,
           RobotState::telemeterizeMechanisms, elevatorMech, shooterFrontMech, shooterBackMech);
 
   private static final Set<Command> activeCommands = new HashSet<>();
@@ -178,7 +179,7 @@ public class RobotState {
                   shooter.applyGoal(goal.goals[2]));
             },
             Set.of(elevator, pivot, shooter))
-        .withName("RobotState: applySuperstructureGoal(" + goal.toString() + ")");
+        .withName("applySuperstructureGoal(" + goal.toString() + ")");
   }
 
   public static void addActiveCommand(Command command) {
@@ -196,13 +197,12 @@ public class RobotState {
           "Simulation/FieldNotes",
           NoteVisualizer.getActiveNotes(
               drivetrain.getPose(), intake.getGoal() == IntakeGoal.INTAKE));
+      Logger.log("Simulation/ClosestNote", NoteVisualizer.getClosestNote(drivetrain.getPose()));
       Logger.log("Simulation/StagedNote", NoteVisualizer.getStagedNote());
     }
-    /* Logger.log(
-        "ActiveCommands", activeCommands.stream().map(Command::getName).toArray(String[]::new));
+    logShotParameters(getActiveShotParameters().get());
     Logger.log(
-        "RobotState/HorizontalDistanceFromGoal",
-        getActiveShotParameters().get().effectiveDistance()); */
+        "ActiveCommands", activeCommands.stream().map(Command::getName).toArray(String[]::new));
     Logger.log(
         "RobotState/Components/MeasuredComponents",
         new Pose3d[] {
@@ -210,7 +210,8 @@ public class RobotState {
           ComponentConstants.getElevStage2Pose(elevator.getMeasuredHeight().getMeters()),
           ComponentConstants.getShooterPose(
               elevator.getMeasuredHeight().getMeters(), pivot.getAngle()),
-          ComponentConstants.getStabilizerPose(stabilizer.getAngle().times(3.5842))
+          ComponentConstants.getStabilizerPose(
+              stabilizer.getAngle().times(StabilizerConstants.REAL_POS_TO_SIM_SCALAR))
         });
     Logger.log(
         "RobotState/Components/SetpointComponents",
@@ -220,12 +221,14 @@ public class RobotState {
           ComponentConstants.getShooterPose(
               elevator.getSetpointHeight().getMeters(),
               Rotation2d.fromRotations(pivot.getSetpoint())),
-          ComponentConstants.getStabilizerPose(Rotation2d.fromRotations(stabilizer.getSetpoint()).times(3.5842))
+          ComponentConstants.getStabilizerPose(
+              Rotation2d.fromRotations(stabilizer.getSetpoint())
+                  .times(StabilizerConstants.REAL_POS_TO_SIM_SCALAR))
         });
-    /* Logger.log("RobotState/SpeedLimit", speedLimit.getAsDouble());
+    Logger.log("RobotState/SpeedLimit", speedLimit.getAsDouble());
     Logger.log(
         "RobotState/PointedAtGoal",
-        ShootingHelper.pointedAtGoal(activeShotParameters.get().actualDistance())); */
+        ShootingHelper.pointedAtGoal(activeShotParameters.get().actualDistance()));
   }
 
   public static void telemeterizeDrivetrain(SwerveDriveState state) {
@@ -237,5 +240,24 @@ public class RobotState {
   public static void telemeterizeMechanisms(Mechanism2d measured, Mechanism2d setpoint) {
     Logger.log("RobotState/Mechanisms/Measured", measured);
     Logger.log("RobotState/Mechanisms/Setpoint", setpoint);
+  }
+
+  private static void logShotParameters(ShotParameters shotParameters) {
+    Logger.log("RobotState/ActiveShotParameters/ActualDistance", shotParameters.actualDistance());
+    Logger.log(
+        "RobotState/ActiveShotParameters/EffectiveDistance", shotParameters.effectiveDistance());
+    Logger.log(
+        "RobotState/ActiveShotParameters/TargetHeading",
+        shotParameters.targetHeading().getDegrees());
+    Logger.log("RobotState/ActiveShotParameters/Lookahead", shotParameters.shotLookahead());
+    Logger.log(
+        "RobotState/ActiveShotParameters/ShootState/ElevatorHeight",
+        shotParameters.shootState().getElevatorHeight());
+    Logger.log(
+        "RobotState/ActiveShotParameters/ShootState/PivotAngle",
+        shotParameters.shootState().getPivotAngle().getDegrees());
+    Logger.log(
+        "RobotState/ActiveShotParameters/ShootState/Velocity",
+        shotParameters.shootState().getVelocityRPM());
   }
 }

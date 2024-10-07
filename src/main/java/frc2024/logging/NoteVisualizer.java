@@ -77,8 +77,14 @@ public class NoteVisualizer {
         new Rotation3d(0, componentRotation.getY(), robotPose.getRotation().getRadians()));
   }
 
-  private static boolean isClose(Translation2d notePos, Pose2d robotPos) {
-    return notePos.getDistance(robotPos.getTranslation()) < INTAKE_DISTANCE;
+  private static boolean isClose(Translation2d notePos, Pose2d robotPose) {
+    return notePos.getDistance(robotPose.getTranslation()) < INTAKE_DISTANCE;
+  }
+
+  public static Translation2d getClosestNote(Pose2d robotPose) {
+    return notes.stream()
+        .min(Comparator.comparingDouble(note -> note.getDistance(robotPose.getTranslation())))
+        .orElseThrow(() -> new NoSuchElementException("No notes available"));
   }
 
   public static void resetNotes() {

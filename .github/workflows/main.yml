@@ -38,7 +38,9 @@ jobs:
 
     # Runs a Spotless command to check for code lint
     - name: Lint robot code
-      run: ./gradlew :spotlessCheck
+      run: |
+        ./gradlew :spotlessApply
+        ./gradlew :spotlessCheck
 
     # Runs a single command using the runners shell
     - name: Compile and run tests on robot code

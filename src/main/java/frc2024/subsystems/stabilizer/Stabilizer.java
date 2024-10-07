@@ -1,9 +1,7 @@
 package frc2024.subsystems.stabilizer;
 
 import com.SCREAMLib.drivers.TalonFXSubsystem;
-
 import frc2024.logging.Logger;
-
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
 
@@ -12,7 +10,7 @@ public class Stabilizer extends TalonFXSubsystem {
   public Stabilizer(TalonFXSubsystemConstants constants) {
     super(constants, StabilizerGoal.IDLE);
 
-    master.setPosition(0.0);
+    resetPosition(0.0);
   }
 
   public enum StabilizerGoal implements TalonFXSubsystemGoal {
@@ -41,7 +39,7 @@ public class Stabilizer extends TalonFXSubsystem {
 
   @Override
   public void periodic() {
-      super.periodic();
-      Logger.log("RobotState/Subsystems/Stabilizer/Angle", getAngle());
+    super.periodic();
+    Logger.log(logPrefix + "Angle", getAngle());
   }
 }

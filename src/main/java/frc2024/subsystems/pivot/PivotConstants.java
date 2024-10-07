@@ -40,11 +40,11 @@ public final class PivotConstants {
     SUBSYSTEM_CONSTANTS.name = "Pivot";
 
     SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.outputTelemetry = false;
+    SUBSYSTEM_CONSTANTS.logTelemetry = false;
 
     SUBSYSTEM_CONSTANTS.simConstants =
         new TalonFXSubsystemSimConstants(
-            new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false);
+            new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false, true);
 
     SUBSYSTEM_CONSTANTS.masterConstants =
         new TalonFXConstants(new CANDevice(17, ""), InvertedValue.Clockwise_Positive);
@@ -67,6 +67,7 @@ public final class PivotConstants {
         new ScreamPIDConstants(350.0, 0, 0).getSlot0Configs(new FeedforwardConstants());
     SUBSYSTEM_CONSTANTS.positionThreshold = 0.025;
     SUBSYSTEM_CONSTANTS.minUnitsLimit = 0.0;
-    SUBSYSTEM_CONSTANTS.maxUnitsLimit = Units.degreesToRotations(54);;
+    SUBSYSTEM_CONSTANTS.maxUnitsLimit = Units.degreesToRotations(54);
+    ;
   }
 }

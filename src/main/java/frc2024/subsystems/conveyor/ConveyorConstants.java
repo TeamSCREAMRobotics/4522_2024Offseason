@@ -18,7 +18,7 @@ public class ConveyorConstants {
     SUBSYSTEM_CONSTANTS.name = "Conveyor";
 
     SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.outputTelemetry = false;
+    SUBSYSTEM_CONSTANTS.logTelemetry = false;
 
     SUBSYSTEM_CONSTANTS.masterConstants =
         new TalonFXConstants(new CANDevice(10, ""), InvertedValue.CounterClockwise_Positive);

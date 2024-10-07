@@ -14,7 +14,7 @@ public class IntakeConstants {
     SUBSYSTEM_CONSTANTS.name = "Intake";
 
     SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.outputTelemetry = false;
+    SUBSYSTEM_CONSTANTS.logTelemetry = false;
 
     SUBSYSTEM_CONSTANTS.masterConstants =
         new TalonFXConstants(new CANDevice(9, ""), InvertedValue.Clockwise_Positive);

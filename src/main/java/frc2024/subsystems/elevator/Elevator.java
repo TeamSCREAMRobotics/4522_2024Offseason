@@ -3,9 +3,6 @@ package frc2024.subsystems.elevator;
 import com.SCREAMLib.data.Length;
 import com.SCREAMLib.drivers.TalonFXSubsystem;
 import com.SCREAMLib.math.Conversions;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc2024.Robot;
 import frc2024.RobotContainer;
 import frc2024.RobotState;
 import frc2024.logging.Logger;
@@ -18,16 +15,16 @@ public class Elevator extends TalonFXSubsystem {
     super(constants, ElevatorGoal.TRACKING);
 
     simFeedforwardSup = () -> 0.3;
-    master.setPosition(0.0);
+    resetPosition(0.0);
   }
 
   public enum ElevatorGoal implements TalonFXSubsystemGoal {
     HOME_INTAKE(() -> 0.0, ControlType.MOTION_MAGIC_POSITION),
     TRAP_INTAKE(() -> 3.41, ControlType.MOTION_MAGIC_POSITION),
     SUB(() -> 3.13, ControlType.MOTION_MAGIC_POSITION),
-    SUB_DEFENDED(() -> 21.745, ControlType.MOTION_MAGIC_POSITION),
+    SUB_DEFENDED(() -> ElevatorConstants.MAX_HEIGHT, ControlType.MOTION_MAGIC_POSITION),
     AMP(() -> 19.71, ControlType.MOTION_MAGIC_POSITION),
-    TRAP(() -> 21.75, ControlType.MOTION_MAGIC_POSITION),
+    TRAP(() -> ElevatorConstants.MAX_HEIGHT, ControlType.MOTION_MAGIC_POSITION),
     EJECT(() -> 5.43, ControlType.MOTION_MAGIC_POSITION),
     TRACKING(
         () ->
@@ -83,6 +80,6 @@ public class Elevator extends TalonFXSubsystem {
   @Override
   public void periodic() {
     super.periodic();
-    Logger.log("RobotState/Subsystems/Elevator/Height", getMeasuredHeight().getInches());
+    Logger.log(logPrefix + "Height", getMeasuredHeight().getInches());
   }
 }

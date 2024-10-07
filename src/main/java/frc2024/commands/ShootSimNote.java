@@ -37,7 +37,6 @@ public class ShootSimNote extends Command {
     setName("ShootSimNote");
     this.subsystems = subsystems;
     note.setMass(MassType.NORMAL);
-    world.setGravity(0, Constants.GRAVITY);
     world.addBody(note);
   }
 
