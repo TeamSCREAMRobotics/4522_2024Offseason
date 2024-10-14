@@ -29,9 +29,9 @@ public final class PivotConstants {
 
   public static final double GEAR_RATIO = 125.0 * (72.0 / 22.0);
 
-  public static final DCMotorSim SIM =
-      new DCMotorSim(DCMotor.getFalcon500(1), GEAR_RATIO * 0.8, 0.366879329);
-  public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(110000.0, 0.0, 0.0);
+  public static final DCMotorSim SIM = new DCMotorSim(DCMotor.getFalcon500(1), GEAR_RATIO, 0.6193);
+  public static final ScreamPIDConstants SIM_GAINS =
+      new ScreamPIDConstants(350 * GEAR_RATIO, 0.0, 0.0);
 
   public static final TalonFXSubsystemConstants SUBSYSTEM_CONSTANTS =
       new TalonFXSubsystemConstants();

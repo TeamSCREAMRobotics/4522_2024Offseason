@@ -7,7 +7,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc2024.subsystems.swerve.SwerveConstants;
+import frc2024.subsystems.drivetrain.DrivetrainConstants;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -51,7 +51,7 @@ public class Controlboard {
                                 driveController.getLeftX(), -driveController.getLeftX()),
                             STICK_DEADBAND),
                         2))
-                .times(SwerveConstants.MAX_SPEED));
+                .times(DrivetrainConstants.MAX_SPEED));
   }
 
   public static Translation2d snapTranslationToPole(Translation2d translation) {
@@ -67,7 +67,7 @@ public class Controlboard {
   public static DoubleSupplier getRotation() {
     return () ->
         applyPower(-MathUtil.applyDeadband(driveController.getRightX(), STICK_DEADBAND), 3)
-            * SwerveConstants.MAX_ANGULAR_SPEED;
+            * DrivetrainConstants.MAX_ANGULAR_SPEED;
   }
 
   public static BooleanSupplier getFieldCentric() {

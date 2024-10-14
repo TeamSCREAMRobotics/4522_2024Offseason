@@ -25,6 +25,9 @@ import frc2024.logging.NoteVisualizer;
 import frc2024.subsystems.conveyor.Conveyor;
 import frc2024.subsystems.conveyor.Conveyor.ConveyorGoal;
 import frc2024.subsystems.conveyor.ConveyorConstants;
+import frc2024.subsystems.drivetrain.Drivetrain;
+import frc2024.subsystems.drivetrain.DrivetrainConstants;
+import frc2024.subsystems.drivetrain.generated.TunerConstants;
 import frc2024.subsystems.elevator.Elevator;
 import frc2024.subsystems.elevator.ElevatorConstants;
 import frc2024.subsystems.intake.Intake;
@@ -34,14 +37,11 @@ import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.PivotConstants;
 import frc2024.subsystems.shooter.Shooter;
 import frc2024.subsystems.shooter.ShooterConstants;
-import frc2024.subsystems.shooter.ShootingHelper;
 import frc2024.subsystems.stabilizer.Stabilizer;
 import frc2024.subsystems.stabilizer.Stabilizer.StabilizerGoal;
 import frc2024.subsystems.stabilizer.StabilizerConstants;
-import frc2024.subsystems.swerve.Drivetrain;
-import frc2024.subsystems.swerve.SwerveConstants;
-import frc2024.subsystems.swerve.generated.TunerConstants;
 import frc2024.subsystems.vision.Vision;
+import frc2024.util.ShootingHelper;
 import java.util.Optional;
 import lombok.Getter;
 
@@ -101,13 +101,11 @@ public class RobotContainer {
               drivetrain.getHelper().setLastAngle(drivetrain.getHeading());
             })); */
     Controlboard.driveController
-        .back()
+        .start()
+        .and(() -> Robot.isSimulation())
         .onTrue(
-            Commands.runOnce(
-                () ->
-                    drivetrain.seedFieldRelative(
-                        AllianceFlipUtil.MirroredPose2d(
-                            new Pose2d(1.37, 5.54, Rotation2d.fromDegrees(0))))));
+            Commands.runOnce(() -> drivetrain.updateFromVision(Vision.getRandomPoseEstimate()))
+                .ignoringDisable(true));
 
     Controlboard.driveController
         .leftBumper()
@@ -135,10 +133,10 @@ public class RobotContainer {
                                     .get()
                                     .times(RobotState.getSpeedLimit().getAsDouble()),
                                 Rotation2d.fromDegrees(90),
-                                SwerveConstants.HEADING_CONTROLLER))
+                                DrivetrainConstants.HEADING_CONTROLLER))
                 .beforeStarting(
                     () ->
-                        SwerveConstants.HEADING_CONTROLLER.reset(
+                        DrivetrainConstants.HEADING_CONTROLLER.reset(
                             drivetrain.getHeading().getRadians())));
 
     Controlboard.driveController
@@ -167,12 +165,16 @@ public class RobotContainer {
         .rightTrigger()
         .and(new Trigger(conveyor.hasNote()).negate())
         .whileTrue(
-            drivetrain.applyRequest(
+            drivetrain.getNoteAssistCommand(
                 () ->
-                    drivetrain.getNoteAssistRequest(
-                        Controlboard.getTranslation().get(),
-                        Controlboard.getRotation().getAsDouble(),
-                        NoteVisualizer.getClosestNote(drivetrain.getPose()))))
+                    Controlboard.getTranslation()
+                        .get()
+                        .times(RobotState.getSpeedLimit().getAsDouble()),
+                Controlboard.getRotation(),
+                () ->
+                    Robot.isSimulation()
+                        ? NoteVisualizer.getClosestNote(drivetrain.getPose())
+                        : Vision.getVisibleNotePose(drivetrain.getPose())))
         .whileTrue(
             robotState
                 .applySuperstructureGoal(SuperstructureGoal.HOME_INTAKE)
@@ -214,10 +216,10 @@ public class RobotContainer {
                             .getFacingAngleProfiled(
                                 Controlboard.getTranslation().get(),
                                 AllianceFlipUtil.getForwardRotation(),
-                                SwerveConstants.HEADING_CONTROLLER))
+                                DrivetrainConstants.HEADING_CONTROLLER))
                 .beforeStarting(
                     () ->
-                        SwerveConstants.HEADING_CONTROLLER.reset(
+                        DrivetrainConstants.HEADING_CONTROLLER.reset(
                             drivetrain.getHeading().getRadians())))
         .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.SUB));
 

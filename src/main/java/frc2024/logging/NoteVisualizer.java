@@ -3,7 +3,6 @@ package frc2024.logging;
 import com.SCREAMLib.util.AllianceFlipUtil;
 import com.SCREAMLib.util.ScreamUtil;
 import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.math.util.Units;
 import frc2024.RobotContainer;
 import frc2024.constants.FieldConstants;
 import frc2024.subsystems.pivot.PivotConstants;
@@ -12,7 +11,6 @@ import java.util.*;
 public class NoteVisualizer {
   private static final Set<Translation2d> notes = new HashSet<>();
   private static final double INTAKE_DISTANCE = 0.55;
-  private static final double NOTE_HEIGHT = Units.inchesToMeters(1.0);
 
   public static boolean hasNote = false;
 
@@ -37,7 +35,11 @@ public class NoteVisualizer {
     return notes.stream()
         .map(
             translation ->
-                new Pose3d(translation.getX(), translation.getY(), NOTE_HEIGHT, new Rotation3d()))
+                new Pose3d(
+                    translation.getX(),
+                    translation.getY(),
+                    FieldConstants.NOTE_HEIGHT.getMeters(),
+                    new Rotation3d()))
         .toArray(Pose3d[]::new);
   }
 
@@ -81,10 +83,9 @@ public class NoteVisualizer {
     return notePos.getDistance(robotPose.getTranslation()) < INTAKE_DISTANCE;
   }
 
-  public static Translation2d getClosestNote(Pose2d robotPose) {
+  public static Optional<Translation2d> getClosestNote(Pose2d robotPose) {
     return notes.stream()
-        .min(Comparator.comparingDouble(note -> note.getDistance(robotPose.getTranslation())))
-        .orElseThrow(() -> new NoSuchElementException("No notes available"));
+        .min(Comparator.comparingDouble(note -> note.getDistance(robotPose.getTranslation())));
   }
 
   public static void resetNotes() {

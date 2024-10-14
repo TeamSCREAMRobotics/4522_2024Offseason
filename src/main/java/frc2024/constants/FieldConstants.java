@@ -12,6 +12,8 @@ public final class FieldConstants {
 
   public static final Length NOTE_DIAMETER = Length.fromInches(14.0);
 
+  public static final Length NOTE_HEIGHT = Length.fromInches(1.0);
+
   public static final class Zones {
     public static final RectangularPoseArea FIELD_AREA =
         new RectangularPoseArea(new Translation2d(0, 0), FIELD_DIMENSIONS);

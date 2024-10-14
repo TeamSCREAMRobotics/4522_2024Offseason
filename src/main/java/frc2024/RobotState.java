@@ -6,6 +6,7 @@ import com.SCREAMLib.data.DataConversions;
 import com.SCREAMLib.data.Length;
 import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemGoal;
 import com.SCREAMLib.util.AllianceFlipUtil;
+import com.SCREAMLib.util.GeomUtil;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -24,6 +25,7 @@ import frc2024.logging.ComponentConstants;
 import frc2024.logging.Logger;
 import frc2024.logging.NoteVisualizer;
 import frc2024.subsystems.conveyor.Conveyor;
+import frc2024.subsystems.drivetrain.Drivetrain;
 import frc2024.subsystems.elevator.Elevator;
 import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
 import frc2024.subsystems.elevator.ElevatorConstants;
@@ -33,12 +35,11 @@ import frc2024.subsystems.pivot.Pivot;
 import frc2024.subsystems.pivot.Pivot.PivotGoal;
 import frc2024.subsystems.shooter.Shooter;
 import frc2024.subsystems.shooter.Shooter.ShooterGoal;
-import frc2024.subsystems.shooter.ShootingHelper;
-import frc2024.subsystems.shooter.ShootingHelper.ShotParameters;
 import frc2024.subsystems.stabilizer.Stabilizer;
 import frc2024.subsystems.stabilizer.StabilizerConstants;
-import frc2024.subsystems.swerve.Drivetrain;
 import frc2024.subsystems.vision.Vision;
+import frc2024.util.ShootingHelper;
+import frc2024.util.ShootingHelper.ShotParameters;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -147,8 +148,13 @@ public class RobotState {
                   pivotRootPosition.get().plus(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0)));
 
   private final MechanismVisualizer mechanismVisualizer =
-      new MechanismVisualizer(SimConstants.MEASURED_MECHANISM, SimConstants.SETPOINT_MECHANISM,
-          RobotState::telemeterizeMechanisms, elevatorMech, shooterFrontMech, shooterBackMech);
+      new MechanismVisualizer(
+          SimConstants.MEASURED_MECHANISM,
+          SimConstants.SETPOINT_MECHANISM,
+          RobotState::telemeterizeMechanisms,
+          elevatorMech,
+          shooterFrontMech,
+          shooterBackMech);
 
   private static final Set<Command> activeCommands = new HashSet<>();
 
@@ -197,7 +203,6 @@ public class RobotState {
           "Simulation/FieldNotes",
           NoteVisualizer.getActiveNotes(
               drivetrain.getPose(), intake.getGoal() == IntakeGoal.INTAKE));
-      Logger.log("Simulation/ClosestNote", NoteVisualizer.getClosestNote(drivetrain.getPose()));
       Logger.log("Simulation/StagedNote", NoteVisualizer.getStagedNote());
     }
     logShotParameters(getActiveShotParameters().get());
@@ -229,6 +234,15 @@ public class RobotState {
     Logger.log(
         "RobotState/PointedAtGoal",
         ShootingHelper.pointedAtGoal(activeShotParameters.get().actualDistance()));
+    (Robot.isSimulation()
+            ? NoteVisualizer.getClosestNote(drivetrain.getPose())
+            : Vision.getVisibleNotePose(drivetrain.getPose()))
+        .ifPresent(
+            translation ->
+                Logger.log(
+                    "RobotState/VisibleNotePose",
+                    GeomUtil.translationToPose3d(
+                        translation, FieldConstants.NOTE_HEIGHT.getMeters())));
   }
 
   public static void telemeterizeDrivetrain(SwerveDriveState state) {

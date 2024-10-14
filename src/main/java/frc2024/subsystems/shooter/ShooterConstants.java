@@ -16,7 +16,8 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc2024.subsystems.elevator.Elevator.ElevatorGoal;
 import frc2024.subsystems.elevator.ElevatorConstants;
 import frc2024.subsystems.pivot.Pivot.PivotGoal;
-import frc2024.subsystems.shooter.ShootStateInterpolatingTreeMap.ShootState;
+import frc2024.util.ShootStateInterpolatingTreeMap;
+import frc2024.util.ShootStateInterpolatingTreeMap.ShootState;
 
 public class ShooterConstants {
 

@@ -1,4 +1,4 @@
-package frc2024.subsystems.shooter;
+package frc2024.util;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;

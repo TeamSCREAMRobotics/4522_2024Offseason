@@ -1,4 +1,4 @@
-package frc2024.subsystems.shooter;
+package frc2024.util;
 
 import com.SCREAMLib.data.DataConversions;
 import com.SCREAMLib.math.ScreamMath;
@@ -13,7 +13,8 @@ import frc2024.RobotContainer.Subsystems;
 import frc2024.RobotState;
 import frc2024.constants.FieldConstants;
 import frc2024.subsystems.pivot.Pivot.PivotGoal;
-import frc2024.subsystems.shooter.ShootStateInterpolatingTreeMap.ShootState;
+import frc2024.subsystems.shooter.ShooterConstants;
+import frc2024.util.ShootStateInterpolatingTreeMap.ShootState;
 
 public class ShootingHelper {
   public record ShotParameters(
@@ -122,7 +123,7 @@ public class ShootingHelper {
         && subsystems.elevator().atGoal()
         && subsystems.pivot().atGoal()
         && pointedAtGoal(horizontalDistance)
-        && ScreamMath.getLinearVelocity(subsystems.drivetrain().getRobotRelativeSpeeds()) < 2.5
+        && subsystems.drivetrain().getLinearVelocity() < 2.5
         && withinRange();
   }
 
