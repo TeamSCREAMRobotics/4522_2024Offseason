@@ -48,7 +48,7 @@ public class ShooterConstants {
     SUBSYSTEM_CONSTANTS.name = "Shooter";
 
     SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.logTelemetry = false;
+    SUBSYSTEM_CONSTANTS.logTelemetry = true;
 
     SUBSYSTEM_CONSTANTS.simConstants =
         new TalonFXSubsystemSimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
@@ -57,8 +57,9 @@ public class ShooterConstants {
         new TalonFXConstants(new CANDevice(11, ""), InvertedValue.CounterClockwise_Positive);
     SUBSYSTEM_CONSTANTS.slaveConstants =
         new TalonFXConstants[] {
-          new TalonFXConstants(new CANDevice(12, ""), InvertedValue.Clockwise_Positive)
+          new TalonFXConstants(new CANDevice(12, ""), InvertedValue.CounterClockwise_Positive)
         };
+    SUBSYSTEM_CONSTANTS.slot0 = new ScreamPIDConstants(0.15, 0, 0).getSlot0Configs(FEEDFORWARD_CONSTANTS);
 
     SUBSYSTEM_CONSTANTS.velocityThreshold = 1.25;
   }

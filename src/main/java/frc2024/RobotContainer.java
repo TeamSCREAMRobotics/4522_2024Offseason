@@ -92,14 +92,14 @@ public class RobotContainer {
   }
 
   private void configButtonBindings() {
-    /* Controlboard.driveController
+    Controlboard.driveController
     .back()
     .onTrue(
         Commands.runOnce(
             () -> {
               drivetrain.resetHeading();
               drivetrain.getHelper().setLastAngle(drivetrain.getHeading());
-            })); */
+            }));
     Controlboard.driveController
         .start()
         .and(() -> Robot.isSimulation())
@@ -195,15 +195,15 @@ public class RobotContainer {
             () ->
                 ShootingHelper.validShot(
                     RobotState.getActiveShotParameters().get().effectiveDistance()))
-        .and(() -> Robot.isSimulation())
         .whileTrue(
             conveyor.applyGoal(ConveyorGoal.SHOOT).alongWith(intake.applyGoal(IntakeGoal.INTAKE)))
+        .and(() -> Robot.isSimulation())
         .and(conveyor.hasNote())
         .whileTrue(RobotState.shootSimNoteCommand());
 
     Controlboard.driveController
         .povRight()
-        .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.EJECT));
+        .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.EJECT).alongWith(conveyor.applyGoal(ConveyorGoal.EJECT), intake.applyGoal(IntakeGoal.EJECT)));
 
     Controlboard.driveController
         .y()

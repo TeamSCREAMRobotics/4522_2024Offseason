@@ -196,8 +196,8 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
         poseEstimate.pose,
         poseEstimate.timestampSeconds,
         VecBuilder.fill(
-            Math.pow(0.8, poseEstimate.tagCount) * poseEstimate.avgTagDist * 2,
-            Math.pow(0.8, poseEstimate.tagCount) * poseEstimate.avgTagDist * 2,
+            Math.pow(0.5, poseEstimate.tagCount) * poseEstimate.avgTagDist * 2,
+            Math.pow(0.5, poseEstimate.tagCount) * poseEstimate.avgTagDist * 2,
             9999999));
   }
 

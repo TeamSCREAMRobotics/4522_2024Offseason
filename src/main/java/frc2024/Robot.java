@@ -15,6 +15,8 @@ import frc2024.constants.Constants;
 import frc2024.dashboard.Dashboard.DashboardValue;
 import frc2024.logging.Logger;
 import frc2024.logging.NoteVisualizer;
+import frc2024.subsystems.vision.Vision;
+
 import java.util.Optional;
 
 /**
@@ -81,6 +83,7 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
     RobotState.outputTelemetry();
+    Vision.periodic();
 
     /* autoConfigurator.runOnceWhen(
     () -> {
