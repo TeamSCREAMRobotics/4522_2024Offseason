@@ -1,6 +1,6 @@
 {
   "java.configuration.updateBuildConfiguration": "automatic",
-  "java.server.launchMode": "Hybrid",
+  "java.server.launchMode": "Standard",
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
@@ -25,6 +25,5 @@
       }
     },
   ],
-  "java.test.defaultConfig": "WPIlibUnitTests",
-  "CodeGPT.apiKey": "Google AI Studio"
+  "java.test.defaultConfig": "WPIlibUnitTests"
 }

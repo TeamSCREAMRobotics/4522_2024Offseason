@@ -382,14 +382,14 @@ public class CustomSwerveDrivetrain {
     m_odometry =
         new SwerveDrivePoseEstimator(
             m_kinematics,
-            new Rotation2d(),
+            Rotation2d.kZero,
             m_modulePositions,
-            new Pose2d(),
+            Pose2d.kZero,
             odometryStandardDeviation,
             visionStandardDeviation);
 
-    m_fieldRelativeOffset = new Rotation2d();
-    m_operatorForwardDirection = new Rotation2d();
+    m_fieldRelativeOffset = Rotation2d.kZero;
+    m_operatorForwardDirection = Rotation2d.kZero;
 
     m_simDrive =
         new SimSwerveDrivetrain(m_moduleLocations, m_pigeon2, driveTrainConstants, modules);
@@ -460,7 +460,7 @@ public class CustomSwerveDrivetrain {
         m_modulePositions[i] = Modules[i].getPosition(true);
       }
       m_odometry.resetPosition(
-          Rotation2d.fromDegrees(m_yawGetter.getValue()), m_modulePositions, new Pose2d());
+          Rotation2d.fromDegrees(m_yawGetter.getValue()), m_modulePositions, Pose2d.kZero);
     } finally {
       m_stateLock.writeLock().unlock();
     }

@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id "edu.wpi.first.GradleRIO" version "2024.3.2"
+    id "edu.wpi.first.GradleRIO" version "2025.1.1-beta-1"
     id "io.freefair.lombok" version "8.4"
     id "com.diffplug.spotless" version "6.25.0"
 }
@@ -10,7 +10,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-def ROBOT_MAIN_CLASS = "frc2024.Main"
+def ROBOT_MAIN_CLASS = "frc2025.Main"
 
 // Define my targets (RoboRIO) and artifacts (deployable files)
 // This is added by GradleRIO's backing project DeployUtils.
@@ -54,13 +54,17 @@ def deployArtifact = deploy.targets.roborio.artifacts.frcJava
 wpi.java.debugJni = false
 
 // Set this to true to enable desktop support.
-def includeDesktopSupport = false
+def includeDesktopSupport = true
 
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
 dependencies {
+    annotationProcessor wpi.java.deps.wpilibAnnotations()
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
+
+    implementation 'gov.nist.math:jama:1.0.3'
+    implementation 'org.dyn4j:dyn4j:5.0.2'
 
     roborioDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.roborio)
     roborioDebug wpi.java.vendor.jniDebug(wpi.platforms.roborio)
@@ -75,9 +79,6 @@ dependencies {
     nativeRelease wpi.java.deps.wpilibJniRelease(wpi.platforms.desktop)
     nativeRelease wpi.java.vendor.jniRelease(wpi.platforms.desktop)
     simulationRelease wpi.sim.enableRelease()
-
-    implementation 'gov.nist.math:jama:1.0.3'
-    implementation 'org.dyn4j:dyn4j:5.0.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -96,11 +97,7 @@ wpi.sim.addDriverstation()
 // in order to make them all available at runtime. Also adding the manifest so WPILib
 // knows where to look for our Robot Class.
 jar {
-    from {
-        configurations.runtimeClasspath.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-    }
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     from sourceSets.main.allSource
     manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -131,4 +128,24 @@ spotless {
     }
 }
 
+task replaceTextInFiles {
+    def sourceDir = file('src/main/java/frc2025')  // The directory containing files to modify
+
+    // Process each file in the directory (and subdirectories if needed)
+    fileTree(dir: sourceDir, includes: ['**/*.java']).each { File file ->
+        doLast {
+            def content = file.text
+            content = content.replaceAll('new Pose2d\\(\\)', 'Pose2d.kZero')
+            content = content.replaceAll('new Pose3d\\(\\)', 'Pose3d.kZero')
+            content = content.replaceAll('new Translation2d\\(\\)', 'Translation2d.kZero')
+            content = content.replaceAll('new Translation3d\\(\\)', 'Translation3d.kZero')
+            content = content.replaceAll('new Rotation2d\\(\\)', 'Rotation2d.kZero')
+            content = content.replaceAll('new Rotation3d\\(\\)', 'Rotation3d.kZero')
+            
+            file.text = content
+        }
+    }
+}
+
 build.dependsOn(spotlessApply)
+build.dependsOn(replaceTextInFiles)
