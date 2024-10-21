@@ -1,15 +1,11 @@
 package frc2025.subsystems.shooter;
 
-import com.SCREAMLib.data.Length;
-import com.SCREAMLib.drivers.TalonFXSubsystem.CANDevice;
-import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXConstants;
-import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
-import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
-import com.SCREAMLib.pid.ScreamPIDConstants;
-import com.SCREAMLib.pid.ScreamPIDConstants.FeedforwardConstants;
-import com.SCREAMLib.sim.SimWrapper;
-import com.SCREAMLib.util.SimUtil;
 import com.ctre.phoenix6.signals.InvertedValue;
+import data.Length;
+import drivers.TalonFXSubsystem.CANDevice;
+import drivers.TalonFXSubsystem.TalonFXConstants;
+import drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -19,6 +15,10 @@ import frc2025.subsystems.elevator.ElevatorConstants;
 import frc2025.subsystems.pivot.Pivot.PivotGoal;
 import frc2025.util.ShootStateInterpolatingTreeMap;
 import frc2025.util.ShootStateInterpolatingTreeMap.ShootState;
+import pid.ScreamPIDConstants;
+import pid.ScreamPIDConstants.FeedforwardConstants;
+import sim.SimWrapper;
+import util.SimUtil;
 
 public class ShooterConstants {
 
@@ -40,7 +40,7 @@ public class ShooterConstants {
       SimUtil.createFlywheelSim(DCMotor.getFalcon500(1), 1.0, 0.00599676919909 + 0.0001);
   public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(0.001, 0, 0);
   public static final SimpleMotorFeedforward SIM_FEEDFORWARD =
-      new SimpleMotorFeedforward(0.08902, 0.11053, 0.00045);
+      new SimpleMotorFeedforward(0.08669, 0.11240, 0.009);
 
   public static final TalonFXSubsystemConstants SUBSYSTEM_CONSTANTS =
       new TalonFXSubsystemConstants();
@@ -52,7 +52,8 @@ public class ShooterConstants {
     SUBSYSTEM_CONSTANTS.logTelemetry = true;
 
     SUBSYSTEM_CONSTANTS.simConstants =
-        new TalonFXSubsystemSimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
+        new TalonFXSubsystemSimConstants(
+            new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false, false);
 
     SUBSYSTEM_CONSTANTS.masterConstants =
         new TalonFXConstants(new CANDevice(11, ""), InvertedValue.CounterClockwise_Positive);
@@ -88,17 +89,15 @@ public class ShooterConstants {
         new ShootState(
             Rotation2d.fromDegrees(55.0 - 6.0),
             Length.fromRotations(
-                    ElevatorGoal.SUB.getTarget().getAsDouble(),
-                    ElevatorConstants.PULLEY_CIRCUMFERENCE)
+                    ElevatorGoal.SUB.target.getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE)
                 .getInches(),
             3250.0));
     SHOOTING_MAP.put(
         1.0,
         new ShootState(
-            Rotation2d.fromRotations(PivotGoal.SUB.getTarget().getAsDouble()),
+            Rotation2d.fromRotations(PivotGoal.SUB.target.getAsDouble()),
             Length.fromRotations(
-                    ElevatorGoal.SUB.getTarget().getAsDouble(),
-                    ElevatorConstants.PULLEY_CIRCUMFERENCE)
+                    ElevatorGoal.SUB.target.getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE)
                 .getInches(),
             3000.0));
   }

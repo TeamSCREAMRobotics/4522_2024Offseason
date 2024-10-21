@@ -1,8 +1,7 @@
 package frc2025.subsystems.intake;
 
-import com.SCREAMLib.drivers.TalonFXSubsystem;
+import drivers.TalonFXSubsystem;
 import java.util.function.DoubleSupplier;
-import lombok.Getter;
 
 public class Intake extends TalonFXSubsystem {
 
@@ -15,8 +14,8 @@ public class Intake extends TalonFXSubsystem {
     INTAKE(9.5, ControlType.VOLTAGE),
     EJECT(-6.0, ControlType.VOLTAGE);
 
-    @Getter double voltage;
-    @Getter ControlType controlType;
+    public final double voltage;
+    public final ControlType controlType;
 
     private IntakeGoal(double voltage, ControlType controlType) {
       this.voltage = voltage;

@@ -4,10 +4,9 @@
 
 package frc2025;
 
-import com.SCREAMLib.util.RunnableUtil.RunOnce;
+import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import dev.doglog.DogLogOptions;
-import edu.wpi.first.epilogue.*;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -18,7 +17,7 @@ import frc2025.dashboard.Dashboard.DashboardValue;
 import frc2025.logging.Logger;
 import frc2025.logging.NoteVisualizer;
 import frc2025.subsystems.vision.Vision;
-import java.util.Optional;
+import util.RunnableUtil.RunOnce;
 
 public class Robot extends TimedRobot {
   private Command autonomousCommand;
@@ -72,6 +71,8 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().onCommandInitialize(RobotState::addActiveCommand);
     CommandScheduler.getInstance().onCommandFinish(RobotState::removeActiveCommand);
     CommandScheduler.getInstance().onCommandInterrupt(RobotState::removeActiveCommand);
+
+    FollowPathCommand.warmupCommand().schedule();
   }
 
   DashboardValue noteReset = new DashboardValue("Reset Notes", false);
@@ -115,7 +116,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.empty());
+    PPHolonomicDriveController.clearRotationFeedbackOverride();
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }

@@ -1,0 +1,285 @@
+{
+  "hubs": [
+    {
+      "x": -1608,
+      "y": -8,
+      "width": 1616,
+      "height": 868,
+      "state": {
+        "sidebar": {
+          "width": 357,
+          "expanded": [
+            "/PathPlanner",
+            "/Robot/RobotState/Subsystems/Swerve/SetpointStates/0",
+            "/Robot/RobotState/Subsystems/Swerve/SetpointStates/0/angle",
+            "/Robot/RobotState/RobotPose/rotation",
+            "/Robot/test",
+            "/Robot/RobotState/Subsystems/Swerve",
+            "/Robot/TestNote",
+            "/Robot/TestNote/translation",
+            "/SmartDashboard",
+            "/SmartDashboard/RobotState/Mechanisms",
+            "/RealOutputs",
+            "/RealOutputs/Arm/Voltages",
+            "/RealOutputs/Arm/MeasuredAngle",
+            "/RealOutputs/Arm/SetpointAngle",
+            "/RealOutputs/ObjectiveTracker",
+            "/RealOutputs/CubeIntake",
+            "/Robot/Simulation/StagedNote",
+            "/Robot/Simulation/StagedNote/rotation",
+            "/Robot/Simulation/StagedNote/translation",
+            "/Robot/RobotState/Subsystems/Shooter",
+            "/Robot/Simulation/ActiveNotes",
+            "/Robot/Simulation/ActiveNotes/0",
+            "/Robot/Simulation/ActiveNotes/0/translation",
+            "/NT",
+            "/NT/SmartDashboard",
+            "/NT/SmartDashboard/RobotState",
+            "/NT/SmartDashboard/RobotState/Mechanisms",
+            "/NT/SmartDashboard/RobotState/Mechanisms/Measured",
+            "/NT/SmartDashboard/RobotState/Mechanisms/Measured/dims",
+            "/NT/SmartDashboard/RobotState/Mechanisms/Measured/Elevator Actual",
+            "/NT/SmartDashboard/RobotState/Mechanisms/Measured/Elevator Actual/Actual",
+            "/NT/SmartDashboard/RobotState/Mechanisms/Measured/Pivot Back Actual",
+            "/NT/SmartDashboard/RobotState/Mechanisms/Measured/Pivot Back Actual/Actual",
+            "/Robot/Simulation/ClosestNote",
+            "/Robot/DogLog",
+            "/Robot/RobotState/RobotPose",
+            "/Robot/RobotState/VisibleNotePose",
+            "/Robot/RobotState/Subsystems",
+            "/Epilogue",
+            "/Robot",
+            "/Robot/RobotState",
+            "/Robot/ActiveCommands",
+            "/Robot/RobotState/Subsystems/Shooter/Rotor Velocity",
+            "/Robot/RobotState/Subsystems/Shooter/Velocity"
+          ]
+        },
+        "tabs": {
+          "selected": 3,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "phaz19h36mnedyt53nzi5uyvl40b6lwz",
+              "renderer": "#/",
+              "controlsHeight": 0
+            },
+            {
+              "type": 1,
+              "title": "Line Graph",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/Robot/RobotState/Subsystems/Shooter/GoalTarget",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/Robot/RobotState/Subsystems/Shooter/Measured",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [],
+                "discreteSources": [],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "ubk2gmf5q9kqn3qxepyer4uu48048ypp",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 2,
+              "title": "Odometry",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/Robot/RobotState/RobotPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {}
+                  }
+                ],
+                "game": "2024 Field",
+                "bumpers": "auto",
+                "origin": "auto",
+                "orientation": 0,
+                "size": 30
+              },
+              "controllerUUID": "i4uw5blkt2zepqd7qstyn0eoirhq55mi",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 3,
+              "title": "3D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/Robot/RobotState/RobotPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "AXL"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "logKey": "NT:/Robot/RobotState/Components/MeasuredComponents",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "NT:/Robot/RobotState/Subsystems/Drivetrain/MeasuredStates",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "NT:/Robot/RobotState/Subsystems/Drivetrain/SetpointStates",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/Robot/RobotState/RobotPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "AXL",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "logKey": "NT:/Robot/RobotState/Components/SetpointComponents",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/Robot/Simulation/ActiveNotes",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Note"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/Robot/Simulation/FieldNotes",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Note"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/Robot/Simulation/StagedNote",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "variant": "Note"
+                    }
+                  }
+                ],
+                "game": "2024 Field",
+                "origin": "blue"
+              },
+              "controllerUUID": "93adgkvwm6i90yi7feruvnisfp3guejz",
+              "renderer": {
+                "cameraIndex": -2,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  -0.49083557261455635,
+                  1.0440496824536551,
+                  -2.3665914372399337
+                ],
+                "cameraTarget": [
+                  0,
+                  0.5,
+                  0
+                ]
+              },
+              "controlsHeight": 241
+            },
+            {
+              "type": 9,
+              "title": "Swerve",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "states",
+                    "logKey": "NT:/Robot/RobotState/Subsystems/Swerve/MeasuredStates",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "states",
+                    "logKey": "NT:/Robot/RobotState/Subsystems/Swerve/SetpointStates",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#0000ff",
+                      "arrangement": "0,1,2,3"
+                    }
+                  }
+                ],
+                "maxSpeed": 5.941,
+                "sizeX": 0.65,
+                "sizeY": 0.65,
+                "orientation": 1
+              },
+              "controllerUUID": "hnhxiix1yydlcborwi8vkrrcyknrvquv",
+              "renderer": null,
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "4.0.0-beta-2"
+}

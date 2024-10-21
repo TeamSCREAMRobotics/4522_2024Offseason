@@ -1,7 +1,5 @@
 package frc2025.controlboard;
 
-import com.SCREAMLib.util.AllianceFlipUtil;
-import com.SCREAMLib.util.ScreamUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -11,6 +9,7 @@ import frc2025.subsystems.drivetrain.DrivetrainConstants;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import util.ScreamUtil;
 
 public class Controlboard {
   public static final CommandXboxController driveController = new CommandXboxController(0);
@@ -40,17 +39,9 @@ public class Controlboard {
         snapTranslationToPole(
             new Translation2d(
                     applyPower(
-                        -MathUtil.applyDeadband(
-                            AllianceFlipUtil.get(
-                                driveController.getLeftY(), -driveController.getLeftY()),
-                            STICK_DEADBAND),
-                        2),
+                        -MathUtil.applyDeadband(driveController.getLeftY(), STICK_DEADBAND), 2),
                     applyPower(
-                        -MathUtil.applyDeadband(
-                            AllianceFlipUtil.get(
-                                driveController.getLeftX(), -driveController.getLeftX()),
-                            STICK_DEADBAND),
-                        2))
+                        -MathUtil.applyDeadband(driveController.getLeftX(), STICK_DEADBAND), 2))
                 .times(DrivetrainConstants.MAX_SPEED));
   }
 
@@ -71,7 +62,7 @@ public class Controlboard {
   public static DoubleSupplier getRotation() {
     return () ->
         applyPower(-MathUtil.applyDeadband(driveController.getRightX(), STICK_DEADBAND), 3)
-            * DrivetrainConstants.MAX_ANGULAR_SPEED;
+            * DrivetrainConstants.MAX_ANGULAR_SPEED_RADS;
   }
 
   public static BooleanSupplier getFieldCentric() {

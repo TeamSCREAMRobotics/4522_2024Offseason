@@ -1,14 +1,18 @@
 package frc2025.subsystems.drivetrain.generated;
 
-import com.SCREAMLib.data.Length;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.ClosedLoopOutputType;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants.SteerFeedbackType;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstantsFactory;
+import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerFeedbackType;
+import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
+import data.Length;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Voltage;
 import frc2025.Robot;
 import frc2025.subsystems.drivetrain.Drivetrain;
 
@@ -48,7 +52,7 @@ public class TunerConstants {
 
   // The stator current at which the wheels start to slip;
   // This needs to be tuned to your individual robot
-  private static final double SLIP_CURRENT = 300.0;
+  private static final Current SLIP_CURRENT = Units.Amps.of(120.0);
 
   // Theoretical free speed (m/s) at 12v applied output;
   // This needs to be tuned to your individual robot
@@ -60,7 +64,7 @@ public class TunerConstants {
 
   private static final double DRIVE_GEAR_RATIO = 5.357142857142857;
   private static final double STEER_GEAR_RATIO = 21.428571428571427;
-  private static final double WHEEL_RADIUS = 2; // inches
+  private static final Distance WHEEL_RADIUS = Units.Inches.of(1.97); // inches
 
   private static final boolean STEER_INVERTED = true;
 
@@ -71,8 +75,8 @@ public class TunerConstants {
   private static final double STEER_INERTIA = 0.001; // 0.00001
   private static final double DRIVE_INERTIA = 0.05; // 0.05
   // Simulated voltage necessary to overcome friction
-  private static final double STEER_KS = 0.25;
-  private static final double DRIVE_KS = 0.25;
+  private static final Voltage STEER_KS = Units.Volts.of(0.25);
+  private static final Voltage DRIVE_KS = Units.Volts.of(0.25);
 
   private static final TalonFXConfiguration DRIVE_CONFIG = new TalonFXConfiguration();
 
@@ -80,9 +84,9 @@ public class TunerConstants {
     DRIVE_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
     DRIVE_CONFIG.CurrentLimits.StatorCurrentLimit = 80;
     DRIVE_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
-    DRIVE_CONFIG.CurrentLimits.SupplyCurrentLimit = 80;
-    DRIVE_CONFIG.CurrentLimits.SupplyCurrentThreshold = 90;
-    DRIVE_CONFIG.CurrentLimits.SupplyTimeThreshold = 0.5;
+    DRIVE_CONFIG.CurrentLimits.SupplyCurrentLowerLimit = 80;
+    DRIVE_CONFIG.CurrentLimits.SupplyCurrentLimit = 90;
+    DRIVE_CONFIG.CurrentLimits.SupplyCurrentLowerTime = 0.5;
     // DRIVE_CONFIG.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25;
   }
 
@@ -90,13 +94,13 @@ public class TunerConstants {
 
   static {
     STEER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    STEER_CONFIG.CurrentLimits.StatorCurrentLimit = 80;
+    STEER_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
     STEER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     STEER_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
   }
 
   private static final SwerveDrivetrainConstants DRIVETRAIN_CONSTANTS =
-      new SwerveDrivetrainConstants().withPigeon2Id(PIGEON_ID).withCANbusName(CANBUS);
+      new SwerveDrivetrainConstants().withPigeon2Id(PIGEON_ID).withCANBusName(CANBUS);
 
   private static final SwerveModuleConstantsFactory CONSTANT_FACTORY =
       new SwerveModuleConstantsFactory()
@@ -108,14 +112,13 @@ public class TunerConstants {
           .withDriveMotorGains(DRIVE_GAINS)
           .withSteerMotorClosedLoopOutput(STEER_CLOSED_LOOP_OUTPUT)
           .withDriveMotorClosedLoopOutput(DRIVE_CLOSED_LOOP_OUTPUT)
-          .withSpeedAt12VoltsMps(SPEED_12V_MPS)
+          .withSpeedAt12Volts(Units.MetersPerSecond.of(SPEED_12V_MPS))
           .withSteerInertia(STEER_INERTIA)
           .withDriveInertia(DRIVE_INERTIA)
           .withSteerFrictionVoltage(STEER_KS)
           .withDriveFrictionVoltage(DRIVE_KS)
           .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
           .withCouplingGearRatio(COUPLE_RATIO)
-          .withSteerMotorInverted(STEER_INVERTED)
           .withDriveMotorInitialConfigs(DRIVE_CONFIG)
           .withSteerMotorInitialConfigs(STEER_CONFIG);
 
@@ -134,16 +137,16 @@ public class TunerConstants {
   public static final double DRIVE_BASE_RADIUS = FRONT_LEFT_POSITION.getNorm();
 
   private static final SwerveModuleConstants MODULE_0 =
-      CONSTANT_FACTORY.createModuleConstants(0, 1, 0, -0.326416015625, 0, 0, false);
+      CONSTANT_FACTORY.createModuleConstants(0, 1, 0, -0.326416015625, 0, 0, false, STEER_INVERTED);
 
   private static final SwerveModuleConstants MODULE_1 =
-      CONSTANT_FACTORY.createModuleConstants(2, 3, 1, -0.467529296875, 0, 0, false);
+      CONSTANT_FACTORY.createModuleConstants(2, 3, 1, -0.467529296875, 0, 0, false, STEER_INVERTED);
 
   private static final SwerveModuleConstants MODULE_2 =
-      CONSTANT_FACTORY.createModuleConstants(4, 5, 2, -0.076904296875, 0, 0, false);
+      CONSTANT_FACTORY.createModuleConstants(4, 5, 2, -0.076904296875, 0, 0, false, STEER_INVERTED);
 
   private static final SwerveModuleConstants MODULE_3 =
-      CONSTANT_FACTORY.createModuleConstants(6, 7, 3, -0.5048828125, 0, 0, false);
+      CONSTANT_FACTORY.createModuleConstants(6, 7, 3, -0.5048828125, 0, 0, false, STEER_INVERTED);
 
   private static final SwerveModuleConstants FRONT_LEFT =
       MODULE_0.withLocationX(FRONT_LEFT_POSITION.getX()).withLocationY(FRONT_LEFT_POSITION.getY());

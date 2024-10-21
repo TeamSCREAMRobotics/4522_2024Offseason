@@ -1,13 +1,11 @@
 package frc2025;
 
-import com.SCREAMLib.dashboard.Mechanism;
-import com.SCREAMLib.dashboard.MechanismVisualizer;
-import com.SCREAMLib.data.DataConversions;
-import com.SCREAMLib.data.Length;
-import com.SCREAMLib.drivers.TalonFXSubsystem.TalonFXSubsystemGoal;
-import com.SCREAMLib.util.AllianceFlipUtil;
-import com.SCREAMLib.util.GeomUtil;
-import com.ctre.phoenix6.mechanisms.swerve.CustomSwerveDrivetrain.SwerveDriveState;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import dashboard.Mechanism;
+import dashboard.MechanismVisualizer;
+import data.DataConversions;
+import data.Length;
+import drivers.TalonFXSubsystem.TalonFXSubsystemGoal;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -47,6 +45,8 @@ import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import lombok.Getter;
+import util.AllianceFlipUtil;
+import util.GeomUtil;
 
 public class RobotState {
 
@@ -237,7 +237,7 @@ public class RobotState {
         ShootingHelper.pointedAtGoal(getActiveShotParameters().actualDistance()));
     (Robot.isSimulation()
             ? NoteVisualizer.getClosestNote(drivetrain.getPose())
-            : Vision.getVisibleNotePose(drivetrain.getPose()))
+            : Vision.getNotePose(drivetrain.getPose()))
         .ifPresent(
             translation ->
                 Logger.log(

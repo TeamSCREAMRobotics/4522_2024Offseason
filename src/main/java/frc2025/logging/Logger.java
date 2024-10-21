@@ -64,6 +64,7 @@ public class Logger extends DogLog {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public static <T extends StructSerializable> void logDebug(String key, T... value) {
     if (debug) {
       log(key, value);

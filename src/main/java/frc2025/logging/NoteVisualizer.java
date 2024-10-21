@@ -1,11 +1,11 @@
 package frc2025.logging;
 
-import com.SCREAMLib.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.*;
 import frc2025.RobotContainer;
 import frc2025.constants.FieldConstants;
 import frc2025.subsystems.pivot.PivotConstants;
 import java.util.*;
+import util.AllianceFlipUtil;
 
 public class NoteVisualizer {
   private static final Set<Translation2d> notes = new HashSet<>();

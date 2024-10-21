@@ -1,8 +1,5 @@
 package frc2025.commands;
 
-import com.SCREAMLib.math.Conversions;
-import com.SCREAMLib.math.ScreamMath;
-import com.SCREAMLib.util.GeomUtil;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
@@ -12,10 +9,13 @@ import frc2025.RobotState;
 import frc2025.constants.Constants;
 import frc2025.logging.NoteVisualizer;
 import frc2025.subsystems.shooter.ShooterConstants;
+import math.Conversions;
+import math.ScreamMath;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Transform;
 import org.dyn4j.world.World;
+import util.GeomUtil;
 
 public class ShootSimNote extends Command {
   private static int noteIndex = -1;

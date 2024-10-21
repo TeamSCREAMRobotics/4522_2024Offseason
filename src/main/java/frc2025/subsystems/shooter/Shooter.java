@@ -1,12 +1,11 @@
 package frc2025.subsystems.shooter;
 
-import com.SCREAMLib.drivers.TalonFXSubsystem;
+import drivers.TalonFXSubsystem;
 import edu.wpi.first.units.Units;
 import frc2025.Robot;
 import frc2025.RobotContainer;
 import frc2025.RobotState;
 import java.util.function.DoubleSupplier;
-import lombok.Getter;
 
 public class Shooter extends TalonFXSubsystem {
 
@@ -19,7 +18,7 @@ public class Shooter extends TalonFXSubsystem {
               ShooterConstants.SIM_FEEDFORWARD
                   .calculate(
                       Units.RotationsPerSecond.of(getVelocity()),
-                      Units.RotationsPerSecond.of(getVelocity()))
+                      Units.RotationsPerSecond.of(getSetpoint()))
                   .baseUnitMagnitude();
     }
   }
@@ -30,13 +29,13 @@ public class Shooter extends TalonFXSubsystem {
     TRACKING(
         () ->
             RobotContainer.getRobotState() == null
-                ? IDLE.getTarget().getAsDouble()
+                ? IDLE.target.getAsDouble()
                 : RobotState.getActiveShotParameters().shootState().getVelocityRPM(),
         ControlType.VELOCITY);
 
-    @Getter DoubleSupplier target;
+    public final DoubleSupplier target;
 
-    @Getter ControlType controlType;
+    public final ControlType controlType;
 
     private ShooterGoal(DoubleSupplier targetRPM, ControlType controlType) {
       this.target = () -> targetRPM.getAsDouble() / 60.0;

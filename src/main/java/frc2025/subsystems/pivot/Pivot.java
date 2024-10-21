@@ -1,12 +1,11 @@
 package frc2025.subsystems.pivot;
 
-import com.SCREAMLib.drivers.TalonFXSubsystem;
+import drivers.TalonFXSubsystem;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc2025.RobotContainer;
 import frc2025.RobotState;
 import frc2025.logging.Logger;
 import java.util.function.DoubleSupplier;
-import lombok.Getter;
 
 public class Pivot extends TalonFXSubsystem {
 
@@ -28,15 +27,15 @@ public class Pivot extends TalonFXSubsystem {
     TRACKING(
         () ->
             RobotContainer.getRobotState() == null
-                ? HOME_INTAKE.getTarget().getAsDouble()
+                ? HOME_INTAKE.target.getAsDouble()
                 : RobotState.getActiveShotParameters().shootState().getPivotAngle().getDegrees(),
         ControlType.POSITION);
 
-    @Getter DoubleSupplier target;
+    public final DoubleSupplier target;
 
-    @Getter ControlType controlType;
+    public final ControlType controlType;
 
-    @Getter Rotation2d angle;
+    public final Rotation2d angle;
 
     private PivotGoal(DoubleSupplier targetAngle, ControlType controlType) {
       this.angle = Rotation2d.fromDegrees(targetAngle.getAsDouble());

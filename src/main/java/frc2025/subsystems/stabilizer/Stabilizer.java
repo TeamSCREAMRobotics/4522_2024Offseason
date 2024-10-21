@@ -1,9 +1,11 @@
 package frc2025.subsystems.stabilizer;
 
-import com.SCREAMLib.drivers.TalonFXSubsystem;
+import drivers.TalonFXSubsystem;
+import drivers.TalonFXSubsystem.ControlType;
+import drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import drivers.TalonFXSubsystem.TalonFXSubsystemGoal;
 import frc2025.logging.Logger;
 import java.util.function.DoubleSupplier;
-import lombok.Getter;
 
 public class Stabilizer extends TalonFXSubsystem {
 
@@ -17,9 +19,9 @@ public class Stabilizer extends TalonFXSubsystem {
     IDLE(() -> 0.0, ControlType.MOTION_MAGIC_POSITION),
     OUT(() -> StabilizerConstants.MAX_ANGLE.getRotations(), ControlType.MOTION_MAGIC_POSITION);
 
-    @Getter DoubleSupplier target;
+    public final DoubleSupplier target;
 
-    @Getter ControlType controlType;
+    public final ControlType controlType;
 
     private StabilizerGoal(DoubleSupplier targetRotations, ControlType controlType) {
       this.target = targetRotations;

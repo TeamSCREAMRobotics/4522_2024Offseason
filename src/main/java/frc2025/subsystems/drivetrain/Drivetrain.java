@@ -1,29 +1,27 @@
 package frc2025.subsystems.drivetrain;
 
-import com.SCREAMLib.drivers.PhoenixSwerveHelper;
-import com.SCREAMLib.math.ScreamMath;
-import com.SCREAMLib.util.AllianceFlipUtil;
-import com.SCREAMLib.util.ScreamUtil;
-import com.SCREAMLib.vision.LimelightHelpers.PoseEstimate;
-import com.SCREAMLib.vision.LimelightVision;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.mechanisms.swerve.CustomSwerveDrivetrain;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.swerve.SwerveSetpoint;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
+import drivers.PhoenixSwerveHelper;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -35,15 +33,26 @@ import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import lombok.Getter;
+import math.ScreamMath;
+import util.AllianceFlipUtil;
+import util.RunnableUtil.RunOnce;
+import util.ScreamUtil;
+import vision.LimelightHelpers.PoseEstimate;
+import vision.LimelightVision;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem so it can be used
  * in command-based projects easily.
  */
-public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
+public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   private double lastSimTime;
 
+  private RunOnce operatorPerspectiveApplier = new RunOnce();
+
   @Getter private final PhoenixSwerveHelper helper;
+
+  private final SwerveSetpointGenerator setpointGenerator;
+  private SwerveSetpoint previousSetpoint;
 
   public Drivetrain(
       SwerveDrivetrainConstants driveTrainConstants,
@@ -70,6 +79,13 @@ public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
         AllianceFlipUtil.shouldFlip(),
         this);
 
+    setpointGenerator =
+        new SwerveSetpointGenerator(
+            DrivetrainConstants.ROBOT_CONFIG, DrivetrainConstants.MAX_AZIMUTH_VEL_RADS);
+    previousSetpoint =
+        new SwerveSetpoint(
+            getRobotRelativeSpeeds(), getModuleStates(), DriveFeedforwards.zeros(m_modules.length));
+
     System.out.println("[Init] Drivetrain initialization complete!");
   }
 
@@ -88,7 +104,10 @@ public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
   }
 
   private void setChassisSpeeds(ChassisSpeeds speeds) {
-    setControl(helper.getApplyChassisSpeeds(speeds));
+    previousSetpoint = setpointGenerator.generateSetpoint(previousSetpoint, speeds, 0.02);
+    setControl(
+        helper.getApplyChassisSpeeds(
+            m_kinematics.toChassisSpeeds(previousSetpoint.moduleStates())));
   }
 
   public void setNeutralModes(NeutralModeValue driveMode, NeutralModeValue steerMode) {
@@ -99,17 +118,14 @@ public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
   }
 
   public void resetHeading() {
-    seedFieldRelative(
-        new Pose2d(getPose().getTranslation(), AllianceFlipUtil.getForwardRotation()));
+    seedFieldRelative(new Pose2d(getPose().getTranslation(), AllianceFlipUtil.getFwdHeading()));
   }
-
-  PIDController test = new PIDController(4.0, 0, 0.01);
 
   public SwerveRequest getNoteAssistRequest(
       Translation2d translation, double angularVelocity, Optional<Translation2d> closestNote) {
 
     if (closestNote.isPresent()) {
-      test.reset();
+      DrivetrainConstants.NOTE_ASSIST_CONTROLLER.reset();
       Translation2d robotPosition = getPose().getTranslation();
       Translation2d robotToNote = closestNote.get().minus(robotPosition);
       double noteDistance = robotToNote.getNorm();
@@ -119,7 +135,11 @@ public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
         translation =
             translation
                 .rotateBy(getHeading().unaryMinus())
-                .minus(new Translation2d(0, test.calculate(robotToNote.getY(), 0)));
+                .minus(
+                    new Translation2d(
+                        0,
+                        DrivetrainConstants.NOTE_ASSIST_CONTROLLER.calculate(
+                            robotToNote.getY(), 0)));
         return helper.getHeadingCorrectedFieldCentric(
             translation.rotateBy(getHeading()), angularVelocity);
       }
@@ -136,7 +156,7 @@ public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
             () ->
                 getNoteAssistRequest(
                     translation.get(), angularVelocity.getAsDouble(), closestNote.get()))
-        .beforeStarting(() -> test.reset());
+        .beforeStarting(() -> DrivetrainConstants.NOTE_ASSIST_CONTROLLER.reset());
   }
 
   public boolean getWithinAngleThreshold(Rotation2d targetAngle, Rotation2d threshold) {
@@ -144,7 +164,7 @@ public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
   }
 
   public SwerveModule[] getModules() {
-    return Modules;
+    return m_modules;
   }
 
   public Pose2d getPose() {
@@ -160,11 +180,25 @@ public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
   }
 
   public ChassisSpeeds getFieldRelativeSpeeds() {
-    return getState().speeds;
+    return getState().Speeds;
   }
 
   public double getLinearVelocity() {
     return ScreamMath.getLinearVelocity(getFieldRelativeSpeeds());
+  }
+
+  public SwerveModuleState[] getModuleStates() {
+    SwerveModuleState[] states = new SwerveModuleState[m_modules.length];
+    for (int i = 0; i < m_modules.length; i++) {
+      states[i] = m_modules[i].getCurrentState();
+    }
+    return states;
+  }
+
+  public DoubleSupplier calculatePathRotationFeedback(Rotation2d targetHeading) {
+    return () ->
+        DrivetrainConstants.PATH_OVERRIDE_CONTROLLER.calculate(
+            getHeading().getRadians(), targetHeading.getRadians());
   }
 
   public void stop() {
@@ -190,7 +224,7 @@ public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
     if (poseEstimate == null
         || poseEstimate.tagCount == 0
         || !FieldConstants.Zones.FIELD_AREA.contains(poseEstimate.pose)
-        || Math.abs(getPigeon2().getRate()) > 540
+        || Math.abs(getPigeon2().getAngularVelocityZWorld().getValueAsDouble()) > 540
         || getLinearVelocity() > 3.0) {
       return;
     }
@@ -205,11 +239,21 @@ public class Drivetrain extends CustomSwerveDrivetrain implements Subsystem {
 
   @Override
   public void periodic() {
+    attemptToSetPerspective();
     updateFromVision(
         LimelightVision.getPoseEstimate_MT2(
-            Vision.SHOOTER_LIMELIGHT, getHeading().getDegrees(), getPigeon2().getRate()));
+            Vision.SHOOTER_LIMELIGHT,
+            getHeading().getDegrees(),
+            getPigeon2().getAngularVelocityZWorld().getValueAsDouble()));
     if (getCurrentCommand() != null) {
       Logger.log("RobotState/Subsystems/Drivetrain/ActiveCommand", getCurrentCommand().getName());
     }
+  }
+
+  public void attemptToSetPerspective() {
+    operatorPerspectiveApplier.runOnceWhenTrueThenWhenChanged(
+        () -> setOperatorPerspectiveForward(AllianceFlipUtil.getFwdHeading()),
+        DriverStation.getAlliance().isPresent(),
+        DriverStation.getAlliance().orElse(null));
   }
 }

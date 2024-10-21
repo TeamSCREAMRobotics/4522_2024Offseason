@@ -1,9 +1,7 @@
 package frc2025.util;
 
-import com.SCREAMLib.data.DataConversions;
-import com.SCREAMLib.data.Length;
-import com.SCREAMLib.math.ScreamMath;
-import com.SCREAMLib.util.AllianceFlipUtil;
+import data.DataConversions;
+import data.Length;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -16,6 +14,8 @@ import frc2025.constants.FieldConstants;
 import frc2025.subsystems.pivot.Pivot.PivotGoal;
 import frc2025.subsystems.shooter.ShooterConstants;
 import frc2025.util.ShootStateInterpolatingTreeMap.ShootState;
+import math.ScreamMath;
+import util.AllianceFlipUtil;
 
 public class ShootingHelper {
   public record ShotParameters(
@@ -79,7 +79,7 @@ public class ShootingHelper {
   private static Rotation2d getPivotAngleToGoal(ShootState mapped, double horizontalDistance) {
     return ScreamMath.clamp(
         mapped.getPivotAngle(),
-        Rotation2d.fromRotations(PivotGoal.SUB.getTarget().getAsDouble()),
+        Rotation2d.fromRotations(PivotGoal.SUB.target.getAsDouble()),
         Rotation2d.fromDegrees(
             subsystems.elevator().getMeasuredHeight().getInches() > 1.5 ? 0 : 4));
   }

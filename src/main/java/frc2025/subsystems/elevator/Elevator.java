@@ -1,13 +1,12 @@
 package frc2025.subsystems.elevator;
 
-import com.SCREAMLib.data.Length;
-import com.SCREAMLib.drivers.TalonFXSubsystem;
-import com.SCREAMLib.math.Conversions;
+import data.Length;
+import drivers.TalonFXSubsystem;
 import frc2025.RobotContainer;
 import frc2025.RobotState;
 import frc2025.logging.Logger;
 import java.util.function.DoubleSupplier;
-import lombok.Getter;
+import math.Conversions;
 
 public class Elevator extends TalonFXSubsystem {
 
@@ -29,13 +28,13 @@ public class Elevator extends TalonFXSubsystem {
     TRACKING(
         () ->
             RobotContainer.getRobotState() == null
-                ? HOME_INTAKE.getTarget().getAsDouble()
+                ? HOME_INTAKE.target.getAsDouble()
                 : RobotState.getActiveShotParameters().shootState().getElevatorHeight(),
         ControlType.MOTION_MAGIC_POSITION);
 
-    @Getter DoubleSupplier target;
+    public final DoubleSupplier target;
 
-    @Getter ControlType controlType;
+    public final ControlType controlType;
 
     private ElevatorGoal(DoubleSupplier targetHeightInches, ControlType controlType) {
       this.target =

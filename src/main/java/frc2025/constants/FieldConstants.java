@@ -1,10 +1,10 @@
 package frc2025.constants;
 
-import com.SCREAMLib.data.Length;
-import com.SCREAMLib.zones.RectangularPoseArea;
+import data.Length;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import zones.RectangularPoseArea;
 
 public final class FieldConstants {
 

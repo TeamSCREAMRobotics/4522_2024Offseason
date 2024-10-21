@@ -1,6 +1,6 @@
 package frc2025.subsystems.conveyor;
 
-import com.SCREAMLib.drivers.TalonFXSubsystem;
+import drivers.TalonFXSubsystem;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc2025.Robot;
 import frc2025.logging.NoteVisualizer;

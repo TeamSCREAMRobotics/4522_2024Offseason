@@ -4,13 +4,11 @@
 
 package frc2025;
 
-import com.SCREAMLib.drivers.TalonFXSubsystem;
-import com.SCREAMLib.util.AllianceFlipUtil;
-import com.SCREAMLib.util.PPUtil;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathPlannerPath;
+import drivers.TalonFXSubsystem;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -45,6 +43,8 @@ import frc2025.subsystems.vision.Vision;
 import frc2025.util.ShootingHelper;
 import java.util.Optional;
 import lombok.Getter;
+import util.AllianceFlipUtil;
+import util.PPUtil;
 
 public class RobotContainer {
 
@@ -149,20 +149,6 @@ public class RobotContainer {
                     Rotation2d.fromDegrees(90), Rotation2d.fromDegrees(45)))
         .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.AMP));
 
-    /* Controlboard.driveController
-    .a()
-    .whileTrue(
-        AutoBuilder.pathfindThenFollowPath(
-            PathPlannerPath.fromPathFile("To Amp"), new PathConstraints(5.0, 3.5, 7.0, 6.0)))
-    .and(
-        () ->
-            drivetrain
-                    .getPose()
-                    .getTranslation()
-                    .getDistance(new Translation2d(1.8, FieldConstants.FIELD_DIMENSIONS.getY()))
-                < 2.0)
-    .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.AMP)); */
-
     Controlboard.driveController
         .rightTrigger()
         .and(new Trigger(conveyor.hasNote()).negate())
@@ -176,7 +162,7 @@ public class RobotContainer {
                 () ->
                     Robot.isSimulation()
                         ? NoteVisualizer.getClosestNote(drivetrain.getPose())
-                        : Vision.getVisibleNotePose(drivetrain.getPose())))
+                        : Vision.getNotePose(drivetrain.getPose())))
         .whileTrue(
             robotState
                 .applySuperstructureGoal(SuperstructureGoal.HOME_INTAKE)
@@ -186,20 +172,17 @@ public class RobotContainer {
     Controlboard.driveController
         .x()
         .toggleOnTrue(
-            elevator.runVoltage(
+            elevator.applyVoltage(
                 () -> -MathUtil.applyDeadband(Controlboard.driveController.getRightY(), 0.05) * 3,
                 () -> ElevatorConstants.SUBSYSTEM_CONSTANTS.slot0.kG));
 
     Controlboard.driveController
         .rightBumper()
         .and(Controlboard.driveController.leftBumper())
+        .and(conveyor.hasNote())
         .and(
             () ->
                 ShootingHelper.validShot(RobotState.getActiveShotParameters().effectiveDistance()))
-        .whileTrue(
-            conveyor.applyGoal(ConveyorGoal.SHOOT).alongWith(intake.applyGoal(IntakeGoal.INTAKE)))
-        .and(() -> Robot.isSimulation())
-        .and(conveyor.hasNote())
         .whileTrue(RobotState.shootSimNoteCommand());
 
     Controlboard.driveController
@@ -229,7 +212,7 @@ public class RobotContainer {
                             .getHelper()
                             .getFacingAngleProfiled(
                                 Controlboard.getTranslation().get(),
-                                AllianceFlipUtil.getForwardRotation(),
+                                AllianceFlipUtil.getFwdHeading(),
                                 DrivetrainConstants.HEADING_CONTROLLER))
                 .beforeStarting(
                     () ->
@@ -279,17 +262,23 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    PathPlannerPath path = PPUtil.loadPathFile("7Piece");
+    Optional<PathPlannerPath> path = PPUtil.loadPathFile("7PieceNuggets");
+    if (path.isEmpty()) {
+      return Commands.none();
+    }
     return new SequentialCommandGroup(
             Commands.runOnce(
                 () ->
                     drivetrain.seedFieldRelative(
-                        AllianceFlipUtil.MirroredPose2d(path.getStartingDifferentialPose()))),
+                        AllianceFlipUtil.MirroredPose2d(
+                            new Pose2d(
+                                path.get().getPoint(0).position,
+                                AllianceFlipUtil.getFwdHeading())))),
             Commands.waitUntil(() -> pivot.atGoal()),
             Commands.runOnce(() -> startTime()),
             RobotState.shootSimNoteCommand(),
             startAiming(),
-            AutoBuilder.followPath(path),
+            AutoBuilder.followPath(path.get()),
             Commands.runOnce(() -> System.out.println(Timer.getFPGATimestamp() - startTime)),
             Commands.runOnce(() -> stopAll()))
         .alongWith(intake.applyGoal(IntakeGoal.INTAKE), conveyor.applyGoal(ConveyorGoal.INTAKE));
@@ -298,12 +287,12 @@ public class RobotContainer {
   public Command startAiming() {
     return Commands.runOnce(
         () ->
-            PPHolonomicDriveController.setRotationTargetOverride(
-                () -> Optional.of(RobotState.getActiveShotParameters().targetHeading())));
+            PPHolonomicDriveController.overrideRotationFeedback(
+                drivetrain.calculatePathRotationFeedback(
+                    RobotState.getActiveShotParameters().targetHeading())));
   }
 
   public Command stopAiming() {
-    return Commands.runOnce(
-        () -> PPHolonomicDriveController.setRotationTargetOverride(() -> Optional.empty()));
+    return Commands.runOnce(() -> PPHolonomicDriveController.clearRotationFeedbackOverride());
   }
 }
