@@ -10,7 +10,7 @@ import data.Length;
 import drivers.TalonFXSubsystem.CANCoderConstants;
 import drivers.TalonFXSubsystem.CANDevice;
 import drivers.TalonFXSubsystem.TalonFXConstants;
-import drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import drivers.TalonFXSubsystem.TalonFXSubsystemConfiguration;
 import drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -35,41 +35,41 @@ public final class PivotConstants {
   public static final ScreamPIDConstants SIM_GAINS =
       new ScreamPIDConstants(350.0 * GEAR_RATIO, 0.0, 0.0);
 
-  public static final TalonFXSubsystemConstants SUBSYSTEM_CONSTANTS =
-      new TalonFXSubsystemConstants();
+  public static final TalonFXSubsystemConfiguration CONFIGURATION =
+      new TalonFXSubsystemConfiguration();
 
   static {
-    SUBSYSTEM_CONSTANTS.name = "Pivot";
+    CONFIGURATION.name = "Pivot";
 
-    SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.logTelemetry = false;
+    CONFIGURATION.codeEnabled = true;
+    CONFIGURATION.logTelemetry = false;
 
-    SUBSYSTEM_CONSTANTS.simConstants =
+    CONFIGURATION.simConstants =
         new TalonFXSubsystemSimConstants(
             new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false, true);
 
-    SUBSYSTEM_CONSTANTS.masterConstants =
+    CONFIGURATION.masterConstants =
         new TalonFXConstants(new CANDevice(17, ""), InvertedValue.Clockwise_Positive);
 
     CANcoderConfiguration config = new CANcoderConfiguration();
     config.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
     config.MagnetSensor.MagnetOffset = -0.12646484375;
     config.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
-    SUBSYSTEM_CONSTANTS.cancoderConstants = new CANCoderConstants(new CANDevice(4, ""), config);
+    CONFIGURATION.cancoderConstants = new CANCoderConstants(new CANDevice(4, ""), config);
 
-    SUBSYSTEM_CONSTANTS.neutralMode = NeutralModeValue.Coast;
-    SUBSYSTEM_CONSTANTS.rotorToSensorRatio = GEAR_RATIO;
-    SUBSYSTEM_CONSTANTS.feedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-    SUBSYSTEM_CONSTANTS.feedbackRemoteSensorId = 4;
-    SUBSYSTEM_CONSTANTS.enableSupplyCurrentLimit = true;
-    SUBSYSTEM_CONSTANTS.supplyCurrentLimit = 40;
-    SUBSYSTEM_CONSTANTS.cruiseVelocity = 20.0;
-    SUBSYSTEM_CONSTANTS.acceleration = 10.0;
-    SUBSYSTEM_CONSTANTS.slot0 =
+    CONFIGURATION.neutralMode = NeutralModeValue.Coast;
+    CONFIGURATION.rotorToSensorRatio = GEAR_RATIO;
+    CONFIGURATION.feedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+    CONFIGURATION.feedbackRemoteSensorId = 4;
+    CONFIGURATION.enableSupplyCurrentLimit = true;
+    CONFIGURATION.supplyCurrentLimit = 40;
+    CONFIGURATION.cruiseVelocity = 20.0;
+    CONFIGURATION.acceleration = 10.0;
+    CONFIGURATION.slot0 =
         new ScreamPIDConstants(350.0, 0, 0).getSlot0Configs(new FeedforwardConstants());
-    SUBSYSTEM_CONSTANTS.positionThreshold = 0.025;
-    SUBSYSTEM_CONSTANTS.minUnitsLimit = 0.0;
-    SUBSYSTEM_CONSTANTS.maxUnitsLimit = Units.degreesToRotations(54);
+    CONFIGURATION.positionThreshold = 0.025;
+    CONFIGURATION.minUnitsLimit = 0.0;
+    CONFIGURATION.maxUnitsLimit = Units.degreesToRotations(54);
     ;
   }
 }

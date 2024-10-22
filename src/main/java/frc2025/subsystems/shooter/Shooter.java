@@ -9,7 +9,7 @@ import java.util.function.DoubleSupplier;
 
 public class Shooter extends TalonFXSubsystem {
 
-  public Shooter(TalonFXSubsystemConstants constants) {
+  public Shooter(TalonFXSubsystemConfiguration constants) {
     super(constants, ShooterGoal.TRACKING);
 
     if (Robot.isSimulation()) {

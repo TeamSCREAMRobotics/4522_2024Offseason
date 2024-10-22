@@ -2,14 +2,14 @@ package frc2025.subsystems.stabilizer;
 
 import drivers.TalonFXSubsystem;
 import drivers.TalonFXSubsystem.ControlType;
-import drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import drivers.TalonFXSubsystem.TalonFXSubsystemConfiguration;
 import drivers.TalonFXSubsystem.TalonFXSubsystemGoal;
 import frc2025.logging.Logger;
 import java.util.function.DoubleSupplier;
 
 public class Stabilizer extends TalonFXSubsystem {
 
-  public Stabilizer(TalonFXSubsystemConstants constants) {
+  public Stabilizer(TalonFXSubsystemConfiguration constants) {
     super(constants, StabilizerGoal.IDLE);
 
     resetPosition(0.0);

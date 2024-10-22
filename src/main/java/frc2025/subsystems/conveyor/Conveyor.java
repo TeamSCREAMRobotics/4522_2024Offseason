@@ -12,7 +12,7 @@ public class Conveyor extends TalonFXSubsystem {
 
   DigitalInput noteSensor;
 
-  public Conveyor(TalonFXSubsystemConstants constants) {
+  public Conveyor(TalonFXSubsystemConfiguration constants) {
     super(constants, ConveyorGoal.IDLE);
     noteSensor = new DigitalInput(ConveyorConstants.NOTE_SENSOR_ID);
   }

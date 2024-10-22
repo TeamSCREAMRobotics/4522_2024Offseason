@@ -6,7 +6,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import data.Length;
 import drivers.TalonFXSubsystem.CANDevice;
 import drivers.TalonFXSubsystem.TalonFXConstants;
-import drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import drivers.TalonFXSubsystem.TalonFXSubsystemConfiguration;
 import drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -39,37 +39,37 @@ public final class ElevatorConstants {
           0.0);
   public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(10.0, 0.0, 0.0);
 
-  public static final TalonFXSubsystemConstants SUBSYSTEM_CONSTANTS =
-      new TalonFXSubsystemConstants();
+  public static final TalonFXSubsystemConfiguration CONFIGURATION =
+      new TalonFXSubsystemConfiguration();
 
   static {
-    SUBSYSTEM_CONSTANTS.name = "Elevator";
+    CONFIGURATION.name = "Elevator";
 
-    SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.logTelemetry = false;
+    CONFIGURATION.codeEnabled = true;
+    CONFIGURATION.logTelemetry = false;
 
-    SUBSYSTEM_CONSTANTS.simConstants =
+    CONFIGURATION.simConstants =
         new TalonFXSubsystemSimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
 
-    SUBSYSTEM_CONSTANTS.masterConstants =
+    CONFIGURATION.masterConstants =
         new TalonFXConstants(new CANDevice(15, ""), InvertedValue.Clockwise_Positive);
-    SUBSYSTEM_CONSTANTS.slaveConstants =
+    CONFIGURATION.slaveConstants =
         new TalonFXConstants[] {
           new TalonFXConstants(new CANDevice(16, ""), InvertedValue.CounterClockwise_Positive)
         };
 
-    SUBSYSTEM_CONSTANTS.neutralMode = NeutralModeValue.Brake;
-    SUBSYSTEM_CONSTANTS.sensorToMechRatio = GEAR_RATIO;
-    SUBSYSTEM_CONSTANTS.enableSupplyCurrentLimit = true;
-    SUBSYSTEM_CONSTANTS.supplyCurrentLimit = 40;
-    SUBSYSTEM_CONSTANTS.minUnitsLimit = 0.0;
-    SUBSYSTEM_CONSTANTS.maxUnitsLimit = 3.1;
-    SUBSYSTEM_CONSTANTS.cruiseVelocity = 20.0;
-    SUBSYSTEM_CONSTANTS.acceleration = SUBSYSTEM_CONSTANTS.cruiseVelocity / 0.8;
-    SUBSYSTEM_CONSTANTS.slot0 =
+    CONFIGURATION.neutralMode = NeutralModeValue.Brake;
+    CONFIGURATION.sensorToMechRatio = GEAR_RATIO;
+    CONFIGURATION.enableSupplyCurrentLimit = true;
+    CONFIGURATION.supplyCurrentLimit = 40;
+    CONFIGURATION.minUnitsLimit = 0.0;
+    CONFIGURATION.maxUnitsLimit = 3.1;
+    CONFIGURATION.cruiseVelocity = 20.0;
+    CONFIGURATION.acceleration = CONFIGURATION.cruiseVelocity / 0.8;
+    CONFIGURATION.slot0 =
         new ScreamPIDConstants(50.0, 0, 0) // 78.0
             .getSlot0Configs(
                 new FeedforwardConstants(0, 0, 0.3, 0, GravityTypeValue.Elevator_Static));
-    SUBSYSTEM_CONSTANTS.positionThreshold = 0.5;
+    CONFIGURATION.positionThreshold = 0.5;
   }
 }

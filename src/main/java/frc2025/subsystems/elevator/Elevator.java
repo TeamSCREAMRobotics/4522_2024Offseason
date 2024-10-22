@@ -10,7 +10,7 @@ import math.Conversions;
 
 public class Elevator extends TalonFXSubsystem {
 
-  public Elevator(TalonFXSubsystemConstants constants) {
+  public Elevator(TalonFXSubsystemConfiguration constants) {
     super(constants, ElevatorGoal.TRACKING);
 
     simFeedforwardSup = () -> 0.3;

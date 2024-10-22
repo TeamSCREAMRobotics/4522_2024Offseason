@@ -4,7 +4,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import drivers.TalonFXSubsystem.CANDevice;
 import drivers.TalonFXSubsystem.TalonFXConstants;
-import drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import drivers.TalonFXSubsystem.TalonFXSubsystemConfiguration;
 import drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -28,33 +28,33 @@ public class StabilizerConstants {
       SimUtil.createDCMotorSim(DCMotor.getFalcon500(1), GEAR_RATIO, 0.05859096765521);
   public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(75.0, 0.0, 0.0);
 
-  public static final TalonFXSubsystemConstants SUBSYSTEM_CONSTANTS =
-      new TalonFXSubsystemConstants();
+  public static final TalonFXSubsystemConfiguration CONFIGURATION =
+      new TalonFXSubsystemConfiguration();
 
   static {
-    SUBSYSTEM_CONSTANTS.name = "Stabilizer";
+    CONFIGURATION.name = "Stabilizer";
 
-    SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.logTelemetry = false;
+    CONFIGURATION.codeEnabled = true;
+    CONFIGURATION.logTelemetry = false;
 
-    SUBSYSTEM_CONSTANTS.simConstants =
+    CONFIGURATION.simConstants =
         new TalonFXSubsystemSimConstants(
             new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false, false);
 
-    SUBSYSTEM_CONSTANTS.masterConstants =
+    CONFIGURATION.masterConstants =
         new TalonFXConstants(new CANDevice(13, ""), InvertedValue.CounterClockwise_Positive);
-    SUBSYSTEM_CONSTANTS.neutralMode = NeutralModeValue.Brake;
+    CONFIGURATION.neutralMode = NeutralModeValue.Brake;
 
-    SUBSYSTEM_CONSTANTS.sensorToMechRatio = GEAR_RATIO;
-    SUBSYSTEM_CONSTANTS.enableSupplyCurrentLimit = true;
-    SUBSYSTEM_CONSTANTS.supplyCurrentLimit = 10;
-    SUBSYSTEM_CONSTANTS.minUnitsLimit = 0.0;
-    SUBSYSTEM_CONSTANTS.maxUnitsLimit = MAX_ANGLE.getRotations();
-    SUBSYSTEM_CONSTANTS.cruiseVelocity = 15;
-    SUBSYSTEM_CONSTANTS.acceleration = 5;
-    SUBSYSTEM_CONSTANTS.slot0 =
+    CONFIGURATION.sensorToMechRatio = GEAR_RATIO;
+    CONFIGURATION.enableSupplyCurrentLimit = true;
+    CONFIGURATION.supplyCurrentLimit = 10;
+    CONFIGURATION.minUnitsLimit = 0.0;
+    CONFIGURATION.maxUnitsLimit = MAX_ANGLE.getRotations();
+    CONFIGURATION.cruiseVelocity = 15;
+    CONFIGURATION.acceleration = 5;
+    CONFIGURATION.slot0 =
         new ScreamPIDConstants(10, 0, 0).getSlot0Configs(new FeedforwardConstants());
 
-    SUBSYSTEM_CONSTANTS.positionThreshold = Units.degreesToRotations(5);
+    CONFIGURATION.positionThreshold = Units.degreesToRotations(5);
   }
 }

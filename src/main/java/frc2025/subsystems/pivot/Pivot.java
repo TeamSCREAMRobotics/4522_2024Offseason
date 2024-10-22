@@ -9,7 +9,7 @@ import java.util.function.DoubleSupplier;
 
 public class Pivot extends TalonFXSubsystem {
 
-  public Pivot(TalonFXSubsystemConstants constants) {
+  public Pivot(TalonFXSubsystemConfiguration constants) {
     super(constants, PivotGoal.TRACKING);
   }
 

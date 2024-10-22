@@ -3,7 +3,7 @@ package frc2025.subsystems.conveyor;
 import com.ctre.phoenix6.signals.InvertedValue;
 import drivers.TalonFXSubsystem.CANDevice;
 import drivers.TalonFXSubsystem.TalonFXConstants;
-import drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import drivers.TalonFXSubsystem.TalonFXSubsystemConfiguration;
 
 public class ConveyorConstants {
 
@@ -11,18 +11,18 @@ public class ConveyorConstants {
 
   public static final int NOTE_SENSOR_ID = 2;
 
-  public static final TalonFXSubsystemConstants SUBSYSTEM_CONSTANTS =
-      new TalonFXSubsystemConstants();
+  public static final TalonFXSubsystemConfiguration CONFIGURATION =
+      new TalonFXSubsystemConfiguration();
 
   static {
-    SUBSYSTEM_CONSTANTS.name = "Conveyor";
+    CONFIGURATION.name = "Conveyor";
 
-    SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.logTelemetry = false;
+    CONFIGURATION.codeEnabled = true;
+    CONFIGURATION.logTelemetry = false;
 
-    SUBSYSTEM_CONSTANTS.masterConstants =
+    CONFIGURATION.masterConstants =
         new TalonFXConstants(new CANDevice(10, ""), InvertedValue.CounterClockwise_Positive);
 
-    SUBSYSTEM_CONSTANTS.sensorToMechRatio = 4.0;
+    CONFIGURATION.sensorToMechRatio = 4.0;
   }
 }

@@ -4,7 +4,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import data.Length;
 import drivers.TalonFXSubsystem.CANDevice;
 import drivers.TalonFXSubsystem.TalonFXConstants;
-import drivers.TalonFXSubsystem.TalonFXSubsystemConstants;
+import drivers.TalonFXSubsystem.TalonFXSubsystemConfiguration;
 import drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -42,29 +42,29 @@ public class ShooterConstants {
   public static final SimpleMotorFeedforward SIM_FEEDFORWARD =
       new SimpleMotorFeedforward(0.08669, 0.11240, 0.009);
 
-  public static final TalonFXSubsystemConstants SUBSYSTEM_CONSTANTS =
-      new TalonFXSubsystemConstants();
+  public static final TalonFXSubsystemConfiguration CONFIGURATION =
+      new TalonFXSubsystemConfiguration();
 
   static {
-    SUBSYSTEM_CONSTANTS.name = "Shooter";
+    CONFIGURATION.name = "Shooter";
 
-    SUBSYSTEM_CONSTANTS.codeEnabled = true;
-    SUBSYSTEM_CONSTANTS.logTelemetry = true;
+    CONFIGURATION.codeEnabled = true;
+    CONFIGURATION.logTelemetry = true;
 
-    SUBSYSTEM_CONSTANTS.simConstants =
+    CONFIGURATION.simConstants =
         new TalonFXSubsystemSimConstants(
             new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false, false);
 
-    SUBSYSTEM_CONSTANTS.masterConstants =
+    CONFIGURATION.masterConstants =
         new TalonFXConstants(new CANDevice(11, ""), InvertedValue.CounterClockwise_Positive);
-    SUBSYSTEM_CONSTANTS.slaveConstants =
+    CONFIGURATION.slaveConstants =
         new TalonFXConstants[] {
           new TalonFXConstants(new CANDevice(12, ""), InvertedValue.CounterClockwise_Positive)
         };
-    SUBSYSTEM_CONSTANTS.slot0 =
+    CONFIGURATION.slot0 =
         new ScreamPIDConstants(0.15, 0, 0).getSlot0Configs(FEEDFORWARD_CONSTANTS);
 
-    SUBSYSTEM_CONSTANTS.velocityThreshold = 1.25;
+    CONFIGURATION.velocityThreshold = 1.25;
   }
 
   public static final ShootStateInterpolatingTreeMap SHOOTING_MAP =

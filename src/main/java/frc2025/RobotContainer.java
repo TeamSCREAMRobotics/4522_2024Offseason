@@ -59,13 +59,13 @@ public class RobotContainer {
       Vision vision) {}
 
   private static final Drivetrain drivetrain = TunerConstants.DriveTrain;
-  private static final Elevator elevator = new Elevator(ElevatorConstants.SUBSYSTEM_CONSTANTS);
-  private static final Pivot pivot = new Pivot(PivotConstants.SUBSYSTEM_CONSTANTS);
-  private static final Shooter shooter = new Shooter(ShooterConstants.SUBSYSTEM_CONSTANTS);
-  private static final Conveyor conveyor = new Conveyor(ConveyorConstants.SUBSYSTEM_CONSTANTS);
-  private static final Intake intake = new Intake(IntakeConstants.SUBSYSTEM_CONSTANTS);
+  private static final Elevator elevator = new Elevator(ElevatorConstants.CONFIGURATION);
+  private static final Pivot pivot = new Pivot(PivotConstants.CONFIGURATION);
+  private static final Shooter shooter = new Shooter(ShooterConstants.CONFIGURATION);
+  private static final Conveyor conveyor = new Conveyor(ConveyorConstants.CONFIGURATION);
+  private static final Intake intake = new Intake(IntakeConstants.CONFIGURATION);
   private static final Stabilizer stabilizer =
-      new Stabilizer(StabilizerConstants.SUBSYSTEM_CONSTANTS);
+      new Stabilizer(StabilizerConstants.CONFIGURATION);
   private static final Vision vision = new Vision();
 
   @Getter
@@ -174,7 +174,7 @@ public class RobotContainer {
         .toggleOnTrue(
             elevator.applyVoltage(
                 () -> -MathUtil.applyDeadband(Controlboard.driveController.getRightY(), 0.05) * 3,
-                () -> ElevatorConstants.SUBSYSTEM_CONSTANTS.slot0.kG));
+                () -> ElevatorConstants.CONFIGURATION.slot0.kG));
 
     Controlboard.driveController
         .rightBumper()

@@ -5,7 +5,7 @@ import java.util.function.DoubleSupplier;
 
 public class Intake extends TalonFXSubsystem {
 
-  public Intake(TalonFXSubsystemConstants constants) {
+  public Intake(TalonFXSubsystemConfiguration constants) {
     super(constants, IntakeGoal.IDLE);
   }
 
