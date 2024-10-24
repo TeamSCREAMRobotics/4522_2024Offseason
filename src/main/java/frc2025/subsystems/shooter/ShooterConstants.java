@@ -61,8 +61,7 @@ public class ShooterConstants {
         new TalonFXConstants[] {
           new TalonFXConstants(new CANDevice(12, ""), InvertedValue.CounterClockwise_Positive)
         };
-    CONFIGURATION.slot0 =
-        new ScreamPIDConstants(0.15, 0, 0).getSlot0Configs(FEEDFORWARD_CONSTANTS);
+    CONFIGURATION.slot0 = new ScreamPIDConstants(0.15, 0, 0).getSlot0Configs(FEEDFORWARD_CONSTANTS);
 
     CONFIGURATION.velocityThreshold = 1.25;
   }

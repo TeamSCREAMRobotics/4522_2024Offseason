@@ -64,8 +64,7 @@ public class RobotContainer {
   private static final Shooter shooter = new Shooter(ShooterConstants.CONFIGURATION);
   private static final Conveyor conveyor = new Conveyor(ConveyorConstants.CONFIGURATION);
   private static final Intake intake = new Intake(IntakeConstants.CONFIGURATION);
-  private static final Stabilizer stabilizer =
-      new Stabilizer(StabilizerConstants.CONFIGURATION);
+  private static final Stabilizer stabilizer = new Stabilizer(StabilizerConstants.CONFIGURATION);
   private static final Vision vision = new Vision();
 
   @Getter

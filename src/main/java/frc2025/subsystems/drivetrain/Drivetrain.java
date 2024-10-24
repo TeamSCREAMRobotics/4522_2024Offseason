@@ -21,11 +21,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.measure.Force;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc2025.constants.Constants;
 import frc2025.constants.FieldConstants;
 import frc2025.logging.Logger;
 import frc2025.subsystems.vision.Vision;
@@ -104,10 +106,15 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   }
 
   private void setChassisSpeeds(ChassisSpeeds speeds) {
-    previousSetpoint = setpointGenerator.generateSetpoint(previousSetpoint, speeds, 0.02);
+    previousSetpoint =
+        setpointGenerator.generateSetpoint(previousSetpoint, speeds, Constants.PERIOD_SEC);
+    Force[] xFeedforwards = previousSetpoint.feedforwards().robotRelativeForcesX();
+    Force[] yFeedforwards = previousSetpoint.feedforwards().robotRelativeForcesY();
     setControl(
-        helper.getApplyChassisSpeeds(
-            m_kinematics.toChassisSpeeds(previousSetpoint.moduleStates())));
+        helper
+            .getApplyChassisSpeeds(speeds)
+            .withWheelForceFeedforwardsX(xFeedforwards)
+            .withWheelForceFeedforwardsY(yFeedforwards));
   }
 
   public void setNeutralModes(NeutralModeValue driveMode, NeutralModeValue steerMode) {

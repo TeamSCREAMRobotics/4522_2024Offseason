@@ -72,7 +72,7 @@ dependencies {
 
     implementation 'gov.nist.math:jama:1.0.3'
     implementation 'org.dyn4j:dyn4j:5.0.2'
-    implementation 'com.github.TeamSCREAMRobotics:SCREAMLib:main-SNAPSHOT'
+    implementation 'com.github.TeamSCREAMRobotics:SCREAMLib:local'
 
     roborioDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.roborio)
     roborioDebug wpi.java.vendor.jniDebug(wpi.platforms.roborio)

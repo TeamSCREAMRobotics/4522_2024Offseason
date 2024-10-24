@@ -4,7 +4,6 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import dashboard.Mechanism;
 import dashboard.MechanismVisualizer;
 import data.DataConversions;
-import data.Length;
 import drivers.TalonFXSubsystem.TalonFXSubsystemGoal;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -26,7 +25,6 @@ import frc2025.subsystems.conveyor.Conveyor;
 import frc2025.subsystems.drivetrain.Drivetrain;
 import frc2025.subsystems.elevator.Elevator;
 import frc2025.subsystems.elevator.Elevator.ElevatorGoal;
-import frc2025.subsystems.elevator.ElevatorConstants;
 import frc2025.subsystems.intake.Intake;
 import frc2025.subsystems.intake.Intake.IntakeGoal;
 import frc2025.subsystems.pivot.Pivot;
@@ -96,46 +94,11 @@ public class RobotState {
   public static final ArrayList<Pose3d> activeNotes =
       new ArrayList<Pose3d>(Collections.nCopies(SimConstants.MAX_SIM_NOTES, Pose3d.kZero));
 
-  private final Mechanism elevatorMech =
-      new Mechanism("Elevator")
-          .withStaticAngle(Rotation2d.fromDegrees(80))
-          .withDynamicLength(
-              () -> elevator.getMeasuredHeight().plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR),
-              () ->
-                  Length.fromRotations(
-                          elevator.getGoal().target().getAsDouble(),
-                          ElevatorConstants.PULLEY_CIRCUMFERENCE)
-                      .plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR))
-          .withStaticPosition(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0));
+  private final Mechanism elevatorMech;
 
-  private final Mechanism shooterFrontMech =
-      new Mechanism("Pivot Front")
-          .withStaticLength(Length.fromInches(17))
-          .withDynamicAngle(
-              () -> pivot.getAngle().unaryMinus(),
-              () -> Rotation2d.fromRotations(-pivot.getGoal().target().getAsDouble()))
-          .withDynamicPosition(
-              () ->
-                  pivotRootPosition.get().plus(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0)));
+  private final Mechanism pivotMech;
 
-  private final Mechanism shooterBackMech =
-      new Mechanism("Pivot Back")
-          .withStaticLength(Length.fromInches(9))
-          .withDynamicAngle(
-              () -> pivot.getAngle().unaryMinus().plus(Rotation2d.fromRotations(0.5)),
-              () -> Rotation2d.fromRotations(0.5 - pivot.getGoal().target().getAsDouble()))
-          .withDynamicPosition(
-              () ->
-                  pivotRootPosition.get().plus(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0)));
-
-  private final MechanismVisualizer mechanismVisualizer =
-      new MechanismVisualizer(
-          SimConstants.MEASURED_MECHANISM,
-          SimConstants.SETPOINT_MECHANISM,
-          RobotState::telemeterizeMechanisms,
-          elevatorMech,
-          shooterFrontMech,
-          shooterBackMech);
+  private final MechanismVisualizer mechanismVisualizer;
 
   private static final Set<Command> activeCommands = new HashSet<>();
 
@@ -148,6 +111,26 @@ public class RobotState {
     intake = subsystems.intake();
     stabilizer = subsystems.stabilizer();
     vision = subsystems.vision();
+
+    pivotMech =
+        new Mechanism("Pivot Front", pivot.getLigaments())
+            .withDynamicPosition(
+                () ->
+                    pivotRootPosition
+                        .get()
+                        .plus(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0)));
+
+    elevatorMech =
+        new Mechanism("Elevator", elevator.getLigament())
+            .withStaticPosition(new Translation2d(SimConstants.MECH_ELEVATOR_X, 0));
+
+    mechanismVisualizer =
+        new MechanismVisualizer(
+            SimConstants.MEASURED_MECHANISM,
+            SimConstants.SETPOINT_MECHANISM,
+            RobotState::telemeterizeMechanisms,
+            elevatorMech,
+            pivotMech);
 
     mechanismVisualizer.setEnabled(true);
   }

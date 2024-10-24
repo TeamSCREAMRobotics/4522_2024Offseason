@@ -1,7 +1,9 @@
 package frc2025.subsystems.elevator;
 
+import dashboard.Ligament;
 import data.Length;
 import drivers.TalonFXSubsystem;
+import edu.wpi.first.math.geometry.Rotation2d;
 import frc2025.RobotContainer;
 import frc2025.RobotState;
 import frc2025.logging.Logger;
@@ -9,6 +11,16 @@ import java.util.function.DoubleSupplier;
 import math.Conversions;
 
 public class Elevator extends TalonFXSubsystem {
+
+  private final Ligament elevatorLig =
+      new Ligament()
+          .withStaticAngle(Rotation2d.fromDegrees(80))
+          .withDynamicLength(
+              () -> getMeasuredHeight().plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR),
+              () ->
+                  Length.fromRotations(
+                          getGoal().target().getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE)
+                      .plus(ElevatorConstants.HOME_HEIGHT_FROM_FLOOR));
 
   public Elevator(TalonFXSubsystemConfiguration constants) {
     super(constants, ElevatorGoal.TRACKING);
@@ -54,6 +66,10 @@ public class Elevator extends TalonFXSubsystem {
     public ControlType controlType() {
       return controlType;
     }
+  }
+
+  public Ligament getLigament() {
+    return elevatorLig;
   }
 
   public Length getMeasuredHeight() {

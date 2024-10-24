@@ -1,5 +1,7 @@
 package frc2025.subsystems.pivot;
 
+import dashboard.Ligament;
+import data.Length;
 import drivers.TalonFXSubsystem;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc2025.RobotContainer;
@@ -8,6 +10,22 @@ import frc2025.logging.Logger;
 import java.util.function.DoubleSupplier;
 
 public class Pivot extends TalonFXSubsystem {
+
+  private final Ligament pivotFront =
+      new Ligament()
+          .withStaticLength(Length.fromInches(17))
+          .withDynamicAngle(
+              () -> getAngle().unaryMinus(),
+              () -> Rotation2d.fromRotations(-getGoal().target().getAsDouble()))
+          .withOverrideAppend(true);
+
+  private final Ligament pivotBack =
+      new Ligament()
+          .withStaticLength(Length.fromInches(9))
+          .withDynamicAngle(
+              () -> getAngle().unaryMinus().plus(Rotation2d.fromRotations(0.5)),
+              () -> Rotation2d.fromRotations(0.5 - getGoal().target().getAsDouble()))
+          .withOverrideAppend(true);
 
   public Pivot(TalonFXSubsystemConfiguration constants) {
     super(constants, PivotGoal.TRACKING);
@@ -52,6 +70,10 @@ public class Pivot extends TalonFXSubsystem {
     public ControlType controlType() {
       return controlType;
     }
+  }
+
+  public Ligament[] getLigaments() {
+    return new Ligament[] {pivotFront, pivotBack};
   }
 
   @Override
