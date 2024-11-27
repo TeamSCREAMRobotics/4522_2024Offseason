@@ -59,7 +59,7 @@ public class RobotState {
 
   public enum SuperstructureGoal {
     IDLE(ElevatorGoal.TRACKING, PivotGoal.TRACKING, ShooterGoal.TRACKING),
-    HOME_INTAKE(ElevatorGoal.HOME_INTAKE, PivotGoal.HOME_INTAKE, ShooterGoal.TRACKING),
+    HOME_INTAKE(ElevatorGoal.HOME, PivotGoal.HOME_INTAKE, ShooterGoal.TRACKING),
     TRAP_INTAKE(ElevatorGoal.TRAP_INTAKE, PivotGoal.TRAP_INTAKE, ShooterGoal.TRACKING),
     SUB(ElevatorGoal.SUB, PivotGoal.SUB, ShooterGoal.SUB),
     SUB_DEFENDED(ElevatorGoal.SUB_DEFENDED, PivotGoal.SUB_DEFENDED, ShooterGoal.SUB),
@@ -253,7 +253,7 @@ public class RobotState {
         shotParameters.shootState().getElevatorHeight());
     Logger.log(
         "RobotState/ActiveShotParameters/ShootState/PivotAngle",
-        shotParameters.shootState().getPivotAngle().getDegrees());
+        shotParameters.shootState().getPivotAngleDeg());
     Logger.log(
         "RobotState/ActiveShotParameters/ShootState/Velocity",
         shotParameters.shootState().getVelocityRPM());

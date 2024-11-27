@@ -29,7 +29,7 @@ public class Shooter extends TalonFXSubsystem {
     TRACKING(
         () ->
             RobotContainer.getRobotState() == null
-                ? IDLE.target.getAsDouble()
+                ? 0.0
                 : RobotState.getActiveShotParameters().shootState().getVelocityRPM(),
         ControlType.VELOCITY);
 

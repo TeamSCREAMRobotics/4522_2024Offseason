@@ -12,6 +12,7 @@ import drivers.TalonFXSubsystem;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -29,11 +30,13 @@ import frc2025.subsystems.drivetrain.DrivetrainConstants;
 import frc2025.subsystems.drivetrain.generated.TunerConstants;
 import frc2025.subsystems.elevator.Elevator;
 import frc2025.subsystems.elevator.ElevatorConstants;
+import frc2025.subsystems.elevator.Elevator.ElevatorGoal;
 import frc2025.subsystems.intake.Intake;
 import frc2025.subsystems.intake.Intake.IntakeGoal;
 import frc2025.subsystems.intake.IntakeConstants;
 import frc2025.subsystems.pivot.Pivot;
 import frc2025.subsystems.pivot.PivotConstants;
+import frc2025.subsystems.pivot.Pivot.PivotGoal;
 import frc2025.subsystems.shooter.Shooter;
 import frc2025.subsystems.shooter.ShooterConstants;
 import frc2025.subsystems.stabilizer.Stabilizer;
@@ -82,8 +85,8 @@ public class RobotContainer {
     NamedCommands.registerCommand("StopAiming", stopAiming());
 
     if (Robot.isSimulation()) {
-      drivetrain.seedFieldRelative(
-          new Pose2d(FieldConstants.FIELD_DIMENSIONS.div(2), Rotation2d.fromDegrees(0)));
+      drivetrain.resetPose(
+          new Pose2d(FieldConstants.FIELD_DIMENSIONS.div(2), AllianceFlipUtil.getFwdHeading()));
     }
 
     drivetrain.registerTelemetry(RobotState::telemeterizeDrivetrain);
@@ -98,9 +101,10 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  drivetrain.resetHeading();
+                  drivetrain.resetRotation(AllianceFlipUtil.getFwdHeading());
                   drivetrain.getHelper().setLastAngle(drivetrain.getHeading());
                 }));
+                
     Controlboard.driveController
         .start()
         .and(() -> Robot.isSimulation())
@@ -133,7 +137,7 @@ public class RobotContainer {
                                 Controlboard.getTranslation()
                                     .get()
                                     .times(RobotState.getSpeedLimit().getAsDouble()),
-                                Rotation2d.fromDegrees(90),
+                                Rotation2d.kCCW_90deg,
                                 DrivetrainConstants.HEADING_CONTROLLER))
                 .beforeStarting(
                     () ->
@@ -145,7 +149,7 @@ public class RobotContainer {
         .and(
             () ->
                 drivetrain.getWithinAngleThreshold(
-                    Rotation2d.fromDegrees(90), Rotation2d.fromDegrees(45)))
+                    Rotation2d.kCCW_90deg, Rotation2d.fromDegrees(45)))
         .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.AMP));
 
     Controlboard.driveController
@@ -223,6 +227,14 @@ public class RobotContainer {
         .b()
         .toggleOnTrue(stabilizer.applyGoal(StabilizerGoal.OUT))
         .toggleOnTrue(robotState.applySuperstructureGoal(SuperstructureGoal.TRAP));
+
+    Controlboard.driveController
+        .rightStick()
+        .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.TRAP_INTAKE))
+        .onFalse(Commands.parallel(
+            pivot.applyGoal(PivotGoal.HOME_INTAKE),
+            Commands.waitUntil(() -> Math.abs(pivot.getError()) < Units.degreesToRotations(2.5)).andThen(elevator.applyGoal(ElevatorGoal.HOME))
+        ));
   }
 
   private void configDefaultCommands() {
@@ -268,7 +280,7 @@ public class RobotContainer {
     return new SequentialCommandGroup(
             Commands.runOnce(
                 () ->
-                    drivetrain.seedFieldRelative(
+                    drivetrain.resetPose(
                         AllianceFlipUtil.MirroredPose2d(
                             new Pose2d(
                                 path.get().getPoint(0).position,

@@ -30,7 +30,7 @@ public class Elevator extends TalonFXSubsystem {
   }
 
   public enum ElevatorGoal implements TalonFXSubsystemGoal {
-    HOME_INTAKE(() -> 0.0, ControlType.MOTION_MAGIC_POSITION),
+    HOME(() -> 0.0, ControlType.MOTION_MAGIC_POSITION),
     TRAP_INTAKE(() -> 3.41, ControlType.MOTION_MAGIC_POSITION),
     SUB(() -> 3.13, ControlType.MOTION_MAGIC_POSITION),
     SUB_DEFENDED(() -> ElevatorConstants.MAX_HEIGHT, ControlType.MOTION_MAGIC_POSITION),
@@ -40,7 +40,7 @@ public class Elevator extends TalonFXSubsystem {
     TRACKING(
         () ->
             RobotContainer.getRobotState() == null
-                ? HOME_INTAKE.target.getAsDouble()
+                ? ElevatorConstants.MIN_HEIGHT
                 : RobotState.getActiveShotParameters().shootState().getElevatorHeight(),
         ControlType.MOTION_MAGIC_POSITION);
 

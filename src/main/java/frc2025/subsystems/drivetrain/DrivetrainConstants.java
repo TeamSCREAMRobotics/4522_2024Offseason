@@ -19,6 +19,8 @@ public final class DrivetrainConstants {
 
   public static final double MAX_AZIMUTH_VEL_RADS = Units.rotationsToRadians(10);
 
+  public static final int NUM_MODULES = 4;
+
   public static final ScreamPIDConstants PATH_TRANSLATION_CONSTANTS =
       new ScreamPIDConstants(10.0, 0.0, 0.0);
   public static final ScreamPIDConstants PATH_ROTATION_CONSTANTS =

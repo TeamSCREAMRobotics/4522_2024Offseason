@@ -23,7 +23,7 @@ import util.SimUtil;
 
 public final class PivotConstants {
 
-  public static final Rotation2d MAP_OFFSET = Rotation2d.fromDegrees(0);
+  public static final Rotation2d MAP_OFFSET = Rotation2d.kZero;
 
   public static final Length AXLE_DISTANCE_FROM_ELEVATOR_TOP = Length.fromInches(9.998565);
   public static final Length SHOOTER_DISTANCE_FROM_AXLE = Length.fromInches(2.736100);

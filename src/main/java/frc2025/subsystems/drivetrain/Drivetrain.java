@@ -73,7 +73,7 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
 
     AutoBuilder.configure(
         this::getPose,
-        this::seedFieldRelative,
+        this::resetPose,
         this::getRobotRelativeSpeeds,
         this::setChassisSpeeds,
         DrivetrainConstants.PATH_FOLLOWING_CONTROLLER,
@@ -86,7 +86,9 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
             DrivetrainConstants.ROBOT_CONFIG, DrivetrainConstants.MAX_AZIMUTH_VEL_RADS);
     previousSetpoint =
         new SwerveSetpoint(
-            getRobotRelativeSpeeds(), getModuleStates(), DriveFeedforwards.zeros(m_modules.length));
+            getRobotRelativeSpeeds(),
+            getModuleStates(),
+            DriveFeedforwards.zeros(DrivetrainConstants.NUM_MODULES));
 
     System.out.println("[Init] Drivetrain initialization complete!");
   }
@@ -112,7 +114,7 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
     Force[] yFeedforwards = previousSetpoint.feedforwards().robotRelativeForcesY();
     setControl(
         helper
-            .getApplyChassisSpeeds(speeds)
+            .getApplyRobotSpeeds(speeds)
             .withWheelForceFeedforwardsX(xFeedforwards)
             .withWheelForceFeedforwardsY(yFeedforwards));
   }
@@ -122,10 +124,6 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
       mod.getDriveMotor().setNeutralMode(driveMode);
       mod.getSteerMotor().setNeutralMode(steerMode);
     }
-  }
-
-  public void resetHeading() {
-    seedFieldRelative(new Pose2d(getPose().getTranslation(), AllianceFlipUtil.getFwdHeading()));
   }
 
   public SwerveRequest getNoteAssistRequest(
@@ -170,10 +168,6 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
     return ScreamUtil.withinAngleThreshold(targetAngle, getHeading(), threshold);
   }
 
-  public SwerveModule[] getModules() {
-    return m_modules;
-  }
-
   public Pose2d getPose() {
     return getState().Pose;
   }
@@ -183,7 +177,7 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   }
 
   public ChassisSpeeds getRobotRelativeSpeeds() {
-    return m_kinematics.toChassisSpeeds(getState().ModuleStates);
+    return getKinematics().toChassisSpeeds(getState().ModuleStates);
   }
 
   public ChassisSpeeds getFieldRelativeSpeeds() {
@@ -195,9 +189,9 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   }
 
   public SwerveModuleState[] getModuleStates() {
-    SwerveModuleState[] states = new SwerveModuleState[m_modules.length];
-    for (int i = 0; i < m_modules.length; i++) {
-      states[i] = m_modules[i].getCurrentState();
+    SwerveModuleState[] states = new SwerveModuleState[DrivetrainConstants.NUM_MODULES];
+    for (int i = 0; i < DrivetrainConstants.NUM_MODULES; i++) {
+      states[i] = getModules()[i].getCurrentState();
     }
     return states;
   }

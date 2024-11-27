@@ -7,8 +7,8 @@ import drivers.TalonFXSubsystem.TalonFXConstants;
 import drivers.TalonFXSubsystem.TalonFXSubsystemConfiguration;
 import drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc2025.subsystems.elevator.Elevator.ElevatorGoal;
 import frc2025.subsystems.elevator.ElevatorConstants;
@@ -70,23 +70,23 @@ public class ShooterConstants {
       new ShootStateInterpolatingTreeMap();
 
   static {
-    SHOOTING_MAP.put(8.0, new ShootState(Rotation2d.fromDegrees(19.50), 0.0, 4500.0));
-    SHOOTING_MAP.put(7.5, new ShootState(Rotation2d.fromDegrees(19.75), 0.0, 4500.0));
-    SHOOTING_MAP.put(7.0, new ShootState(Rotation2d.fromDegrees(20.0), 0.0, 4500.0));
-    SHOOTING_MAP.put(6.5, new ShootState(Rotation2d.fromDegrees(21.3), 0.0, 4250.0));
-    SHOOTING_MAP.put(6.0, new ShootState(Rotation2d.fromDegrees(21.8), 0.0, 4250.0));
-    SHOOTING_MAP.put(5.5, new ShootState(Rotation2d.fromDegrees(22.3), 0.0, 4250.0));
-    SHOOTING_MAP.put(5.0, new ShootState(Rotation2d.fromDegrees(24.15), 0.0, 4000.0));
-    SHOOTING_MAP.put(4.5, new ShootState(Rotation2d.fromDegrees(28.3 - 3.5), 0.0, 4000.0));
-    SHOOTING_MAP.put(4.0, new ShootState(Rotation2d.fromDegrees(30.5 - 3.65), 0.0, 4000.0));
-    SHOOTING_MAP.put(3.5, new ShootState(Rotation2d.fromDegrees(33.3 - 4.0), 0.0, 4000.0));
-    SHOOTING_MAP.put(3.0, new ShootState(Rotation2d.fromDegrees(37.0 - 5.0), 0.0, 4000.0));
-    SHOOTING_MAP.put(2.5, new ShootState(Rotation2d.fromDegrees(41.3 - 5.0), 0.0, 4000.0));
-    SHOOTING_MAP.put(2.0, new ShootState(Rotation2d.fromDegrees(47.4 - 6.0), 0.0, 3500.0));
+    SHOOTING_MAP.put(8.0, new ShootState(19.50, 0.0, 4500.0));
+    SHOOTING_MAP.put(7.5, new ShootState(19.75, 0.0, 4500.0));
+    SHOOTING_MAP.put(7.0, new ShootState(20.0, 0.0, 4500.0));
+    SHOOTING_MAP.put(6.5, new ShootState(21.3, 0.0, 4250.0));
+    SHOOTING_MAP.put(6.0, new ShootState(21.8, 0.0, 4250.0));
+    SHOOTING_MAP.put(5.5, new ShootState(22.3, 0.0, 4250.0));
+    SHOOTING_MAP.put(5.0, new ShootState(24.15, 0.0, 4000.0));
+    SHOOTING_MAP.put(4.5, new ShootState(28.3 - 3.5, 0.0, 4000.0));
+    SHOOTING_MAP.put(4.0, new ShootState(30.5 - 3.65, 0.0, 4000.0));
+    SHOOTING_MAP.put(3.5, new ShootState(33.3 - 4.0, 0.0, 4000.0));
+    SHOOTING_MAP.put(3.0, new ShootState(37.0 - 5.0, 0.0, 4000.0));
+    SHOOTING_MAP.put(2.5, new ShootState(41.3 - 5.0, 0.0, 4000.0));
+    SHOOTING_MAP.put(2.0, new ShootState(47.4 - 6.0, 0.0, 3500.0));
     SHOOTING_MAP.put(
         1.5,
         new ShootState(
-            Rotation2d.fromDegrees(55.0 - 6.0),
+            55.0 - 6.0,
             Length.fromRotations(
                     ElevatorGoal.SUB.target.getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE)
                 .getInches(),
@@ -94,7 +94,7 @@ public class ShooterConstants {
     SHOOTING_MAP.put(
         1.0,
         new ShootState(
-            Rotation2d.fromRotations(PivotGoal.SUB.target.getAsDouble()),
+            Units.rotationsToDegrees(PivotGoal.SUB.target.getAsDouble()),
             Length.fromRotations(
                     ElevatorGoal.SUB.target.getAsDouble(), ElevatorConstants.PULLEY_CIRCUMFERENCE)
                 .getInches(),

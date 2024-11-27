@@ -6,6 +6,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc2025.RobotContainer;
 import frc2025.RobotContainer.Subsystems;
@@ -14,7 +15,6 @@ import frc2025.constants.FieldConstants;
 import frc2025.subsystems.pivot.Pivot.PivotGoal;
 import frc2025.subsystems.shooter.ShooterConstants;
 import frc2025.util.ShootStateInterpolatingTreeMap.ShootState;
-import math.ScreamMath;
 import util.AllianceFlipUtil;
 
 public class ShootingHelper {
@@ -55,7 +55,7 @@ public class ShootingHelper {
 
   private static void setPivotAngleAndElevatorHeight(
       ShootState calculated, double effectiveDistance, ShootState mapped) {
-    calculated.setPivotAngle(getPivotAngleToGoal(mapped, effectiveDistance));
+    calculated.setPivotAngleDeg(getPivotAngleToGoal(mapped, effectiveDistance));
     if (!DriverStation.isAutonomous()) {
       calculated.setElevatorHeight(mapped.elevatorHeight);
     }
@@ -76,12 +76,11 @@ public class ShootingHelper {
         .minus(new Rotation2d(Math.PI));
   }
 
-  private static Rotation2d getPivotAngleToGoal(ShootState mapped, double horizontalDistance) {
-    return ScreamMath.clamp(
-        mapped.getPivotAngle(),
-        Rotation2d.fromRotations(PivotGoal.SUB.target.getAsDouble()),
-        Rotation2d.fromDegrees(
-            subsystems.elevator().getMeasuredHeight().getInches() > 1.5 ? 0 : 4));
+  private static double getPivotAngleToGoal(ShootState mapped, double horizontalDistance) {
+    return MathUtil.clamp(
+        mapped.getPivotAngleDeg(),
+        subsystems.elevator().getMeasuredHeight().getInches() > 1.5 ? 0 : 4,
+        Units.rotationsToDegrees(PivotGoal.SUB.target().getAsDouble()));
   }
 
   public static Translation2d getShotLookahead(ChassisSpeeds robotSpeeds, double actualDistance) {

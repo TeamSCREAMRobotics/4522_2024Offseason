@@ -4,6 +4,7 @@ import dashboard.Ligament;
 import data.Length;
 import drivers.TalonFXSubsystem;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import frc2025.RobotContainer;
 import frc2025.RobotState;
 import frc2025.logging.Logger;
@@ -45,8 +46,8 @@ public class Pivot extends TalonFXSubsystem {
     TRACKING(
         () ->
             RobotContainer.getRobotState() == null
-                ? HOME_INTAKE.target.getAsDouble()
-                : RobotState.getActiveShotParameters().shootState().getPivotAngle().getDegrees(),
+                ? Units.rotationsToDegrees(HOME_INTAKE.target().getAsDouble())
+                : RobotState.getActiveShotParameters().shootState().getPivotAngleDeg(),
         ControlType.POSITION);
 
     public final DoubleSupplier target;

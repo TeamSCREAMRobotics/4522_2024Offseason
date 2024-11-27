@@ -49,8 +49,8 @@ public class Controlboard {
     if (!translation.equals(Translation2d.kZero)) {
       for (int i = 0; i < 4; i++) {
         if (ScreamUtil.withinAngleThreshold(
-            Rotation2d.fromDegrees(i * 90.0), translation.getAngle(), SNAP_TO_POLE_THRESHOLD)) {
-          return new Translation2d(translation.getNorm(), Rotation2d.fromDegrees(i * 90.0));
+            Rotation2d.kCCW_90deg.times(i), translation.getAngle(), SNAP_TO_POLE_THRESHOLD)) {
+          return new Translation2d(translation.getNorm(), Rotation2d.kCCW_90deg.times(i));
         }
       }
       return translation;
