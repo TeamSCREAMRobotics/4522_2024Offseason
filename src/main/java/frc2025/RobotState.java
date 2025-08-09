@@ -144,9 +144,9 @@ public class RobotState {
             () -> {
               activeSuperstructureGoal = goal;
               return Commands.parallel(
-                  elevator.applyGoal(goal.goals[0]),
-                  pivot.applyGoal(goal.goals[1]),
-                  shooter.applyGoal(goal.goals[2]));
+                  elevator.applyGoalCommand(goal.goals[0]),
+                  pivot.applyGoalCommand(goal.goals[1]),
+                  shooter.applyGoalCommand(goal.goals[2]));
             },
             Set.of(elevator, pivot, shooter))
         .withName("applySuperstructureGoal(" + goal.toString() + ")");
@@ -241,9 +241,12 @@ public class RobotState {
   }
 
   private static void logShotParameters(ShotParameters shotParameters) {
-    Logger.log("RobotState/ActiveShotParameters/ActualDistance", shotParameters.actualDistance());
     Logger.log(
-        "RobotState/ActiveShotParameters/EffectiveDistance", shotParameters.effectiveDistance());
+        "RobotState/ActiveShotParameters/ActualDistance",
+        shotParameters.actualDistance().getMeters());
+    Logger.log(
+        "RobotState/ActiveShotParameters/EffectiveDistance",
+        shotParameters.effectiveDistance().getMeters());
     Logger.log(
         "RobotState/ActiveShotParameters/TargetHeading",
         shotParameters.targetHeading().getDegrees());

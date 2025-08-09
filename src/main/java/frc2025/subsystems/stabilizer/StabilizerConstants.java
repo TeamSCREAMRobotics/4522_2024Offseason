@@ -8,6 +8,7 @@ import drivers.TalonFXSubsystem.TalonFXSubsystemConfiguration;
 import drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import pid.ScreamPIDConstants;
@@ -39,7 +40,11 @@ public class StabilizerConstants {
 
     CONFIGURATION.simConstants =
         new TalonFXSubsystemSimConstants(
-            new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false, false);
+            new SimWrapper(SIM),
+            GEAR_RATIO,
+            SIM_GAINS.getProfiledPIDController(new Constraints(99999999, 99999999)),
+            false,
+            false);
 
     CONFIGURATION.masterConstants =
         new TalonFXConstants(new CANDevice(13, ""), InvertedValue.CounterClockwise_Positive);

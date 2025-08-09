@@ -8,6 +8,7 @@ import drivers.TalonFXSubsystem.TalonFXSubsystemConfiguration;
 import drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc2025.subsystems.elevator.Elevator.ElevatorGoal;
@@ -53,7 +54,11 @@ public class ShooterConstants {
 
     CONFIGURATION.simConstants =
         new TalonFXSubsystemSimConstants(
-            new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false, false);
+            new SimWrapper(SIM),
+            1.0,
+            SIM_GAINS.getProfiledPIDController(new Constraints(999999, 999999)),
+            false,
+            false);
 
     CONFIGURATION.masterConstants =
         new TalonFXConstants(new CANDevice(11, ""), InvertedValue.CounterClockwise_Positive);

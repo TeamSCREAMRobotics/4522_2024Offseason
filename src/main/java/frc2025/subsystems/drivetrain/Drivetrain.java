@@ -1,8 +1,9 @@
 package frc2025.subsystems.drivetrain;
 
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -30,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc2025.constants.Constants;
 import frc2025.constants.FieldConstants;
 import frc2025.logging.Logger;
+import frc2025.subsystems.drivetrain.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc2025.subsystems.vision.Vision;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
@@ -46,7 +48,7 @@ import vision.LimelightVision;
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem so it can be used
  * in command-based projects easily.
  */
-public class Drivetrain extends SwerveDrivetrain implements Subsystem {
+public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
   private double lastSimTime;
 
   private RunOnce operatorPerspectiveApplier = new RunOnce();
@@ -59,7 +61,7 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   public Drivetrain(
       SwerveDrivetrainConstants driveTrainConstants,
       double OdometryUpdateFrequency,
-      SwerveModuleConstants... modules) {
+      SwerveModuleConstants<?, ?, ?>... modules) {
     super(driveTrainConstants, OdometryUpdateFrequency, modules);
 
     CommandScheduler.getInstance().registerSubsystem(this);
@@ -120,7 +122,7 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
   }
 
   public void setNeutralModes(NeutralModeValue driveMode, NeutralModeValue steerMode) {
-    for (SwerveModule mod : getModules()) {
+    for (SwerveModule<TalonFX, TalonFX, CANcoder> mod : getModules()) {
       mod.getDriveMotor().setNeutralMode(driveMode);
       mod.getSteerMotor().setNeutralMode(steerMode);
     }
@@ -206,10 +208,10 @@ public class Drivetrain extends SwerveDrivetrain implements Subsystem {
     setControl(new SwerveRequest.Idle());
   }
 
-  public void optimizeModuleUtilization(SwerveModule module) {
+  public void optimizeModuleUtilization(SwerveModule<TalonFX, TalonFX, CANcoder> module) {
     module.getDriveMotor().optimizeBusUtilization();
     module.getSteerMotor().optimizeBusUtilization();
-    module.getCANcoder().optimizeBusUtilization();
+    module.getEncoder().optimizeBusUtilization();
   }
 
   @Override

@@ -31,5 +31,10 @@ public class Intake extends TalonFXSubsystem {
     public ControlType controlType() {
       return controlType;
     }
+
+    @Override
+    public DoubleSupplier feedForward() {
+      return () -> 0.0;
+    }
   }
 }

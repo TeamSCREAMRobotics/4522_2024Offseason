@@ -1,7 +1,6 @@
 package frc2025.subsystems.pivot;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -14,6 +13,7 @@ import drivers.TalonFXSubsystem.TalonFXSubsystemConfiguration;
 import drivers.TalonFXSubsystem.TalonFXSubsystemSimConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import pid.ScreamPIDConstants;
@@ -32,8 +32,7 @@ public final class PivotConstants {
 
   public static final DCMotorSim SIM =
       SimUtil.createDCMotorSim(DCMotor.getFalcon500(1), GEAR_RATIO, 0.6193);
-  public static final ScreamPIDConstants SIM_GAINS =
-      new ScreamPIDConstants(350.0 * GEAR_RATIO, 0.0, 0.0);
+  public static final ScreamPIDConstants SIM_GAINS = new ScreamPIDConstants(GEAR_RATIO, 0.0, 0.0);
 
   public static final TalonFXSubsystemConfiguration CONFIGURATION =
       new TalonFXSubsystemConfiguration();
@@ -46,13 +45,17 @@ public final class PivotConstants {
 
     CONFIGURATION.simConstants =
         new TalonFXSubsystemSimConstants(
-            new SimWrapper(SIM), SIM_GAINS.getPIDController(), false, false, true);
+            new SimWrapper(SIM),
+            GEAR_RATIO,
+            SIM_GAINS.getProfiledPIDController(new Constraints(1, 1)),
+            false,
+            false);
 
     CONFIGURATION.masterConstants =
         new TalonFXConstants(new CANDevice(17, ""), InvertedValue.Clockwise_Positive);
 
     CANcoderConfiguration config = new CANcoderConfiguration();
-    config.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
+    config.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
     config.MagnetSensor.MagnetOffset = -0.12646484375;
     config.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
     CONFIGURATION.cancoderConstants = new CANCoderConstants(new CANDevice(4, ""), config);

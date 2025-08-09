@@ -66,6 +66,11 @@ public class Elevator extends TalonFXSubsystem {
     public ControlType controlType() {
       return controlType;
     }
+
+    @Override
+    public DoubleSupplier feedForward() {
+      return () -> 0.0;
+    }
   }
 
   public Ligament getLigament() {
@@ -80,7 +85,7 @@ public class Elevator extends TalonFXSubsystem {
     return Length.fromRotations(getSetpoint(), ElevatorConstants.PULLEY_CIRCUMFERENCE);
   }
 
-  @Override
+  /* @Override
   public synchronized void setSimState(double position, double velocity) {
     super.setSimState(
         Conversions.linearDistanceToRotations(
@@ -90,7 +95,7 @@ public class Elevator extends TalonFXSubsystem {
             velocity,
             ElevatorConstants.PULLEY_CIRCUMFERENCE.getMeters(),
             ElevatorConstants.GEAR_RATIO));
-  }
+  } */
 
   @Override
   public void periodic() {

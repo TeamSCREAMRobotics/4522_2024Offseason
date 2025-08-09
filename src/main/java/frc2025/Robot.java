@@ -52,7 +52,8 @@ public class Robot extends TimedRobot {
                 .withCaptureDs(true)
                 .withCaptureNt(true)
                 .withLogExtras(true)
-                .withNtPublish(false));
+                .withNtPublish(false)
+                .withLogEntryQueueCapacity(2000));
         // SignalLogger.setPath("/media/sda1/");
         // SignalLogger.start();
         break;
@@ -62,11 +63,11 @@ public class Robot extends TimedRobot {
             new DogLogOptions()
                 .withCaptureDs(true)
                 .withCaptureNt(true)
-                .withLogExtras(false)
-                .withNtPublish(true));
+                .withLogExtras(true)
+                .withNtPublish(true)
+                .withLogEntryQueueCapacity(2000));
         break;
     }
-
     Logger.setEnabled(true);
     CommandScheduler.getInstance().onCommandInitialize(RobotState::addActiveCommand);
     CommandScheduler.getInstance().onCommandFinish(RobotState::removeActiveCommand);

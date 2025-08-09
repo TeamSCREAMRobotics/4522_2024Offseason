@@ -1,7 +1,6 @@
 package frc2025.subsystems.shooter;
 
 import drivers.TalonFXSubsystem;
-import edu.wpi.first.units.Units;
 import frc2025.Robot;
 import frc2025.RobotContainer;
 import frc2025.RobotState;
@@ -14,12 +13,7 @@ public class Shooter extends TalonFXSubsystem {
 
     if (Robot.isSimulation()) {
       simFeedforwardSup =
-          () ->
-              ShooterConstants.SIM_FEEDFORWARD
-                  .calculate(
-                      Units.RotationsPerSecond.of(getVelocity()),
-                      Units.RotationsPerSecond.of(getSetpoint()))
-                  .baseUnitMagnitude();
+          () -> ShooterConstants.SIM_FEEDFORWARD.calculate(getVelocity(), getSetpoint());
     }
   }
 
@@ -51,5 +45,15 @@ public class Shooter extends TalonFXSubsystem {
     public ControlType controlType() {
       return controlType;
     }
+
+    @Override
+    public DoubleSupplier feedForward() {
+      return () -> 0.0;
+    }
+  }
+
+  @Override
+  public synchronized double getVelocity() {
+      return Robot.isSimulation() ? getSetpoint() : super.getVelocity(); 
   }
 }

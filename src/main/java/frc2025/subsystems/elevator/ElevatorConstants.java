@@ -49,7 +49,10 @@ public final class ElevatorConstants {
     CONFIGURATION.logTelemetry = false;
 
     CONFIGURATION.simConstants =
-        new TalonFXSubsystemSimConstants(new SimWrapper(SIM), SIM_GAINS.getPIDController());
+        new TalonFXSubsystemSimConstants(
+            new SimWrapper(SIM, PULLEY_CIRCUMFERENCE, GEAR_RATIO),
+            GEAR_RATIO,
+            SIM_GAINS.getPIDController());
 
     CONFIGURATION.masterConstants =
         new TalonFXConstants(new CANDevice(15, ""), InvertedValue.Clockwise_Positive);

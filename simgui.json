@@ -1,7 +1,9 @@
 {
   "NTProvider": {
     "types": {
-      "/FMSInfo": "FMSInfo"
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/RobotState/Mechanisms/Measured": "Mechanism2d",
+      "/SmartDashboard/RobotState/Mechanisms/Setpoint": "Mechanism2d"
     }
   },
   "NetworkTables Info": {

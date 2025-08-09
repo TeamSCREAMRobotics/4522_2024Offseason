@@ -8,6 +8,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.team6328.FeedForwardCharacterization;
+
 import drivers.TalonFXSubsystem;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -29,14 +31,14 @@ import frc2025.subsystems.drivetrain.Drivetrain;
 import frc2025.subsystems.drivetrain.DrivetrainConstants;
 import frc2025.subsystems.drivetrain.generated.TunerConstants;
 import frc2025.subsystems.elevator.Elevator;
-import frc2025.subsystems.elevator.ElevatorConstants;
 import frc2025.subsystems.elevator.Elevator.ElevatorGoal;
+import frc2025.subsystems.elevator.ElevatorConstants;
 import frc2025.subsystems.intake.Intake;
 import frc2025.subsystems.intake.Intake.IntakeGoal;
 import frc2025.subsystems.intake.IntakeConstants;
 import frc2025.subsystems.pivot.Pivot;
-import frc2025.subsystems.pivot.PivotConstants;
 import frc2025.subsystems.pivot.Pivot.PivotGoal;
+import frc2025.subsystems.pivot.PivotConstants;
 import frc2025.subsystems.shooter.Shooter;
 import frc2025.subsystems.shooter.ShooterConstants;
 import frc2025.subsystems.stabilizer.Stabilizer;
@@ -96,6 +98,9 @@ public class RobotContainer {
   }
 
   private void configButtonBindings() {
+
+    Controlboard.driveController.povDown().whileTrue(new FeedForwardCharacterization(shooter, shooter::setVoltage, shooter::getVelocity));
+
     Controlboard.driveController
         .back()
         .onTrue(
@@ -104,7 +109,7 @@ public class RobotContainer {
                   drivetrain.resetRotation(AllianceFlipUtil.getFwdHeading());
                   drivetrain.getHelper().setLastAngle(drivetrain.getHeading());
                 }));
-                
+
     Controlboard.driveController
         .start()
         .and(() -> Robot.isSimulation())
@@ -169,13 +174,13 @@ public class RobotContainer {
         .whileTrue(
             robotState
                 .applySuperstructureGoal(SuperstructureGoal.HOME_INTAKE)
-                .alongWith(conveyor.applyGoal(ConveyorGoal.INTAKE))
-                .alongWith(intake.applyGoal(IntakeGoal.INTAKE)));
+                .alongWith(conveyor.applyGoalCommand(ConveyorGoal.INTAKE))
+                .alongWith(intake.applyGoalCommand(IntakeGoal.INTAKE)));
 
     Controlboard.driveController
         .x()
         .toggleOnTrue(
-            elevator.applyVoltage(
+            elevator.applyVoltageCommand(
                 () -> -MathUtil.applyDeadband(Controlboard.driveController.getRightY(), 0.05) * 3,
                 () -> ElevatorConstants.CONFIGURATION.slot0.kG));
 
@@ -195,7 +200,9 @@ public class RobotContainer {
             () ->
                 ShootingHelper.validShot(RobotState.getActiveShotParameters().effectiveDistance()))
         .whileTrue(
-            conveyor.applyGoal(ConveyorGoal.SHOOT).alongWith(intake.applyGoal(IntakeGoal.INTAKE)));
+            conveyor
+                .applyGoalCommand(ConveyorGoal.SHOOT)
+                .alongWith(intake.applyGoalCommand(IntakeGoal.INTAKE)));
 
     Controlboard.driveController
         .povRight()
@@ -203,7 +210,8 @@ public class RobotContainer {
             robotState
                 .applySuperstructureGoal(SuperstructureGoal.EJECT)
                 .alongWith(
-                    conveyor.applyGoal(ConveyorGoal.EJECT), intake.applyGoal(IntakeGoal.EJECT)));
+                    conveyor.applyGoalCommand(ConveyorGoal.EJECT),
+                    intake.applyGoalCommand(IntakeGoal.EJECT)));
 
     Controlboard.driveController
         .y()
@@ -225,16 +233,17 @@ public class RobotContainer {
 
     Controlboard.driveController
         .b()
-        .toggleOnTrue(stabilizer.applyGoal(StabilizerGoal.OUT))
+        .toggleOnTrue(stabilizer.applyGoalCommand(StabilizerGoal.OUT))
         .toggleOnTrue(robotState.applySuperstructureGoal(SuperstructureGoal.TRAP));
 
     Controlboard.driveController
         .rightStick()
         .whileTrue(robotState.applySuperstructureGoal(SuperstructureGoal.TRAP_INTAKE))
-        .onFalse(Commands.parallel(
-            pivot.applyGoal(PivotGoal.HOME_INTAKE),
-            Commands.waitUntil(() -> Math.abs(pivot.getError()) < Units.degreesToRotations(2.5)).andThen(elevator.applyGoal(ElevatorGoal.HOME))
-        ));
+        .onFalse(
+            Commands.parallel(
+                pivot.applyGoalCommand(PivotGoal.HOME_INTAKE),
+                Commands.waitUntil(() -> Math.abs(pivot.getError()) < Units.degreesToRotations(2.5))
+                    .andThen(elevator.applyGoalCommand(ElevatorGoal.HOME))));
   }
 
   private void configDefaultCommands() {
@@ -292,7 +301,9 @@ public class RobotContainer {
             AutoBuilder.followPath(path.get()),
             Commands.runOnce(() -> System.out.println(Timer.getFPGATimestamp() - startTime)),
             Commands.runOnce(() -> stopAll()))
-        .alongWith(intake.applyGoal(IntakeGoal.INTAKE), conveyor.applyGoal(ConveyorGoal.INTAKE));
+        .alongWith(
+            intake.applyGoalCommand(IntakeGoal.INTAKE),
+            conveyor.applyGoalCommand(ConveyorGoal.INTAKE));
   }
 
   public Command startAiming() {

@@ -29,7 +29,7 @@ public final class DrivetrainConstants {
       new ProfiledPIDController(8.0, 0, 0, new Constraints(30, 15));
 
   public static final PIDController PATH_OVERRIDE_CONTROLLER =
-      DrivetrainConstants.PATH_ROTATION_CONSTANTS.getPIDController(true);
+      DrivetrainConstants.PATH_ROTATION_CONSTANTS.getPIDController(-Math.PI, Math.PI);
 
   public static final PIDController NOTE_ASSIST_CONTROLLER = new PIDController(4.0, 0, 0.01);
 
@@ -45,11 +45,7 @@ public final class DrivetrainConstants {
 
   public static final RobotConfig ROBOT_CONFIG =
       new RobotConfig(
-          Units.lbsToKilograms(150),
-          6.883,
-          MODULE_CONFIG,
-          TunerConstants.TRACK_WIDTH.getMeters(),
-          TunerConstants.WHEEL_BASE.getMeters());
+          Units.lbsToKilograms(150), 6.883, MODULE_CONFIG, TunerConstants.TRACK_WIDTH.getMeters());
 
   public static final PathFollowingController PATH_FOLLOWING_CONTROLLER =
       new PPHolonomicDriveController(
